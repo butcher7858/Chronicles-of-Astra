@@ -20,6 +20,7 @@ function closePanel(id){
   if(id==='pDlg'){G.dlgNpc=null;dlgView=null}
   if(id==='pLoot')G.lootM=null;
   if(id==='pMap')G.mapSel=null;
+  if(id==='pTrade'){if(typeof TRADE_SESSION!=='undefined')TRADE_SESSION=null}
   hideTip();refreshUI();
 }
 function togglePanel(id){if($(id).hidden)showPanel(id);else closePanel(id)}
@@ -505,6 +506,7 @@ function renderCraftUI(){
 /* ---------- Banco y Banco de Hermandad ---------- */
 let bankTab='personal';
 function renderBankUI(){
+  if(window._bankActiveTab){bankTab=window._bankActiveTab;delete window._bankActiveTab}
   const p=$('pBank');if(!p||p.hidden)return;
   const pTabBtn=$('btnBankPersonal'), gTabBtn=$('btnBankGuild');
   if(pTabBtn)pTabBtn.onclick=()=>{bankTab='personal';renderBankUI()};

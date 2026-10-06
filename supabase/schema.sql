@@ -57,6 +57,16 @@ create table if not exists public.character_state (
   mount        text not null default 'horse',
   mounts       jsonb not null default '["horse"]'::jsonb,
   guild        jsonb,
+  bags         jsonb not null default '[null,null,null,null]'::jsonb,
+  bank         jsonb not null default '[]'::jsonb,
+  bank_gold    int   not null default 0,
+  achievements jsonb not null default '{}'::jsonb,
+  titles       jsonb not null default '["novice"]'::jsonb,
+  title        text  not null default '',
+  action_bar   jsonb,
+  action_bar2  jsonb,
+  recipes      jsonb not null default '{}'::jsonb,
+  stats_extra  jsonb not null default '{}'::jsonb,
   options      jsonb not null default '{}'::jsonb,
   updated_at   timestamptz not null default now()
 );
@@ -66,6 +76,16 @@ alter table public.character_state add column if not exists talents jsonb not nu
 alter table public.character_state add column if not exists mount text not null default 'horse';
 alter table public.character_state add column if not exists mounts jsonb not null default '["horse"]'::jsonb;
 alter table public.character_state add column if not exists guild jsonb;
+alter table public.character_state add column if not exists bags jsonb not null default '[null,null,null,null]'::jsonb;
+alter table public.character_state add column if not exists bank jsonb not null default '[]'::jsonb;
+alter table public.character_state add column if not exists bank_gold int not null default 0;
+alter table public.character_state add column if not exists achievements jsonb not null default '{}'::jsonb;
+alter table public.character_state add column if not exists titles jsonb not null default '["novice"]'::jsonb;
+alter table public.character_state add column if not exists title text not null default '';
+alter table public.character_state add column if not exists action_bar jsonb;
+alter table public.character_state add column if not exists action_bar2 jsonb;
+alter table public.character_state add column if not exists recipes jsonb not null default '{}'::jsonb;
+alter table public.character_state add column if not exists stats_extra jsonb not null default '{}'::jsonb;
 
 create index if not exists state_user on public.character_state (user_id);
 

@@ -193,7 +193,7 @@ function bindInput(){
     else if(k==='k')togglePanel('pCraft');
     else if(k==='n')togglePanel('pTalents');
     else if(k==='g')togglePanel('pGuild');
-    else if(k==='j')togglePanel('pAchieve');
+    else if(k==='j'||k==='y')togglePanel('pAchieve');
     else if(k==='u')togglePanel('pRankings');
     else if(k==='Escape'){let any=false;for(const id of PANELS)if(!$(id).hidden){closePanel(id);any=true}if(!any){P.target=null;P.autoAtk=false}}
     else if(k==='Enter'){$('chat').classList.add('open');chatIn.focus();e.preventDefault()}

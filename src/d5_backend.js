@@ -90,7 +90,7 @@ const LocalBE=(function(){
     async loadState(id){return load().states[id]||null},
     async saveChar(ch,st){
       const d=load(),c=d.chars.find(x=>x.id===ch.id);if(!c)return;
-      Object.assign(c,ch,{last_seen:new Date().toISOString()});d.states[ch.id]=Object.assign({character_id:ch.id,user_id:sess.id},st);store(d);
+      Object.assign(c,ch,{last_seen:new Date().toISOString()});d.states[ch.id]=Object.assign({character_id:ch.id,user_id:sess?sess.id:(c.user_id||'local')},st);store(d);
     },
     async top(n){return load().chars.slice().sort((a,b)=>b.level-a.level||b.kills-a.kills).slice(0,n)},
     async residents(exclude){
@@ -99,7 +99,7 @@ const LocalBE=(function(){
     },
     async chatHistory(n){return load().chat.slice(-n)},
     async sendChat(ch,body){const d=load();d.chat.push({name:ch.name,body:body,channel:'global',created_at:new Date().toISOString()});d.chat=d.chat.slice(-100);store(d)},
-    saveBeacon(){}
+    saveBeacon(ch,st){try{o.saveChar(ch,st)}catch(e){}}
   };
   /* tiempo real local: BroadcastChannel entre pestañas */
   o.rt=(function(){
@@ -212,13 +212,17 @@ const SupaBE=USE_SB?(function(){
           body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},st)});
       }catch(err){
         if(err&&/column.*does not exist|Could not find.*column/i.test(err.message)){
-          const fallbackSt=Object.assign({},st);
-          delete fallbackSt.talents;
-          delete fallbackSt.mount;
-          delete fallbackSt.mounts;
-          delete fallbackSt.guild;
-          b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-            body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},fallbackSt)});
+          const baseCols=['character_id','user_id','xp','gold','inv','eq','quests','disc','explored','world_time','options','updated_at','talents','mount','mounts','guild'];
+          const fallbackSt={character_id:ch.id,user_id:S.user.id,updated_at:now};
+          for(const k of baseCols)if(st[k]!==undefined)fallbackSt[k]=st[k];
+          try{
+            b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:fallbackSt});
+          }catch(err2){
+            if(err2&&/column.*does not exist|Could not find.*column/i.test(err2.message)){
+              delete fallbackSt.talents;delete fallbackSt.mount;delete fallbackSt.mounts;delete fallbackSt.guild;
+              b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:fallbackSt});
+            }else throw err2;
+          }
         }else{
           throw err;
         }
@@ -244,6 +248,7 @@ const SupaBE=USE_SB?(function(){
     function connect(){
       if(closed)return;
       joined=false;
+      if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
       try{ws=new WebSocket(URL_.replace(/^http/,'ws')+'/realtime/v1/websocket?apikey='+encodeURIComponent(KEY)+'&vsn=1.0.0')}catch(e){return sched()}
       ws.onopen=()=>{
         send('phx_join',{config:{broadcast:{self:false,ack:false},presence:{key:me.id},postgres_changes:[],private:false},access_token:S?S.access_token:KEY});

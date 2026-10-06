@@ -7,7 +7,7 @@ const G={time:0,worldT:0,mobs:[],npcs:[],bots:[],nodes:[],projs:[],parts:[],floa
   dlgNpc:null,dlgQuest:null,lootM:null,botChat:8,sfxOn:true,autoLoot:true,sprintToggle:false,shake:0,zoom:1,explored:new Uint8Array(GW*GH),keys:{},joy:null};
 let P=null;
 const xpNeed=l=>Math.round(45*l*(1+0.18*l));
-const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28};
+const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28,jungle:25,desert_ruins:36,crystal_woods:45,vortex:55,dungeon_crypt:30,dungeon_frost:50};
 
 /* ---------- Clases y habilidades ---------- */
 const CLS={
@@ -815,10 +815,20 @@ const SPAWN_PLAN=[
   ['skel','deepcave',6,1,0],['crystal_spider','deepcave',8,2,50],
   ['ogre','peaks',6,1,0],['golem','peaks',6,1,0],['wyvern','peaks',8,1,0],
   ['magma_golem','volcano',8,1,0],['fire_elemental','volcano',10,2,50],
-  ['shadow_stalker','abyss',8,1,0]
+  ['shadow_stalker','abyss',8,1,0],
+  ['ghoul','necropolis',8,2,50],['crypt_fiend','necropolis',6,1,0],
+  ['death_knight_foe','shadowlands',6,1,0],['shadow_wraith','shadowlands',6,2,50],
+  ['obsidian_destroyer','titanpeaks',6,1,0],['storm_elemental','titanpeaks',6,1,0],
+  ['void_reaver','astralvoid',6,1,0],
+  ['jungle_tiger','jungle',6,2,60],['jungle_serpent','jungle',6,1,0],['zul_witchdoctor','jungle',4,1,0],
+  ['cinder_golem','desert_ruins',6,1,0],['ash_stalker','desert_ruins',6,2,50],
+  ['crystal_ancient','crystal_woods',6,1,0],
+  ['vortex_horror','vortex',6,1,0],['astral_chimera','vortex',5,1,0],
+  ['crypt_fiend','dungeon_crypt',6,2,50],['ghoul','dungeon_crypt',6,1,0],
+  ['fskel','dungeon_frost',6,2,50],['golem','dungeon_frost',4,1,0]
 ];
 const RARE_PLAN=[['alpha','meadow'],['chief','forest'],['grukk','hills'],['bogking','swamp'],['scorpk','desert'],['yetik','snow'],['bandit_warlord','forest']];
-function nearArea(id,tx,ty,m){const r=AREAS[id];return tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m}
+function nearArea(id,tx,ty,m){const r=AREAS[id];return r?tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m:false}
 function avoidFor(zone){
   return (tx,ty)=>{
     for(const id of ['town','capital','cieno','oasis','cumbre'])if(nearArea(id,tx,ty,6))return true;
@@ -827,6 +837,11 @@ function avoidFor(zone){
     if(zone==='palace'&&Math.hypot(tx-190,ty-15)<8)return true;
     if(zone==='palace'&&Math.abs(ty-15)<=2&&tx<180)return true;
     if(zone==='volcano'&&Math.hypot(tx-179,ty-94)<8)return true;
+    if(zone==='necropolis'&&Math.hypot(tx-73,ty-13)<7)return true;
+    if(zone==='titanpeaks'&&Math.hypot(tx-181,ty-41)<7)return true;
+    if(zone==='astralvoid'&&Math.hypot(tx-26,ty-37)<7)return true;
+    if(zone==='dungeon_crypt'&&Math.hypot(tx-65,ty-10)<6)return true;
+    if(zone==='dungeon_frost'&&Math.hypot(tx-183,ty-10)<6)return true;
     return false;
   };
 }
@@ -852,6 +867,8 @@ function initWorldEntities(){
   G.mobs.push(makeMob('lich_malakor',BOSS_MALAKOR.x,BOSS_MALAKOR.y));
   G.mobs.push(makeMob('titan_colossus',BOSS_TITAN.x,BOSS_TITAN.y));
   G.mobs.push(makeMob('void_horror',BOSS_VOID.x,BOSS_VOID.y));
+  if(typeof BOSS_CRYPT!=='undefined')G.mobs.push(makeMob('crypt_lord_boss',BOSS_CRYPT.x,BOSS_CRYPT.y));
+  if(typeof BOSS_FROST_EMP!=='undefined')G.mobs.push(makeMob('frost_emperor_boss',BOSS_FROST_EMP.x,BOSS_FROST_EMP.y));
   for(const n of NPC_DEF)G.npcs.push({id:n.id,name:n.name,title:n.title,x:n.tx*TILE+16,y:n.ty*TILE+16,def:n,npc:true,size:12,dir:n.dir||1,anim:rand(0,6)});
   G.nodes=NODES.map(n=>Object.assign({node:true,open:false,t:0,size:12},n));
   makeBots();

@@ -920,7 +920,12 @@ const IC={
   map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/>',
   wing:'<path d="M3 8c5-4 9-4 9 0 0-4 4-4 9 0-2 1-3 2-3 5-2-2-4-2-6 0-2-2-4-2-6 0 0-3-1-4-3-5z"/>',
   run:'<circle cx="14" cy="5" r="2"/><path d="M6 20l4-6 3 2 2-6-4-2-3 3M13 16l2 4"/>',
-  crown:'<path d="M4 18l-1-10 5 4 4-7 4 7 5-4-1 10z"/>'
+  crown:'<path d="M4 18l-1-10 5 4 4-7 4 7 5-4-1 10z"/>',
+  shield:'<path d="M12 3l8 4v5c0 5-4 8.5-8 10-4-1.5-8-5-8-10V7z"/>',
+  shoulder:'<path d="M4 15c1-5 4-8 8-8s7 3 8 8M6 14c2-2 5-3 8-1"/>',
+  glove:'<path d="M8 19v-7a2 2 0 014 0v1a2 2 0 014 0v2a2 2 0 012 2v2a4 4 0 01-4 4H10a2 2 0 01-2-2z"/>',
+  legs:'<path d="M6 3h12l-1 18h-4l-1-10-1 10H7z"/>',
+  star:'<polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.3 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>'
 };
 function svg(name,color,sw){return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="'+(sw||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[name]||'')+'</svg>'}
 
@@ -1438,6 +1443,7 @@ const WAYPOINTS=[
 ];
 const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16},BOSS_DRAGON={x:179*TILE+16,y:94*TILE+16};
 const BOSS_MALAKOR={x:73*TILE+16,y:13*TILE+16},BOSS_TITAN={x:181*TILE+16,y:41*TILE+16},BOSS_VOID={x:26*TILE+16,y:37*TILE+16};
+const BOSS_CRYPT={x:65*TILE+16,y:10*TILE+16},BOSS_FROST_EMP={x:183*TILE+16,y:10*TILE+16};
 const SPAWN_P={x:43*TILE+16,y:77*TILE+16};
 const tiles=new Uint8Array(W*H),block=new Uint8Array(W*H),deco=new Uint8Array(W*H),shade=new Uint8Array(W*H),zmap=new Uint8Array(W*H);
 const shore=new Uint8Array(W*H),wdepth=new Uint8Array(W*H),pathNear=new Uint8Array(W*H),keep=new Uint8Array(W*H);
@@ -1538,11 +1544,12 @@ function genWorld(){
     const i=idx(x,y),z=biomeBase(x,y);
     zmap[i]=z;tiles[i]=Z[z].tile;shade[i]=Math.floor(hash2(x,y)*4);
   }
-  for(const id of ['town','capital','cieno','oasis','cumbre','bastion','necropolis','shadowlands','titanpeaks','astralvoid']){
+  for(const id of ['town','capital','cieno','oasis','cumbre','bastion','necropolis','shadowlands','titanpeaks','astralvoid','jungle','desert_ruins','crystal_woods','vortex']){
     const r=AREAS[id];
+    if(!r)continue;
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){
       const i=idx(x,y);zmap[i]=ZI[id];
-      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:id==='cumbre'?T.SNOW:id==='necropolis'||id==='shadowlands'?T.CORRUPT:id==='astralvoid'?T.ASTRAL:T.HILL;
+      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'||id==='desert_ruins'?T.DUNE:id==='cumbre'?T.SNOW:id==='necropolis'||id==='shadowlands'?T.CORRUPT:id==='astralvoid'||id==='vortex'?T.ASTRAL:id==='jungle'||id==='crystal_woods'?T.FOREST:T.HILL;
     }
   }
   lake(62,104,12,6.5,T.WATER,T.SAND);lake(116,78,6,4.5,T.WATER,T.SAND);lake(20,24,5,3.5,T.WATER,T.SAND);
@@ -1563,11 +1570,19 @@ function genWorld(){
   dungeon(AREAS.shadowlands,T.CORRUPT,ZI.shadowlands,132);
   dungeon(AREAS.titanpeaks,T.HILL,ZI.titanpeaks,40);
   dungeon(AREAS.astralvoid,T.ASTRAL,ZI.astralvoid,36);
+  if(AREAS.dungeon_crypt)dungeon(AREAS.dungeon_crypt,T.CORRUPT,ZI.dungeon_crypt,13);
+  if(AREAS.dungeon_frost)dungeon(AREAS.dungeon_frost,T.ICE,ZI.dungeon_frost,13);
   addProp('obelisk',72,12,true,{wp:'necropolis'});
   addProp('obelisk',184,14,true,{wp:'palace'});
   addProp('obelisk',180,40,true,{wp:'titanpeaks'});
   addProp('obelisk',26,36,true,{wp:'astralvoid'});
   addProp('obelisk',179,94,true,{wp:'volcano'});
+  addProp('obelisk',14,106,true,{wp:'jungle'});
+  addProp('obelisk',132,104,true,{wp:'desert_ruins'});
+  addProp('obelisk',18,60,true,{wp:'crystal_woods'});
+  addProp('obelisk',14,12,true,{wp:'vortex'});
+  addProp('obelisk',65,13,true,{wp:'dungeon_crypt'});
+  addProp('obelisk',183,13,true,{wp:'dungeon_frost'});
   carve([[43,74],[60,74],[76,73],[90,71],[100,70],[112,70],[126,67],[138,62]],1.7);
   carve([[100,70],[102,86],[112,98],[128,106],[144,116],[152,124],[160,126]],1.4);
   carve([[112,70],[112,52],[110,36],[106,24],[103,15],[107,15]],1.4);
@@ -1867,7 +1882,7 @@ const G={time:0,worldT:0,mobs:[],npcs:[],bots:[],nodes:[],projs:[],parts:[],floa
   dlgNpc:null,dlgQuest:null,lootM:null,botChat:8,sfxOn:true,autoLoot:true,sprintToggle:false,shake:0,zoom:1,explored:new Uint8Array(GW*GH),keys:{},joy:null};
 let P=null;
 const xpNeed=l=>Math.round(45*l*(1+0.18*l));
-const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28};
+const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28,jungle:25,desert_ruins:36,crystal_woods:45,vortex:55,dungeon_crypt:30,dungeon_frost:50};
 
 /* ---------- Clases y habilidades ---------- */
 const CLS={
@@ -2675,10 +2690,20 @@ const SPAWN_PLAN=[
   ['skel','deepcave',6,1,0],['crystal_spider','deepcave',8,2,50],
   ['ogre','peaks',6,1,0],['golem','peaks',6,1,0],['wyvern','peaks',8,1,0],
   ['magma_golem','volcano',8,1,0],['fire_elemental','volcano',10,2,50],
-  ['shadow_stalker','abyss',8,1,0]
+  ['shadow_stalker','abyss',8,1,0],
+  ['ghoul','necropolis',8,2,50],['crypt_fiend','necropolis',6,1,0],
+  ['death_knight_foe','shadowlands',6,1,0],['shadow_wraith','shadowlands',6,2,50],
+  ['obsidian_destroyer','titanpeaks',6,1,0],['storm_elemental','titanpeaks',6,1,0],
+  ['void_reaver','astralvoid',6,1,0],
+  ['jungle_tiger','jungle',6,2,60],['jungle_serpent','jungle',6,1,0],['zul_witchdoctor','jungle',4,1,0],
+  ['cinder_golem','desert_ruins',6,1,0],['ash_stalker','desert_ruins',6,2,50],
+  ['crystal_ancient','crystal_woods',6,1,0],
+  ['vortex_horror','vortex',6,1,0],['astral_chimera','vortex',5,1,0],
+  ['crypt_fiend','dungeon_crypt',6,2,50],['ghoul','dungeon_crypt',6,1,0],
+  ['fskel','dungeon_frost',6,2,50],['golem','dungeon_frost',4,1,0]
 ];
 const RARE_PLAN=[['alpha','meadow'],['chief','forest'],['grukk','hills'],['bogking','swamp'],['scorpk','desert'],['yetik','snow'],['bandit_warlord','forest']];
-function nearArea(id,tx,ty,m){const r=AREAS[id];return tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m}
+function nearArea(id,tx,ty,m){const r=AREAS[id];return r?tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m:false}
 function avoidFor(zone){
   return (tx,ty)=>{
     for(const id of ['town','capital','cieno','oasis','cumbre'])if(nearArea(id,tx,ty,6))return true;
@@ -2687,6 +2712,11 @@ function avoidFor(zone){
     if(zone==='palace'&&Math.hypot(tx-190,ty-15)<8)return true;
     if(zone==='palace'&&Math.abs(ty-15)<=2&&tx<180)return true;
     if(zone==='volcano'&&Math.hypot(tx-179,ty-94)<8)return true;
+    if(zone==='necropolis'&&Math.hypot(tx-73,ty-13)<7)return true;
+    if(zone==='titanpeaks'&&Math.hypot(tx-181,ty-41)<7)return true;
+    if(zone==='astralvoid'&&Math.hypot(tx-26,ty-37)<7)return true;
+    if(zone==='dungeon_crypt'&&Math.hypot(tx-65,ty-10)<6)return true;
+    if(zone==='dungeon_frost'&&Math.hypot(tx-183,ty-10)<6)return true;
     return false;
   };
 }
@@ -2712,6 +2742,8 @@ function initWorldEntities(){
   G.mobs.push(makeMob('lich_malakor',BOSS_MALAKOR.x,BOSS_MALAKOR.y));
   G.mobs.push(makeMob('titan_colossus',BOSS_TITAN.x,BOSS_TITAN.y));
   G.mobs.push(makeMob('void_horror',BOSS_VOID.x,BOSS_VOID.y));
+  if(typeof BOSS_CRYPT!=='undefined')G.mobs.push(makeMob('crypt_lord_boss',BOSS_CRYPT.x,BOSS_CRYPT.y));
+  if(typeof BOSS_FROST_EMP!=='undefined')G.mobs.push(makeMob('frost_emperor_boss',BOSS_FROST_EMP.x,BOSS_FROST_EMP.y));
   for(const n of NPC_DEF)G.npcs.push({id:n.id,name:n.name,title:n.title,x:n.tx*TILE+16,y:n.ty*TILE+16,def:n,npc:true,size:12,dir:n.dir||1,anim:rand(0,6)});
   G.nodes=NODES.map(n=>Object.assign({node:true,open:false,t:0,size:12},n));
   makeBots();
@@ -3396,7 +3428,15 @@ function putSprite(s,x,y,a){
   ctx.drawImage(s.c,x-s.ax,y-s.ay,s.w,s.h);
   if(a!==undefined)ctx.globalAlpha=1;
 }
-function hexRGB(hex){const n=parseInt(hex.slice(1),16);return [n>>16,(n>>8)&255,n&255]}
+function hexRGB(hex){
+  if(!hex||typeof hex!=='string')return [255,255,255];
+  let h=hex.trim();
+  if(h.startsWith('#'))h=h.slice(1);
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const n=parseInt(h,16);
+  if(isNaN(n))return [255,255,255];
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
 function tint(hex,k){
   const c=hexRGB(hex);let r=c[0],g=c[1],b=c[2];
   if(k>=0){r+=(255-r)*k;g+=(255-g)*k;b+=(255-b)*k}else{r*=1+k;g*=1+k;b*=1+k}
@@ -4554,6 +4594,7 @@ function drawCreature(g,x,y,m,o){
       const ember=Math.sin(t*12)*4;
       disc(g,44+ember,-24+Math.cos(t*10)*2,1.2,'#fbbf24',false);
       leg(-8,Math.PI,'#991b1b');leg(16,0,'#991b1b');
+      g.restore();
       return;
     }
 
@@ -4609,6 +4650,7 @@ function drawCreature(g,x,y,m,o){
       }
       g.restore();
       disc(g,0,-14,3.2,'#05000a');disc(g,0,-14,1.4,'#f472b6',false);
+      g.restore();
       return;
     }
 
@@ -4689,6 +4731,7 @@ function drawCreature(g,x,y,m,o){
       poly(g,[-8,-46,0,-54,8,-46],'#d97706');
       rr(g,-6,-50,12,3.5,1,'#0f172a');
       disc(g,Math.sin(t*3)*3,-48,1.6,'#ef4444',false);
+      g.restore();
       return;
     }
 
@@ -4866,6 +4909,7 @@ function randomApp(cls){
 
 /* Conexión directa del equipamiento y customización al aspect model L */
 function lookFor(cls,app,eq){
+  if(cls&&typeof cls==='object'&&cls.cls){eq=cls.eq;app=cls.app;cls=cls.cls}
   const c=CLS[cls]||CLS.war;app=Object.assign(defaultApp(cls),app||{});
   const L=Object.assign({},c.vis);
   L.skin=app.skin;L.hair=app.hair;L.hairStyle=app.hairStyle;L.eye=app.eye;L.mark=app.mark||0;
@@ -5558,6 +5602,7 @@ function closePanel(id){
   if(id==='pDlg'){G.dlgNpc=null;dlgView=null}
   if(id==='pLoot')G.lootM=null;
   if(id==='pMap')G.mapSel=null;
+  if(id==='pTrade'){if(typeof TRADE_SESSION!=='undefined')TRADE_SESSION=null}
   hideTip();refreshUI();
 }
 function togglePanel(id){if($(id).hidden)showPanel(id);else closePanel(id)}
@@ -6043,6 +6088,7 @@ function renderCraftUI(){
 /* ---------- Banco y Banco de Hermandad ---------- */
 let bankTab='personal';
 function renderBankUI(){
+  if(window._bankActiveTab){bankTab=window._bankActiveTab;delete window._bankActiveTab}
   const p=$('pBank');if(!p||p.hidden)return;
   const pTabBtn=$('btnBankPersonal'), gTabBtn=$('btnBankGuild');
   if(pTabBtn)pTabBtn.onclick=()=>{bankTab='personal';renderBankUI()};
@@ -6568,7 +6614,7 @@ function bindInput(){
     else if(k==='k')togglePanel('pCraft');
     else if(k==='n')togglePanel('pTalents');
     else if(k==='g')togglePanel('pGuild');
-    else if(k==='j')togglePanel('pAchieve');
+    else if(k==='j'||k==='y')togglePanel('pAchieve');
     else if(k==='u')togglePanel('pRankings');
     else if(k==='Escape'){let any=false;for(const id of PANELS)if(!$(id).hidden){closePanel(id);any=true}if(!any){P.target=null;P.autoAtk=false}}
     else if(k==='Enter'){$('chat').classList.add('open');chatIn.focus();e.preventDefault()}
@@ -6699,7 +6745,7 @@ const LocalBE=(function(){
     async loadState(id){return load().states[id]||null},
     async saveChar(ch,st){
       const d=load(),c=d.chars.find(x=>x.id===ch.id);if(!c)return;
-      Object.assign(c,ch,{last_seen:new Date().toISOString()});d.states[ch.id]=Object.assign({character_id:ch.id,user_id:sess.id},st);store(d);
+      Object.assign(c,ch,{last_seen:new Date().toISOString()});d.states[ch.id]=Object.assign({character_id:ch.id,user_id:sess?sess.id:(c.user_id||'local')},st);store(d);
     },
     async top(n){return load().chars.slice().sort((a,b)=>b.level-a.level||b.kills-a.kills).slice(0,n)},
     async residents(exclude){
@@ -6708,7 +6754,7 @@ const LocalBE=(function(){
     },
     async chatHistory(n){return load().chat.slice(-n)},
     async sendChat(ch,body){const d=load();d.chat.push({name:ch.name,body:body,channel:'global',created_at:new Date().toISOString()});d.chat=d.chat.slice(-100);store(d)},
-    saveBeacon(){}
+    saveBeacon(ch,st){try{o.saveChar(ch,st)}catch(e){}}
   };
   /* tiempo real local: BroadcastChannel entre pestañas */
   o.rt=(function(){
@@ -6821,13 +6867,17 @@ const SupaBE=USE_SB?(function(){
           body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},st)});
       }catch(err){
         if(err&&/column.*does not exist|Could not find.*column/i.test(err.message)){
-          const fallbackSt=Object.assign({},st);
-          delete fallbackSt.talents;
-          delete fallbackSt.mount;
-          delete fallbackSt.mounts;
-          delete fallbackSt.guild;
-          b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-            body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},fallbackSt)});
+          const baseCols=['character_id','user_id','xp','gold','inv','eq','quests','disc','explored','world_time','options','updated_at','talents','mount','mounts','guild'];
+          const fallbackSt={character_id:ch.id,user_id:S.user.id,updated_at:now};
+          for(const k of baseCols)if(st[k]!==undefined)fallbackSt[k]=st[k];
+          try{
+            b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:fallbackSt});
+          }catch(err2){
+            if(err2&&/column.*does not exist|Could not find.*column/i.test(err2.message)){
+              delete fallbackSt.talents;delete fallbackSt.mount;delete fallbackSt.mounts;delete fallbackSt.guild;
+              b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:fallbackSt});
+            }else throw err2;
+          }
         }else{
           throw err;
         }
@@ -6853,6 +6903,7 @@ const SupaBE=USE_SB?(function(){
     function connect(){
       if(closed)return;
       joined=false;
+      if(ws){try{ws.onclose=null;ws.close()}catch(e){}}
       try{ws=new WebSocket(URL_.replace(/^http/,'ws')+'/realtime/v1/websocket?apikey='+encodeURIComponent(KEY)+'&vsn=1.0.0')}catch(e){return sched()}
       ws.onopen=()=>{
         send('phx_join',{config:{broadcast:{self:false,ack:false},presence:{key:me.id},postgres_changes:[],private:false},access_token:S?S.access_token:KEY});
@@ -6954,12 +7005,15 @@ function setAuthMode(m){
   $('aPass').autocomplete=m==='in'?'current-password':'new-password';
   setMsg('aMsg','');
 }
-function setMsg(id,t,ok){const e=$(id);e.textContent=t||'';e.classList.toggle('ok',!!ok)}
+function setMsg(id,t,ok){const e=$(id);if(e){e.textContent=t||'';e.classList.toggle('ok',!!ok)}}
 function bindAuth(){
   $('tabIn').onclick=()=>setAuthMode('in');$('tabUp').onclick=()=>setAuthMode('up');
   const b=$('srvBadge');
-  b.classList.toggle('local',BE.mode!=='supabase');
-  b.querySelector('span').textContent=BE.mode==='supabase'?'Servidor Supabase conectado':'Modo local (sin servidor · datos en este navegador)';
+  if(b){
+    b.classList.toggle('local',BE.mode!=='supabase');
+    const sp=b.querySelector('span');
+    if(sp)sp.textContent=BE.mode==='supabase'?'Servidor Supabase conectado':'Modo local (sin servidor · datos en este navegador)';
+  }
   const tm=$('btnToggleMode');
   if(tm){
     tm.textContent=BE.mode==='supabase'?'Cambiar a Modo Local (offline)':'Conectar a Supabase (online)';
@@ -7161,13 +7215,20 @@ function bindScreens(){
 /* ---------- Guardado ---------- */
 function snapshot(){
   const ch={id:P.charId,level:P.level,x:Math.round(P.x),y:Math.round(P.y),zone:(G.zone&&G.zone.id)||'town',kills:P.kills|0,appearance:P.app};
-  const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
-    talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null,
+  const extra={
     bags:P.bags||[null,null,null,null],bank:P.bank||[],bankGold:P.bankGold||0,
     achievements:P.achievements||{},titles:P.titles||['novice'],title:P.title||'',
     actionBar:P.actionBar||[],actionBar2:P.actionBar2||[],recipes:P.recipes||{},
     craftedCount:P.craftedCount||0,duelsWon:P.duelsWon||0,dungeonsCleared:P.dungeonsCleared||0,visitedZones:P.visitedZones||{},
-    options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff}};
+    talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null
+  };
+  const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
+    talents:extra.talents,mount:extra.mount,mounts:extra.mounts,guild:extra.guild,
+    bags:extra.bags,bank:extra.bank,bankGold:extra.bankGold,
+    achievements:extra.achievements,titles:extra.titles,title:extra.title,
+    actionBar:extra.actionBar,actionBar2:extra.actionBar2,recipes:extra.recipes,
+    craftedCount:extra.craftedCount,duelsWon:extra.duelsWon,dungeonsCleared:extra.dungeonsCleared,visitedZones:extra.visitedZones,
+    options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff,_extra:extra}};
   return {ch:ch,st:st};
 }
 async function save(manual){
@@ -7194,28 +7255,30 @@ async function enterWorld(row){
   newGame(CLS[row.class]?row.class:'war',row.name,row.appearance);
   P.charId=row.id;P.level=Math.max(1,Math.min(MAXLV,row.level||1));P.kills=row.kills||0;
   if(st){
+    const ext=(st.options&&st.options._extra)||{};
     P.xp=st.xp|0;P.gold=st.gold|0;P.inv=st.inv||[];
     P.eq=Object.assign({weapon:null,head:null,chest:null,boots:null},st.eq||{});
     P.quests=st.quests||{};P.disc=st.disc||{town:1};
     if(st.explored)G.explored.set(bitsUnpack(st.explored,G.explored.length));
     G.worldT=st.world_time||0;
-    P.talents=st.talents||{};
-    P.mount=st.mount||'horse';
-    P.mounts=st.mounts||['horse'];
-    P.guild=st.guild||null;
-    P.bags=st.bags||[null,null,null,null];
-    P.bank=st.bank||[];
-    P.bankGold=st.bankGold||0;
-    P.achievements=st.achievements||{};
-    P.titles=st.titles||['novice'];
-    P.title=st.title||'';
-    P.actionBar=st.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
-    P.actionBar2=st.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
-    P.recipes=st.recipes||{hp1:true,mp1:true};
-    P.craftedCount=st.craftedCount||0;
-    P.duelsWon=st.duelsWon||0;
-    P.dungeonsCleared=st.dungeonsCleared||0;
-    P.visitedZones=st.visitedZones||{town:1};
+    P.talents=st.talents||ext.talents||{};
+    P.mount=st.mount||ext.mount||'horse';
+    P.mounts=st.mounts||ext.mounts||['horse'];
+    P.guild=st.guild||ext.guild||null;
+    if(P.guild&&!Array.isArray(P.guild.members))P.guild.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
+    P.bags=st.bags||ext.bags||[null,null,null,null];
+    P.bank=st.bank||ext.bank||[];
+    P.bankGold=st.bankGold||st.bank_gold||ext.bankGold||0;
+    P.achievements=st.achievements||ext.achievements||{};
+    P.titles=st.titles||ext.titles||['novice'];
+    P.title=st.title||ext.title||'';
+    P.actionBar=st.actionBar||st.action_bar||ext.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
+    P.actionBar2=st.actionBar2||st.action_bar2||ext.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
+    P.recipes=st.recipes||ext.recipes||{hp1:true,mp1:true};
+    P.craftedCount=st.craftedCount||ext.craftedCount||0;
+    P.duelsWon=st.duelsWon||ext.duelsWon||0;
+    P.dungeonsCleared=st.dungeonsCleared||ext.dungeonsCleared||0;
+    P.visitedZones=st.visitedZones||ext.visitedZones||{town:1};
     const o=st.options||{};
     G.autoLoot=o.autoLoot!==false;G.sfxOn=o.sfx!==false;G.sprintToggle=!!o.run;G.shakeOff=o.shake===false;
   }
@@ -7499,8 +7562,9 @@ function updatePortraits(){
 /* ---------- 3. MENÚ CONTEXTUAL DEL OBJETIVO ---------- */
 function guildInvitePlayer(targetName){
   if(!P.guild){toast('No perteneces a una hermandad');return}
+  if(!Array.isArray(P.guild.members))P.guild.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
   const myMem=P.guild.members.find(m=>m.name===P.name);
-  const myRank=myMem?myMem.rank:(P.guild.members[0].name===P.name?'Líder':'Recluta');
+  const myRank=myMem?myMem.rank:(P.guild.members[0]?.name===P.name?'Líder':'Recluta');
   if(myRank!=='Líder'&&myRank!=='Oficial'){toast('Solo el Líder y Oficiales pueden invitar miembros');return}
   if(P.guild.members.some(m=>m.name===targetName)){toast(targetName+' ya está en la hermandad');return}
   const b=G.bots.find(x=>x.name===targetName);
@@ -7519,7 +7583,7 @@ function initTargetMenu(){
     const t=P&&P.target;if(!t||t.dead)return;
     const m=$('targetMenu');if(!m)return;
     const isPlayerOrBot=t.isPlayer||t.bot;
-    const canGuildInvite=isPlayerOrBot&&P.guild&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
+    const canGuildInvite=isPlayerOrBot&&P.guild&&Array.isArray(P.guild.members)&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
     m.innerHTML='<div style="background:#140e08;padding:6px 10px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--line);font-size:12px">'+esc(t.name)+'</div>'+
       (isPlayerOrBot?'<button id="tmWhisper">'+svg('shout','#ff7ae8')+' Susurrar</button>'+
       '<button id="tmParty">'+svg('shield','#5cd0ff')+' Invitar a Grupo</button>'+
@@ -8223,22 +8287,25 @@ function sendWhisper(targetName,msg){
 }
 
 /* ---------- 9. DUELOS (DUELS PVP) ---------- */
-let ACTIVE_DUEL=null;
+let ACTIVE_DUEL=null, duelCountdownTimer=null;
 function startDuel(target){
   if(!target||target.dead){toast('Objetivo no válido para duelo');return}
-  if(ACTIVE_DUEL){toast('Ya hay un duelo en curso');return}
+  if(ACTIVE_DUEL||duelCountdownTimer){toast('Ya hay un duelo en curso');return}
   toast('¡Desafío de duelo a '+target.name+'!');
   log('<span style="color:#ff5544"><b>[Duelo]</b> Desafías a '+esc(target.name)+' a un duelo.</span>','cmb');
   let countdown=3;
   float(P.x,P.y-30,'Duelo en 3...','#ffcc00',20);
   sfx('hit');
-  const intv=setInterval(()=>{
+  duelCountdownTimer=setInterval(()=>{
+    if(!P||P.dead||target.dead||!G.started){
+      clearInterval(duelCountdownTimer);duelCountdownTimer=null;return;
+    }
     countdown--;
     if(countdown>0){
       float(P.x,P.y-30,'Duelo en '+countdown+'...','#ffcc00',20);
       sfx('hit');
     }else{
-      clearInterval(intv);
+      clearInterval(duelCountdownTimer);duelCountdownTimer=null;
       float(P.x,P.y-30,'¡A LUCHAR!','#ff4433',24);
       sfx('boom');
       ACTIVE_DUEL={
@@ -8252,6 +8319,7 @@ function startDuel(target){
   },1000);
 }
 function endDuel(winnerName,loserName){
+  if(duelCountdownTimer){clearInterval(duelCountdownTimer);duelCountdownTimer=null;}
   if(!ACTIVE_DUEL)return;
   const isPWinner=(winnerName===P.name);
   ACTIVE_DUEL=null;
@@ -8342,6 +8410,12 @@ function bindTradeButtons(){
   };
   if($('btnTradeAccept')) $('btnTradeAccept').onclick=()=>{
     if(!TRADE_SESSION||!TRADE_SESSION.myLocked||!TRADE_SESSION.otherLocked)return;
+    const maxSlots=typeof maxInventorySlots==='function'?maxInventorySlots():24;
+    const netSlotsNeeded=TRADE_SESSION.otherItems.filter(it=>it.t==='gear'||it.t==='bag'||!P.inv.some(x=>x.key===it.key)).length - TRADE_SESSION.myItems.length;
+    if(P.inv.length+netSlotsNeeded>maxSlots){
+      toast('No tienes suficiente espacio en la mochila');
+      return;
+    }
     // Transferir oro
     P.gold-=TRADE_SESSION.myGold;
     P.gold+=TRADE_SESSION.otherGold;
@@ -8352,10 +8426,8 @@ function bindTradeButtons(){
     }
     // Añadir objetos recibidos
     for(const it of TRADE_SESSION.otherItems){
-      if(P.inv.length<maxInventorySlots()){
-        if(it.t==='gear'||it.t==='bag')P.inv.push(it);
-        else addStack(it.key,it.n||1);
-      }
+      if(it.t==='gear'||it.t==='bag')P.inv.push(it);
+      else addStack(it.key,it.n||1);
     }
     toast('¡Intercambio realizado con éxito!');
     sfx('coin');
@@ -8367,7 +8439,7 @@ function bindTradeButtons(){
 
 /* ---------- 11. HERMANDADES (GUILDS) ---------- */
 function promoteGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   if(m.rank==='Recluta')m.rank='Miembro';
   else if(m.rank==='Miembro')m.rank='Oficial';
@@ -8375,7 +8447,7 @@ function promoteGuildMember(idx){
   renderGuildUI();
 }
 function demoteGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   if(m.rank==='Oficial')m.rank='Miembro';
   else if(m.rank==='Miembro')m.rank='Recluta';
@@ -8383,7 +8455,7 @@ function demoteGuildMember(idx){
   renderGuildUI();
 }
 function kickGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   P.guild.members.splice(idx,1);
   toast(m.name+' expulsado de la hermandad');
@@ -8404,15 +8476,16 @@ function renderGuildUI(){
       if(!nm){toast('Introduce un nombre');return}
       if(P.gold<50){toast('Necesitas 50 de oro');return}
       P.gold-=50;
-      P.guild={name:nm,level:1,motd:'¡Gloria a '+nm+'! Juntos forjamos el destino de Astra.',members:[{name:P.name,cls:P.cls,lvl:P.level,rank:'Líder'}]};
+      P.guild={name:nm,level:1,motd:'¡Gloria a '+nm+'! Juntos forjamos el destino de Astra.',members:[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}]};
       toast('¡Has fundado la hermandad '+nm+'!');
       sfx('quest');refreshUI();renderGuildUI();
     };
     return;
   }
   const g=P.guild;
+  if(!Array.isArray(g.members))g.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
   const myMem=g.members.find(m=>m.name===P.name);
-  const isLeader=myMem?(myMem.rank==='Líder'):(g.members[0].name===P.name);
+  const isLeader=myMem?(myMem.rank==='Líder'):(g.members[0]?.name===P.name);
   b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
     '<h3 style="margin:0;font-family:var(--f-display);color:var(--gold)">'+esc(g.name)+'</h3>'+
     '<span style="color:var(--muted);font-size:12px">Nivel '+g.level+' · '+(g.members.length)+' miembros</span>'+
@@ -8575,9 +8648,9 @@ chatSend=function(txt){
 /* ---------- 16.5 ARRASTRAR Y SOLTAR EN MOCHILA Y RANURAS RÁPIDAS ---------- */
 let DRAG=null;
 const QKEYS=['q','r','t'];
-let QUICK=[null,null,null];
+let QUICK=['hp1','mp1',null];
 const qKey=()=>'astra_quick_'+(P&&P.name||'');
-function loadQuick(){try{QUICK=JSON.parse(localStorage.getItem(qKey()))||[null,null,null]}catch(e){QUICK=[null,null,null]}}
+function loadQuick(){try{const s=JSON.parse(localStorage.getItem(qKey()));if(Array.isArray(s)&&s.length>=3)QUICK=s;else QUICK=['hp1','mp1',null]}catch(e){QUICK=['hp1','mp1',null]}}
 function saveQuick(){try{localStorage.setItem(qKey(),JSON.stringify(QUICK))}catch(e){}}
 function useQuick(i){
   const k=QUICK[i];if(!k||!G.started||P.dead)return;
@@ -8606,7 +8679,10 @@ function bindDrag(){
   g.addEventListener('drop',e=>{
     e.preventDefault();if(!DRAG||DRAG.t!=='inv')return;
     const c=e.target.closest('[data-cell]');if(!c){DRAG=null;return}
-    const to=Math.min(+c.dataset.cell,P.inv.length-1),it=P.inv.splice(DRAG.i,1)[0];
+    if(!P||!Array.isArray(P.inv)||DRAG.i<0||DRAG.i>=P.inv.length){DRAG=null;return}
+    const it=P.inv[DRAG.i];if(!it){DRAG=null;return}
+    P.inv.splice(DRAG.i,1);
+    const to=Math.max(0,Math.min(+c.dataset.cell,P.inv.length));
     P.inv.splice(to,0,it);DRAG=null;renderInv();
   });
   g.addEventListener('dragend',()=>{DRAG=null});

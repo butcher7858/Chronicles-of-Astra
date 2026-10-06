@@ -47,6 +47,7 @@ function drawCreature(g,x,y,m,o){
       const ember=Math.sin(t*12)*4;
       disc(g,44+ember,-24+Math.cos(t*10)*2,1.2,'#fbbf24',false);
       leg(-8,Math.PI,'#991b1b');leg(16,0,'#991b1b');
+      g.restore();
       return;
     }
 
@@ -102,6 +103,7 @@ function drawCreature(g,x,y,m,o){
       }
       g.restore();
       disc(g,0,-14,3.2,'#05000a');disc(g,0,-14,1.4,'#f472b6',false);
+      g.restore();
       return;
     }
 
@@ -182,6 +184,7 @@ function drawCreature(g,x,y,m,o){
       poly(g,[-8,-46,0,-54,8,-46],'#d97706');
       rr(g,-6,-50,12,3.5,1,'#0f172a');
       disc(g,Math.sin(t*3)*3,-48,1.6,'#ef4444',false);
+      g.restore();
       return;
     }
 
@@ -359,6 +362,7 @@ function randomApp(cls){
 
 /* Conexión directa del equipamiento y customización al aspect model L */
 function lookFor(cls,app,eq){
+  if(cls&&typeof cls==='object'&&cls.cls){eq=cls.eq;app=cls.app;cls=cls.cls}
   const c=CLS[cls]||CLS.war;app=Object.assign(defaultApp(cls),app||{});
   const L=Object.assign({},c.vis);
   L.skin=app.skin;L.hair=app.hair;L.hairStyle=app.hairStyle;L.eye=app.eye;L.mark=app.mark||0;

@@ -51,12 +51,15 @@ function setAuthMode(m){
   $('aPass').autocomplete=m==='in'?'current-password':'new-password';
   setMsg('aMsg','');
 }
-function setMsg(id,t,ok){const e=$(id);e.textContent=t||'';e.classList.toggle('ok',!!ok)}
+function setMsg(id,t,ok){const e=$(id);if(e){e.textContent=t||'';e.classList.toggle('ok',!!ok)}}
 function bindAuth(){
   $('tabIn').onclick=()=>setAuthMode('in');$('tabUp').onclick=()=>setAuthMode('up');
   const b=$('srvBadge');
-  b.classList.toggle('local',BE.mode!=='supabase');
-  b.querySelector('span').textContent=BE.mode==='supabase'?'Servidor Supabase conectado':'Modo local (sin servidor · datos en este navegador)';
+  if(b){
+    b.classList.toggle('local',BE.mode!=='supabase');
+    const sp=b.querySelector('span');
+    if(sp)sp.textContent=BE.mode==='supabase'?'Servidor Supabase conectado':'Modo local (sin servidor · datos en este navegador)';
+  }
   const tm=$('btnToggleMode');
   if(tm){
     tm.textContent=BE.mode==='supabase'?'Cambiar a Modo Local (offline)':'Conectar a Supabase (online)';
@@ -258,13 +261,20 @@ function bindScreens(){
 /* ---------- Guardado ---------- */
 function snapshot(){
   const ch={id:P.charId,level:P.level,x:Math.round(P.x),y:Math.round(P.y),zone:(G.zone&&G.zone.id)||'town',kills:P.kills|0,appearance:P.app};
-  const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
-    talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null,
+  const extra={
     bags:P.bags||[null,null,null,null],bank:P.bank||[],bankGold:P.bankGold||0,
     achievements:P.achievements||{},titles:P.titles||['novice'],title:P.title||'',
     actionBar:P.actionBar||[],actionBar2:P.actionBar2||[],recipes:P.recipes||{},
     craftedCount:P.craftedCount||0,duelsWon:P.duelsWon||0,dungeonsCleared:P.dungeonsCleared||0,visitedZones:P.visitedZones||{},
-    options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff}};
+    talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null
+  };
+  const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
+    talents:extra.talents,mount:extra.mount,mounts:extra.mounts,guild:extra.guild,
+    bags:extra.bags,bank:extra.bank,bankGold:extra.bankGold,
+    achievements:extra.achievements,titles:extra.titles,title:extra.title,
+    actionBar:extra.actionBar,actionBar2:extra.actionBar2,recipes:extra.recipes,
+    craftedCount:extra.craftedCount,duelsWon:extra.duelsWon,dungeonsCleared:extra.dungeonsCleared,visitedZones:extra.visitedZones,
+    options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff,_extra:extra}};
   return {ch:ch,st:st};
 }
 async function save(manual){
@@ -291,28 +301,30 @@ async function enterWorld(row){
   newGame(CLS[row.class]?row.class:'war',row.name,row.appearance);
   P.charId=row.id;P.level=Math.max(1,Math.min(MAXLV,row.level||1));P.kills=row.kills||0;
   if(st){
+    const ext=(st.options&&st.options._extra)||{};
     P.xp=st.xp|0;P.gold=st.gold|0;P.inv=st.inv||[];
     P.eq=Object.assign({weapon:null,head:null,chest:null,boots:null},st.eq||{});
     P.quests=st.quests||{};P.disc=st.disc||{town:1};
     if(st.explored)G.explored.set(bitsUnpack(st.explored,G.explored.length));
     G.worldT=st.world_time||0;
-    P.talents=st.talents||{};
-    P.mount=st.mount||'horse';
-    P.mounts=st.mounts||['horse'];
-    P.guild=st.guild||null;
-    P.bags=st.bags||[null,null,null,null];
-    P.bank=st.bank||[];
-    P.bankGold=st.bankGold||0;
-    P.achievements=st.achievements||{};
-    P.titles=st.titles||['novice'];
-    P.title=st.title||'';
-    P.actionBar=st.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
-    P.actionBar2=st.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
-    P.recipes=st.recipes||{hp1:true,mp1:true};
-    P.craftedCount=st.craftedCount||0;
-    P.duelsWon=st.duelsWon||0;
-    P.dungeonsCleared=st.dungeonsCleared||0;
-    P.visitedZones=st.visitedZones||{town:1};
+    P.talents=st.talents||ext.talents||{};
+    P.mount=st.mount||ext.mount||'horse';
+    P.mounts=st.mounts||ext.mounts||['horse'];
+    P.guild=st.guild||ext.guild||null;
+    if(P.guild&&!Array.isArray(P.guild.members))P.guild.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
+    P.bags=st.bags||ext.bags||[null,null,null,null];
+    P.bank=st.bank||ext.bank||[];
+    P.bankGold=st.bankGold||st.bank_gold||ext.bankGold||0;
+    P.achievements=st.achievements||ext.achievements||{};
+    P.titles=st.titles||ext.titles||['novice'];
+    P.title=st.title||ext.title||'';
+    P.actionBar=st.actionBar||st.action_bar||ext.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
+    P.actionBar2=st.actionBar2||st.action_bar2||ext.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
+    P.recipes=st.recipes||ext.recipes||{hp1:true,mp1:true};
+    P.craftedCount=st.craftedCount||ext.craftedCount||0;
+    P.duelsWon=st.duelsWon||ext.duelsWon||0;
+    P.dungeonsCleared=st.dungeonsCleared||ext.dungeonsCleared||0;
+    P.visitedZones=st.visitedZones||ext.visitedZones||{town:1};
     const o=st.options||{};
     G.autoLoot=o.autoLoot!==false;G.sfxOn=o.sfx!==false;G.sprintToggle=!!o.run;G.shakeOff=o.shake===false;
   }

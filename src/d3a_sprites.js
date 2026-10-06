@@ -16,7 +16,15 @@ function putSprite(s,x,y,a){
   ctx.drawImage(s.c,x-s.ax,y-s.ay,s.w,s.h);
   if(a!==undefined)ctx.globalAlpha=1;
 }
-function hexRGB(hex){const n=parseInt(hex.slice(1),16);return [n>>16,(n>>8)&255,n&255]}
+function hexRGB(hex){
+  if(!hex||typeof hex!=='string')return [255,255,255];
+  let h=hex.trim();
+  if(h.startsWith('#'))h=h.slice(1);
+  if(h.length===3)h=h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  const n=parseInt(h,16);
+  if(isNaN(n))return [255,255,255];
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
 function tint(hex,k){
   const c=hexRGB(hex);let r=c[0],g=c[1],b=c[2];
   if(k>=0){r+=(255-r)*k;g+=(255-g)*k;b+=(255-b)*k}else{r*=1+k;g*=1+k;b*=1+k}

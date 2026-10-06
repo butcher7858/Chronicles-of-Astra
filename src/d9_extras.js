@@ -142,8 +142,9 @@ function updatePortraits(){
 /* ---------- 3. MENÚ CONTEXTUAL DEL OBJETIVO ---------- */
 function guildInvitePlayer(targetName){
   if(!P.guild){toast('No perteneces a una hermandad');return}
+  if(!Array.isArray(P.guild.members))P.guild.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
   const myMem=P.guild.members.find(m=>m.name===P.name);
-  const myRank=myMem?myMem.rank:(P.guild.members[0].name===P.name?'Líder':'Recluta');
+  const myRank=myMem?myMem.rank:(P.guild.members[0]?.name===P.name?'Líder':'Recluta');
   if(myRank!=='Líder'&&myRank!=='Oficial'){toast('Solo el Líder y Oficiales pueden invitar miembros');return}
   if(P.guild.members.some(m=>m.name===targetName)){toast(targetName+' ya está en la hermandad');return}
   const b=G.bots.find(x=>x.name===targetName);
@@ -162,7 +163,7 @@ function initTargetMenu(){
     const t=P&&P.target;if(!t||t.dead)return;
     const m=$('targetMenu');if(!m)return;
     const isPlayerOrBot=t.isPlayer||t.bot;
-    const canGuildInvite=isPlayerOrBot&&P.guild&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
+    const canGuildInvite=isPlayerOrBot&&P.guild&&Array.isArray(P.guild.members)&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
     m.innerHTML='<div style="background:#140e08;padding:6px 10px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--line);font-size:12px">'+esc(t.name)+'</div>'+
       (isPlayerOrBot?'<button id="tmWhisper">'+svg('shout','#ff7ae8')+' Susurrar</button>'+
       '<button id="tmParty">'+svg('shield','#5cd0ff')+' Invitar a Grupo</button>'+
@@ -866,22 +867,25 @@ function sendWhisper(targetName,msg){
 }
 
 /* ---------- 9. DUELOS (DUELS PVP) ---------- */
-let ACTIVE_DUEL=null;
+let ACTIVE_DUEL=null, duelCountdownTimer=null;
 function startDuel(target){
   if(!target||target.dead){toast('Objetivo no válido para duelo');return}
-  if(ACTIVE_DUEL){toast('Ya hay un duelo en curso');return}
+  if(ACTIVE_DUEL||duelCountdownTimer){toast('Ya hay un duelo en curso');return}
   toast('¡Desafío de duelo a '+target.name+'!');
   log('<span style="color:#ff5544"><b>[Duelo]</b> Desafías a '+esc(target.name)+' a un duelo.</span>','cmb');
   let countdown=3;
   float(P.x,P.y-30,'Duelo en 3...','#ffcc00',20);
   sfx('hit');
-  const intv=setInterval(()=>{
+  duelCountdownTimer=setInterval(()=>{
+    if(!P||P.dead||target.dead||!G.started){
+      clearInterval(duelCountdownTimer);duelCountdownTimer=null;return;
+    }
     countdown--;
     if(countdown>0){
       float(P.x,P.y-30,'Duelo en '+countdown+'...','#ffcc00',20);
       sfx('hit');
     }else{
-      clearInterval(intv);
+      clearInterval(duelCountdownTimer);duelCountdownTimer=null;
       float(P.x,P.y-30,'¡A LUCHAR!','#ff4433',24);
       sfx('boom');
       ACTIVE_DUEL={
@@ -895,6 +899,7 @@ function startDuel(target){
   },1000);
 }
 function endDuel(winnerName,loserName){
+  if(duelCountdownTimer){clearInterval(duelCountdownTimer);duelCountdownTimer=null;}
   if(!ACTIVE_DUEL)return;
   const isPWinner=(winnerName===P.name);
   ACTIVE_DUEL=null;
@@ -985,6 +990,12 @@ function bindTradeButtons(){
   };
   if($('btnTradeAccept')) $('btnTradeAccept').onclick=()=>{
     if(!TRADE_SESSION||!TRADE_SESSION.myLocked||!TRADE_SESSION.otherLocked)return;
+    const maxSlots=typeof maxInventorySlots==='function'?maxInventorySlots():24;
+    const netSlotsNeeded=TRADE_SESSION.otherItems.filter(it=>it.t==='gear'||it.t==='bag'||!P.inv.some(x=>x.key===it.key)).length - TRADE_SESSION.myItems.length;
+    if(P.inv.length+netSlotsNeeded>maxSlots){
+      toast('No tienes suficiente espacio en la mochila');
+      return;
+    }
     // Transferir oro
     P.gold-=TRADE_SESSION.myGold;
     P.gold+=TRADE_SESSION.otherGold;
@@ -995,10 +1006,8 @@ function bindTradeButtons(){
     }
     // Añadir objetos recibidos
     for(const it of TRADE_SESSION.otherItems){
-      if(P.inv.length<maxInventorySlots()){
-        if(it.t==='gear'||it.t==='bag')P.inv.push(it);
-        else addStack(it.key,it.n||1);
-      }
+      if(it.t==='gear'||it.t==='bag')P.inv.push(it);
+      else addStack(it.key,it.n||1);
     }
     toast('¡Intercambio realizado con éxito!');
     sfx('coin');
@@ -1010,7 +1019,7 @@ function bindTradeButtons(){
 
 /* ---------- 11. HERMANDADES (GUILDS) ---------- */
 function promoteGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   if(m.rank==='Recluta')m.rank='Miembro';
   else if(m.rank==='Miembro')m.rank='Oficial';
@@ -1018,7 +1027,7 @@ function promoteGuildMember(idx){
   renderGuildUI();
 }
 function demoteGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   if(m.rank==='Oficial')m.rank='Miembro';
   else if(m.rank==='Miembro')m.rank='Recluta';
@@ -1026,7 +1035,7 @@ function demoteGuildMember(idx){
   renderGuildUI();
 }
 function kickGuildMember(idx){
-  if(!P.guild)return;
+  if(!P.guild||!Array.isArray(P.guild.members))return;
   const m=P.guild.members[idx];if(!m)return;
   P.guild.members.splice(idx,1);
   toast(m.name+' expulsado de la hermandad');
@@ -1047,15 +1056,16 @@ function renderGuildUI(){
       if(!nm){toast('Introduce un nombre');return}
       if(P.gold<50){toast('Necesitas 50 de oro');return}
       P.gold-=50;
-      P.guild={name:nm,level:1,motd:'¡Gloria a '+nm+'! Juntos forjamos el destino de Astra.',members:[{name:P.name,cls:P.cls,lvl:P.level,rank:'Líder'}]};
+      P.guild={name:nm,level:1,motd:'¡Gloria a '+nm+'! Juntos forjamos el destino de Astra.',members:[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}]};
       toast('¡Has fundado la hermandad '+nm+'!');
       sfx('quest');refreshUI();renderGuildUI();
     };
     return;
   }
   const g=P.guild;
+  if(!Array.isArray(g.members))g.members=[{name:P.name,cls:P.cls,lvl:P.level||1,rank:'Líder'}];
   const myMem=g.members.find(m=>m.name===P.name);
-  const isLeader=myMem?(myMem.rank==='Líder'):(g.members[0].name===P.name);
+  const isLeader=myMem?(myMem.rank==='Líder'):(g.members[0]?.name===P.name);
   b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
     '<h3 style="margin:0;font-family:var(--f-display);color:var(--gold)">'+esc(g.name)+'</h3>'+
     '<span style="color:var(--muted);font-size:12px">Nivel '+g.level+' · '+(g.members.length)+' miembros</span>'+
@@ -1218,9 +1228,9 @@ chatSend=function(txt){
 /* ---------- 16.5 ARRASTRAR Y SOLTAR EN MOCHILA Y RANURAS RÁPIDAS ---------- */
 let DRAG=null;
 const QKEYS=['q','r','t'];
-let QUICK=[null,null,null];
+let QUICK=['hp1','mp1',null];
 const qKey=()=>'astra_quick_'+(P&&P.name||'');
-function loadQuick(){try{QUICK=JSON.parse(localStorage.getItem(qKey()))||[null,null,null]}catch(e){QUICK=[null,null,null]}}
+function loadQuick(){try{const s=JSON.parse(localStorage.getItem(qKey()));if(Array.isArray(s)&&s.length>=3)QUICK=s;else QUICK=['hp1','mp1',null]}catch(e){QUICK=['hp1','mp1',null]}}
 function saveQuick(){try{localStorage.setItem(qKey(),JSON.stringify(QUICK))}catch(e){}}
 function useQuick(i){
   const k=QUICK[i];if(!k||!G.started||P.dead)return;
@@ -1249,7 +1259,10 @@ function bindDrag(){
   g.addEventListener('drop',e=>{
     e.preventDefault();if(!DRAG||DRAG.t!=='inv')return;
     const c=e.target.closest('[data-cell]');if(!c){DRAG=null;return}
-    const to=Math.min(+c.dataset.cell,P.inv.length-1),it=P.inv.splice(DRAG.i,1)[0];
+    if(!P||!Array.isArray(P.inv)||DRAG.i<0||DRAG.i>=P.inv.length){DRAG=null;return}
+    const it=P.inv[DRAG.i];if(!it){DRAG=null;return}
+    P.inv.splice(DRAG.i,1);
+    const to=Math.max(0,Math.min(+c.dataset.cell,P.inv.length));
     P.inv.splice(to,0,it);DRAG=null;renderInv();
   });
   g.addEventListener('dragend',()=>{DRAG=null});

@@ -58,7 +58,12 @@ const IC={
   map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14"/>',
   wing:'<path d="M3 8c5-4 9-4 9 0 0-4 4-4 9 0-2 1-3 2-3 5-2-2-4-2-6 0-2-2-4-2-6 0 0-3-1-4-3-5z"/>',
   run:'<circle cx="14" cy="5" r="2"/><path d="M6 20l4-6 3 2 2-6-4-2-3 3M13 16l2 4"/>',
-  crown:'<path d="M4 18l-1-10 5 4 4-7 4 7 5-4-1 10z"/>'
+  crown:'<path d="M4 18l-1-10 5 4 4-7 4 7 5-4-1 10z"/>',
+  shield:'<path d="M12 3l8 4v5c0 5-4 8.5-8 10-4-1.5-8-5-8-10V7z"/>',
+  shoulder:'<path d="M4 15c1-5 4-8 8-8s7 3 8 8M6 14c2-2 5-3 8-1"/>',
+  glove:'<path d="M8 19v-7a2 2 0 014 0v1a2 2 0 014 0v2a2 2 0 012 2v2a4 4 0 01-4 4H10a2 2 0 01-2-2z"/>',
+  legs:'<path d="M6 3h12l-1 18h-4l-1-10-1 10H7z"/>',
+  star:'<polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.3 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>'
 };
 function svg(name,color,sw){return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="'+(sw||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[name]||'')+'</svg>'}
 
@@ -576,6 +581,7 @@ const WAYPOINTS=[
 ];
 const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16},BOSS_DRAGON={x:179*TILE+16,y:94*TILE+16};
 const BOSS_MALAKOR={x:73*TILE+16,y:13*TILE+16},BOSS_TITAN={x:181*TILE+16,y:41*TILE+16},BOSS_VOID={x:26*TILE+16,y:37*TILE+16};
+const BOSS_CRYPT={x:65*TILE+16,y:10*TILE+16},BOSS_FROST_EMP={x:183*TILE+16,y:10*TILE+16};
 const SPAWN_P={x:43*TILE+16,y:77*TILE+16};
 const tiles=new Uint8Array(W*H),block=new Uint8Array(W*H),deco=new Uint8Array(W*H),shade=new Uint8Array(W*H),zmap=new Uint8Array(W*H);
 const shore=new Uint8Array(W*H),wdepth=new Uint8Array(W*H),pathNear=new Uint8Array(W*H),keep=new Uint8Array(W*H);
@@ -676,11 +682,12 @@ function genWorld(){
     const i=idx(x,y),z=biomeBase(x,y);
     zmap[i]=z;tiles[i]=Z[z].tile;shade[i]=Math.floor(hash2(x,y)*4);
   }
-  for(const id of ['town','capital','cieno','oasis','cumbre','bastion','necropolis','shadowlands','titanpeaks','astralvoid']){
+  for(const id of ['town','capital','cieno','oasis','cumbre','bastion','necropolis','shadowlands','titanpeaks','astralvoid','jungle','desert_ruins','crystal_woods','vortex']){
     const r=AREAS[id];
+    if(!r)continue;
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){
       const i=idx(x,y);zmap[i]=ZI[id];
-      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:id==='cumbre'?T.SNOW:id==='necropolis'||id==='shadowlands'?T.CORRUPT:id==='astralvoid'?T.ASTRAL:T.HILL;
+      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'||id==='desert_ruins'?T.DUNE:id==='cumbre'?T.SNOW:id==='necropolis'||id==='shadowlands'?T.CORRUPT:id==='astralvoid'||id==='vortex'?T.ASTRAL:id==='jungle'||id==='crystal_woods'?T.FOREST:T.HILL;
     }
   }
   lake(62,104,12,6.5,T.WATER,T.SAND);lake(116,78,6,4.5,T.WATER,T.SAND);lake(20,24,5,3.5,T.WATER,T.SAND);
@@ -701,11 +708,19 @@ function genWorld(){
   dungeon(AREAS.shadowlands,T.CORRUPT,ZI.shadowlands,132);
   dungeon(AREAS.titanpeaks,T.HILL,ZI.titanpeaks,40);
   dungeon(AREAS.astralvoid,T.ASTRAL,ZI.astralvoid,36);
+  if(AREAS.dungeon_crypt)dungeon(AREAS.dungeon_crypt,T.CORRUPT,ZI.dungeon_crypt,13);
+  if(AREAS.dungeon_frost)dungeon(AREAS.dungeon_frost,T.ICE,ZI.dungeon_frost,13);
   addProp('obelisk',72,12,true,{wp:'necropolis'});
   addProp('obelisk',184,14,true,{wp:'palace'});
   addProp('obelisk',180,40,true,{wp:'titanpeaks'});
   addProp('obelisk',26,36,true,{wp:'astralvoid'});
   addProp('obelisk',179,94,true,{wp:'volcano'});
+  addProp('obelisk',14,106,true,{wp:'jungle'});
+  addProp('obelisk',132,104,true,{wp:'desert_ruins'});
+  addProp('obelisk',18,60,true,{wp:'crystal_woods'});
+  addProp('obelisk',14,12,true,{wp:'vortex'});
+  addProp('obelisk',65,13,true,{wp:'dungeon_crypt'});
+  addProp('obelisk',183,13,true,{wp:'dungeon_frost'});
   carve([[43,74],[60,74],[76,73],[90,71],[100,70],[112,70],[126,67],[138,62]],1.7);
   carve([[100,70],[102,86],[112,98],[128,106],[144,116],[152,124],[160,126]],1.4);
   carve([[112,70],[112,52],[110,36],[106,24],[103,15],[107,15]],1.4);
