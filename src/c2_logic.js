@@ -23,7 +23,9 @@ const CLS={
       {id:'will',ul:9,name:'Voluntad de Hierro',ic:'heart',col:'#7fe07f',cost:0,cd:60,noGcd:true,desc:'Recuperas el 35% de tu vida máxima al instante.',fn:()=>healP(P.maxhp*0.35)},
       {id:'leap',ul:11,name:'Salto Heroico',ic:'charge',col:'#ff9a4a',cost:15,cd:16,range:280,tgt:true,coef:2.2,desc:'Saltas por los aires y caes aplastando la zona: {d} de daño y aturdimiento.',fn:t=>{P.x=t.x+(P.dir<0?16:-16);P.y=t.y;aoe(t.x,t.y,95,e=>{hitMob(e,A()*2.2,{rage:10});stunMob(e,1.5)});ring(t.x,t.y,95,'#ff9a4a');burst(t.x,t.y,'#ff9a4a',20,180);G.shake=Math.max(G.shake,6);sfx('boom')}},
       {id:'shieldwall',ul:13,name:'Muro de Escudo',ic:'barrier',col:'#e8c27a',cost:20,cd:35,noGcd:true,desc:'Alzas un baluarte invencible: reduces un 65% del daño recibido durante 8 s.',fn:()=>{addBuff({id:'shieldwall',name:'Muro de Escudo',ic:'barrier',col:'#e8c27a',dur:8,dr:0.65});ring(P.x,P.y,60,'#e8c27a');sfx('buff')}},
-      {id:'tormenta',ul:15,name:'Filo de Tormenta',ic:'whirl',col:'#ff5533',cost:35,cd:22,coef:3.5,desc:'Un torbellino letal e imparable: {d} de daño masivo a los enemigos cercanos.',fn:()=>{aoe(P.x,P.y,110,e=>hitMob(e,A()*3.5,{rage:15}));ring(P.x,P.y,110,'#ff5533');G.fx.push({k:'spin',t:0,life:0.7,col:'#ff5533'});G.shake=Math.max(G.shake,6);sfx('whirl')}}
+      {id:'tormenta',ul:15,name:'Filo de Tormenta',ic:'whirl',col:'#ff5533',cost:35,cd:22,coef:3.5,desc:'Un torbellino letal e imparable: {d} de daño masivo a los enemigos cercanos.',fn:()=>{aoe(P.x,P.y,110,e=>hitMob(e,A()*3.5,{rage:15}));ring(P.x,P.y,110,'#ff5533');G.fx.push({k:'spin',t:0,life:0.7,col:'#ff5533'});G.shake=Math.max(G.shake,6);sfx('whirl')}},
+      {id:'colossus',ul:17,name:'Machaque Colosal',ic:'hammer',col:'#ff7744',cost:30,cd:18,range:60,tgt:true,coef:3.6,desc:'Un golpe titánico que ignora defensas: {d} de daño y aturde 2 s.',fn:t=>{hitMob(t,A()*3.6,{rage:15,color:'#ff7744'});stunMob(t,2);G.shake=Math.max(G.shake,7);burst(t.x,t.y-8,'#ff7744',22,180);sfx('boom')}},
+      {id:'avatar',ul:19,name:'Avatar Titánico',ic:'shout',col:'#ffcc44',cost:40,cd:60,noGcd:true,desc:'Poder ancestral: te vuelves gigante con +40% daño y 30% reducción de daño durante 15 s.',fn:()=>{addBuff({id:'avatar',name:'Avatar',ic:'shout',col:'#ffcc44',dur:15,atk:0.4,dr:0.3});burst(P.x,P.y-10,'#ffcc44',30,220);ring(P.x,P.y,80,'#ffcc44');sfx('buff')}}
     ]},
   mage:{key:'mage',res:'mana',name:'Mago',role:'Distancia · Maná',color:'#6f7de8',icon:'bolt',resName:'Maná',resCol:'var(--mana)',melee:false,
     hp0:80,hpl:13,res0:90,resl:16,atk0:9,atkl:3.5,
@@ -37,7 +39,9 @@ const CLS={
       {id:'meteor',ul:9,name:'Meteorito',ic:'meteor',col:'#ff5a2a',cost:40,cd:20,cast:2.6,range:340,tgt:true,coef:3.4,desc:'Un meteoro cae sobre el objetivo y daña a todos a su alrededor por {d}.',fn:t=>{const x=t.x,y=t.y;G.fx.push({k:'meteor',x:x,y:y,t:0,life:0.55,hit:()=>{ring(x,y,90,'#ff5a2a');burst(x,y,'#ff9a4a',30,240);aoe(x,y,90,e=>hitMob(e,A()*3.4));G.shake=Math.max(G.shake,6);sfx('boom')}});sfx('cast2')}},
       {id:'comet',ul:11,name:'Cometa Glacial',ic:'snow',col:'#7fd6ff',cost:28,cd:14,cast:1.4,range:350,tgt:true,coef:2.8,desc:'Un cometa de hielo congela a los enemigos en el área: {d} de daño y ralentización.',fn:t=>{const x=t.x,y=t.y;G.fx.push({k:'meteor',x:x,y:y,col:'#7fd6ff',t:0,life:0.5,hit:()=>{ring(x,y,100,'#7fd6ff');burst(x,y,'#bfe8ff',25,200);aoe(x,y,100,e=>{hitMob(e,A()*2.8);slow(e,0.7,3)});G.shake=Math.max(G.shake,5);sfx('boom')}});sfx('cast2')}},
       {id:'timewarp',ul:13,name:'Distorsión Temporal',ic:'run',col:'#c8a0ff',cost:25,cd:40,noGcd:true,desc:'Manipulas el tiempo: +45% de velocidad de movimiento durante 12 s.',fn:()=>{addBuff({id:'timewarp',name:'Distorsión Temporal',ic:'run',col:'#c8a0ff',dur:12,spd:0.45});ring(P.x,P.y,70,'#c8a0ff');sfx('buff')}},
-      {id:'combust',ul:15,name:'Ignición Arcana',ic:'fire',col:'#ff4411',cost:35,cd:18,tgt:true,coef:3.8,desc:'Detona una explosión ígnea devastadora en el objetivo por {d} de daño.',fn:t=>{hitMob(t,A()*3.8,{color:'#ff4411'});burst(t.x,t.y-8,'#ff4411',26,220);ring(t.x,t.y,90,'#ff4411');G.shake=Math.max(G.shake,7);sfx('boom')}}
+      {id:'combust',ul:15,name:'Ignición Arcana',ic:'fire',col:'#ff4411',cost:35,cd:18,tgt:true,coef:3.8,desc:'Detona una explosión ígnea devastadora en el objetivo por {d} de daño.',fn:t=>{hitMob(t,A()*3.8,{color:'#ff4411'});burst(t.x,t.y-8,'#ff4411',26,220);ring(t.x,t.y,90,'#ff4411');G.shake=Math.max(G.shake,7);sfx('boom')}},
+      {id:'pyroblast',ul:17,name:'Piroexplosión',ic:'fire',col:'#ff3300',cost:45,cd:14,cast:2.4,range:350,tgt:true,coef:4.2,desc:'Inmensa esfera de fuego puro que calcina al objetivo por {d} de daño.',fn:t=>shoot(t,{col:'#ff3300',dmg:A()*4.2,big:true,fire:true,onHit:m=>addDot(m,'burn',A()*1.5,8,'#ff3300')})},
+      {id:'blizzard',ul:19,name:'Ventisca Ártica',ic:'snow',col:'#80d0ff',cost:45,cd:25,cast:1.8,range:350,tgt:true,coef:3.6,desc:'Convoca una tormenta de hielo: {d} de daño en área y congela 3 s.',fn:t=>{aoe(t.x,t.y,120,e=>{hitMob(e,A()*3.6,{color:'#80d0ff'});slow(e,0.7,5);stunMob(e,2)});ring(t.x,t.y,120,'#80d0ff');G.fx.push({k:'frost',t:0,life:0.9,r:120});sfx('boom')}}
     ]},
   priest:{key:'priest',res:'mana',name:'Sacerdote',role:'Distancia · Sanación',color:'#e8d27a',icon:'sun',resName:'Maná',resCol:'var(--mana)',melee:false,
     hp0:92,hpl:15,res0:100,resl:15,atk0:7,atkl:2.9,
@@ -51,7 +55,9 @@ const CLS={
       {id:'hnova',ul:9,name:'Nova Sagrada',ic:'nova',col:'#ffe08a',cost:28,cd:10,coef:1.4,desc:'Daña a los enemigos cercanos ({d}) y te cura.',fn:()=>{aoe(P.x,P.y,120,e=>hitMob(e,A()*1.4));healP(A()*1.5);ring(P.x,P.y,120,'#ffe08a');G.fx.push({k:'frost',t:0,life:0.6,r:120,gold:true});sfx('whirl')}},
       {id:'holyfire',ul:11,name:'Fuego Sagrado',ic:'fire',col:'#ffe07a',cost:18,cd:9,range:330,tgt:true,coef:2.2,desc:'Llama sagrada: {d} de daño al instante y quema por daño continuado.',fn:t=>{hitMob(t,A()*2.2,{holy:true,color:'#ffe07a'});addDot(t,'hfire',A()*1.2,6,'#ffe07a');sfx('cast2')}},
       {id:'sanctuary',ul:13,name:'Santuario Divino',ic:'nova',col:'#ffd870',cost:30,cd:25,desc:'Suelo sagrado: sana {h} de vida cada 1,5 s a ti y aliados durante 9 s.',fn:()=>{addBuff({id:'sanctuary',name:'Santuario',ic:'nova',col:'#ffd870',dur:9,hot:{amt:A()*0.8,every:1.5,next:1.5}});ring(P.x,P.y,90,'#ffd870');G.fx.push({k:'frost',t:0,life:0.8,r:90,gold:true});sfx('buff')}},
-      {id:'shadowform',ul:15,name:'Forma de Sombras',ic:'ghost',col:'#a870ff',cost:20,cd:45,noGcd:true,desc:'Poder del vacío: aumentas tu ataque un 30% y reduces daño recibido un 20% durante 15 s.',fn:()=>{addBuff({id:'shadowform',name:'Forma de Sombras',ic:'ghost',col:'#a870ff',dur:15,atk:0.3,dr:0.2});burst(P.x,P.y-10,'#a870ff',20,140);ring(P.x,P.y,60,'#a870ff');sfx('buff')}}
+      {id:'shadowform',ul:15,name:'Forma de Sombras',ic:'ghost',col:'#a870ff',cost:20,cd:45,noGcd:true,desc:'Poder del vacío: aumentas tu ataque un 30% y reduces daño recibido un 20% durante 15 s.',fn:()=>{addBuff({id:'shadowform',name:'Forma de Sombras',ic:'ghost',col:'#a870ff',dur:15,atk:0.3,dr:0.2});burst(P.x,P.y-10,'#a870ff',20,140);ring(P.x,P.y,60,'#a870ff');sfx('buff')}},
+      {id:'divinestar',ul:17,name:'Estrella Divina',ic:'star',col:'#ffe880',cost:30,cd:12,coef:2.6,desc:'Una estrella de luz viaja hacia adelante dañando enemigos ({d}) y sanando aliados.',fn:()=>{aoe(P.x,P.y,130,e=>hitMob(e,A()*2.6,{holy:true,color:'#ffe880'}));healP(A()*2.2);ring(P.x,P.y,130,'#ffe880');burst(P.x,P.y-8,'#ffe880',24,190);sfx('cast2')}},
+      {id:'apotheosis',ul:19,name:'Apoteosis',ic:'sun',col:'#fff8b0',cost:40,cd:60,noGcd:true,desc:'Trascendencia divina: reduce los costes un 50% y aumenta curaciones y daño un 40% durante 15 s.',fn:()=>{addBuff({id:'apotheosis',name:'Apoteosis',ic:'sun',col:'#fff8b0',dur:15,atk:0.4,healM:0.4});burst(P.x,P.y-10,'#fff8b0',30,220);ring(P.x,P.y,80,'#fff8b0');sfx('buff')}}
     ]}
 };
 function A(){let m=1;for(const b of P.buffs)if(b.atk)m+=b.atk;return P.atk*m}
@@ -540,17 +546,22 @@ const SPAWN_PLAN=[
   ['toad','swamp',10,2,60],['croc','swamp',8,1,0],['witch','swamp',6,1,0],
   ['scorpion','desert',10,2,60],['raider','desert',8,2,60],['mummy','desert',7,1,0],
   ['icewolf','snow',9,3,70],['yeti','snow',8,1,0],['golem','snow',7,1,0],
-  ['fskel','palace',10,1,0]
+  ['fskel','palace',10,1,0],
+  ['skel','deepcave',6,1,0],['crystal_spider','deepcave',8,2,50],
+  ['ogre','peaks',6,1,0],['golem','peaks',6,1,0],['wyvern','peaks',8,1,0],
+  ['magma_golem','volcano',8,1,0],['fire_elemental','volcano',10,2,50],
+  ['shadow_stalker','abyss',8,1,0]
 ];
-const RARE_PLAN=[['alpha','meadow'],['chief','forest'],['grukk','hills'],['bogking','swamp'],['scorpk','desert'],['yetik','snow']];
+const RARE_PLAN=[['alpha','meadow'],['chief','forest'],['grukk','hills'],['bogking','swamp'],['scorpk','desert'],['yetik','snow'],['bandit_warlord','forest']];
 function nearArea(id,tx,ty,m){const r=AREAS[id];return tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m}
 function avoidFor(zone){
   return (tx,ty)=>{
-    for(const id of ['town','cieno','oasis','cumbre'])if(nearArea(id,tx,ty,6))return true;
+    for(const id of ['town','capital','cieno','oasis','cumbre'])if(nearArea(id,tx,ty,6))return true;
     if(zone==='cave'&&Math.hypot(tx-122,ty-15)<7)return true;
     if(zone==='cave'&&Math.abs(ty-15)<=2&&tx<111)return true;
     if(zone==='palace'&&Math.hypot(tx-190,ty-15)<8)return true;
     if(zone==='palace'&&Math.abs(ty-15)<=2&&tx<180)return true;
+    if(zone==='volcano'&&Math.hypot(tx-179,ty-94)<8)return true;
     return false;
   };
 }
@@ -572,6 +583,7 @@ function initWorldEntities(){
   for(const rp of RARE_PLAN){const c=spotIn(rp[1],avoidFor(rp[1]));if(c)G.mobs.push(makeMob(rp[0],c.x,c.y))}
   G.mobs.push(makeMob('boss',BOSS1.x,BOSS1.y));
   G.mobs.push(makeMob('queen',BOSS2.x,BOSS2.y));
+  G.mobs.push(makeMob('dragon_ignis',BOSS_DRAGON.x,BOSS_DRAGON.y));
   for(const n of NPC_DEF)G.npcs.push({id:n.id,name:n.name,title:n.title,x:n.tx*TILE+16,y:n.ty*TILE+16,def:n,npc:true,size:12,dir:n.dir||1,anim:rand(0,6)});
   G.nodes=NODES.map(n=>Object.assign({node:true,open:false,t:0,size:12},n));
   makeBots();
@@ -587,6 +599,14 @@ const NPC_DEF=[
     look:{skin:'#d9b08c',hair:'#6b4a2a',hairStyle:1,body:'#58682f',trim:'#8a8a3a',legs:'#3a3a22',hat:'#3a4420',hatType:'hood',weapon:'bow',cape:'#3a4420'}},
   {id:'valen',name:'Anciano Valen',title:'Sabio de Alba',tx:43,ty:68,dir:1,greet:'He visto cuatro generaciones de Alba. Esta quizá sea la que lo cambie todo.',
     look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:2,beard:'#eaeaea',body:'#5a3f8a',trim:'#d9b44a',legs:'#3a2a5a',hat:'#3a2a5a',hatType:'pointy',weapon:'staff',orb:'#c9a6ff'}},
+  {id:'aurelius',name:'Comandante Aurelius',title:'Comandante de Astra',tx:107,ty:59,dir:1,greet:'Bienvenido a la Gran Ciudad de Astra. Aquí se forjan las leyendas del imperio.',
+    look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:3,beard:'#eaeaea',body:'#243f70',trim:'#ffd700',legs:'#1c2b4d',hat:'#e0d0a0',hatType:'crown',weapon:'sword',blade:'#ffd700',shield:1,cape:'#7a1a1a',pads:'#ffd700'}},
+  {id:'seraphina',name:'Archimaga Seraphina',title:'Gran Maestra Arcana',tx:116,ty:75,dir:-1,shop:{kinds:['potions'],pots:['hp3','hp4','hp5','mp3','mp4','mp5']},greet:'El Telar resuena con un poder antiguo. ¿Deseas elixires de la más alta pureza?',
+    look:{skin:'#ebd0b5',hair:'#c7a0ff',hairStyle:2,body:'#5c2850',trim:'#ffd700',legs:'#381830',hat:'#5c2850',hatType:'horns',weapon:'staff',orb:'#c7a0ff',cape:'#24183a'}},
+  {id:'valerius',name:'Maestro Valerius',title:'Maestro de Hermandades',tx:90,ty:75,dir:1,greet:'Aquí se fundan y gestionan las hermandades de Astra. ¡Únete a otros campeones!',
+    look:{skin:'#d6a67a',hair:'#6a4a2a',hairStyle:1,beard:'#6a4a2a',body:'#1e4a30',trim:'#d9b44a',legs:'#183824',hat:'#b8905a',hatType:'beret',weapon:'sword',blade:'#d8dce4',shield:1}},
+  {id:'kaelen',name:'Maestro Kaelen',title:'Armero Imperial',tx:119,ty:56,dir:-1,shop:{kinds:['gear'],lv:[12,16,20]},greet:'Las mejores aleaciones de mithril y obsidiana para los héroes del reino.',
+    look:{skin:'#cfa075',hair:'#333',hairStyle:3,beard:'#333',body:'#482e22',trim:'#ffd700',legs:'#2c1d16',weapon:'hammer',apron:1}},
   {id:'nyx',name:'Hechicera Nyx',title:'Guardiana del Cieno',tx:33,ty:130,dir:1,greet:'El pantano susurra por las noches. No todo lo que se mueve entre la niebla es amigo.',
     look:{skin:'#c8d8c0',hair:'#7a3a8a',hairStyle:2,body:'#3b5a4a',trim:'#9bff5a',legs:'#243a30',hat:'#2a4a3a',hatType:'pointy',weapon:'staff',orb:'#9bff5a'}},
   {id:'bram',name:'Bram el Mercader',title:'Mercader del Cieno',tx:39,ty:133,dir:-1,shop:{kinds:['potions','gear'],pots:['hp2','hp3','hp4','mp2','mp3','mp4'],lv:[10,12,14]},greet:'Llevo mercancía de todas partes. Tú pones el oro, yo el resto.',

@@ -192,11 +192,16 @@ function drawPreview(t){
   g.clearRect(0,0,cvp.width,cvp.height);
   const L=lookFor(K.cls,K.app,null);
   g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.ellipse(130,268,64,14,0,0,6.283);g.fill();
-  drawHuman(g,130,268,L,{dir:1,t:t,scale:5.2});
+  drawHuman(g,130,268,L,{dir:K.dir||1,t:t,scale:5.2});
 }
 function validName(n){return /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]{2,13}$/.test(n)}
 function bindScreens(){
   bindAuth();
+  if($('kPrev')){
+    $('kPrev').style.cursor='pointer';
+    $('kPrev').title='Haz clic para rotar el personaje';
+    $('kPrev').onclick=()=>{K.dir=-(K.dir||1)};
+  }
   $('cOut').onclick=()=>doLogout();
   $('cPlay').onclick=()=>{const r=Sess.chars.find(c=>c.id===Sess.sel);if(r)enterWorld(r)};
   $('kBack').onclick=()=>{cancelAnimationFrame(K.raf);openChars()};

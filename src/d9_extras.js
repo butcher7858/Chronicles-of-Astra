@@ -391,12 +391,15 @@ function respecTalents(){
 
 /* ---------- 5. ESTABLO DE MONTURAS ---------- */
 const MOUNTS={
-  horse:{id:'horse',name:'Caballo de Guerra',speed:270,ic:'horse',col:'#8a5a32',desc:'El leal caballo de la guardia de Villa Alba.'},
-  wolf:{id:'wolf',name:'Lobo Huargo Sombrío',speed:295,ic:'ghost',col:'#6a748c',desc:'Depredador veloz de las nieves del norte.'},
-  tiger:{id:'tiger',name:'Tigre Dientes de Sable',speed:315,ic:'strike',col:'#d98a2a',desc:'Feroz carnívoro de zancada letal.'},
-  ram:{id:'ram',name:'Carnero de las Cumbres',speed:285,ic:'shield',col:'#d0dde8',desc:'Bestia montañesa de cuernos curvos.'},
-  drake:{id:'drake',name:'Draco del Alba',speed:335,ic:'wing',col:'#ff6a3a',desc:'Draco alado que planea veloz por los cielos.',flying:true},
-  mech:{id:'mech',name:'Zancudo de Vapor',speed:310,ic:'crown',col:'#c89838',desc:'Ingeniería enana impulsada por vapor y bronce.'}
+  horse:{id:'horse',name:'Caballo de Guerra',speed:270,price:25,ic:'horse',col:'#8a5a32',desc:'El leal corcel de la guardia de Villa Alba.'},
+  wolf:{id:'wolf',name:'Lobo Huargo Sombrío',speed:295,price:40,ic:'ghost',col:'#6a748c',desc:'Depredador veloz de las nieves del norte.'},
+  tiger:{id:'tiger',name:'Tigre Dientes de Sable',speed:315,price:50,ic:'strike',col:'#d98a2a',desc:'Feroz carnívoro de zancada letal.'},
+  ram:{id:'ram',name:'Carnero de las Cumbres',speed:285,price:35,ic:'shield',col:'#d0dde8',desc:'Bestia montañesa de cuernos curvos.'},
+  drake:{id:'drake',name:'Draco del Alba',speed:335,price:70,ic:'wing',col:'#ff6a3a',desc:'Draco alado que planea veloz por los cielos.',flying:true},
+  mech:{id:'mech',name:'Zancudo de Vapor',speed:310,price:60,ic:'crown',col:'#c89838',desc:'Ingeniería enana impulsada por vapor y bronce.'},
+  unicorn:{id:'unicorn',name:'Unicornio Astral',speed:325,price:65,ic:'star',col:'#d0f4ff',desc:'Criatura pura bañada por el fulgor de las constelaciones.'},
+  wyvern_mount:{id:'wyvern_mount',name:'Draco de Obsidiana',speed:345,price:80,ic:'wing',col:'#8034a0',desc:'Temible reptil alado forjado en el cráter de Ignis.',flying:true},
+  stag:{id:'stag',name:'Ciervo Celestial',speed:305,price:45,ic:'leaf',col:'#7ad08a',desc:'Noble espíritu de los bosques con cornamenta luminosa.'}
 };
 
 function renderMountsUI(){
@@ -406,7 +409,7 @@ function renderMountsUI(){
   P.mount=P.mount||'horse';
 
   for(const k in MOUNTS){
-    const m=MOUNTS[k],owned=P.mounts.indexOf(k)>=0,active=P.mount===k;
+    const m=MOUNTS[k],owned=P.mounts.indexOf(k)>=0,active=P.mount===k,cost=m.price||40;
     const card=document.createElement('div');
     card.className='mount-card'+(active?' active':'');
     card.innerHTML='<div class="mount-ic">'+svg(m.ic,m.col)+'</div>'+
@@ -414,17 +417,17 @@ function renderMountsUI(){
       '<span>Velocidad: +'+Math.round((m.speed/150-1)*100)+'% ('+m.speed+')</span>'+
       '<div style="font-size:11px;color:var(--muted)">'+esc(m.desc)+'</div>'+
       (owned?(active?'<span style="color:#5cff8a;font-weight:700">✓ ACTIVA</span>':'<button class="btn sm" style="margin-top:4px">Seleccionar</button>'):
-             '<button class="btn sm sec" style="margin-top:4px">Desbloquear (40 oro)</button>');
+             '<button class="btn sm sec" style="margin-top:4px">Desbloquear ('+cost+' oro)</button>');
     card.onclick=()=>{
       if(owned){
         P.mount=k;toast('Montura activa: '+m.name);
         sfx('equip');renderMountsUI();
-      }else if(P.gold>=40){
-        P.gold-=40;P.mounts.push(k);P.mount=k;
-        toast('¡Has desbloqueado el '+m.name+'!');
+      }else if(P.gold>=cost){
+        P.gold-=cost;P.mounts.push(k);P.mount=k;
+        toast('¡Has desbloqueado '+m.name+'!');
         sfx('coin');renderMountsUI();refreshUI();
       }else{
-        toast('Necesitas 40 de oro para desbloquear');
+        toast('Necesitas '+cost+' de oro para desbloquear');
       }
     };
     g.appendChild(card);
@@ -532,6 +535,42 @@ drawHorse=function(g,t,mv,fast){
     // Faro delantero
     disc(g,14,-16,3,'#ffe860');
     lim(g,-5,-13,-6,-2,3.2,'#888');lim(g,12,-13,13,-2,3.2,'#888');
+  } else if(mId==='unicorn'){
+    // UNICORNIO ASTRAL
+    g.fillStyle='rgba(0,0,0,0.3)';g.beginPath();g.ellipse(0,1,18,5,0,0,6.283);g.fill();
+    const uc='#f5f8ff',um='#e0c8ff';
+    lim(g,-8,-12,-8,-2,3.2,'#d0e0ff');lim(g,8,-12,8,-2,3.2,'#d0e0ff');
+    g.fillStyle=uc;g.beginPath();g.ellipse(0,-16,16,7,0,0,6.283);g.fill();g.strokeStyle=OUT;g.lineWidth=1;g.stroke();
+    g.strokeStyle=um;g.lineWidth=3;g.beginPath();g.moveTo(6,-26);g.lineTo(1,-15);g.stroke();
+    g.strokeStyle='#ffe860';g.lineWidth=2.2;g.beginPath();g.moveTo(22,-27);g.lineTo(30,-36);g.stroke();
+    disc(g,30,-36,2,'#fff',false);
+    poly(g,[10,-18,18,-27,24,-24,18,-15],uc);
+    disc(g,20,-24,1.3,'#80a0ff',false);
+    lim(g,-6,-12,-6,-2,3.2,'#d0e0ff');lim(g,10,-12,10,-2,3.2,'#d0e0ff');
+  } else if(mId==='wyvern_mount'){
+    // DRACO DE OBSIDIANA
+    g.fillStyle='rgba(0,0,0,0.35)';g.beginPath();g.ellipse(0,1,18,5.5,0,0,6.283);g.fill();
+    const wc='#281430',wg='#8a30a0';
+    g.fillStyle=wc;g.beginPath();g.ellipse(0,-16,16,7,0,0,6.283);g.fill();g.strokeStyle=OUT;g.lineWidth=1;g.stroke();
+    const wFlap=Math.sin(t*8.5)*13;
+    poly(g,[ -5,-20, 8,-38+wFlap, 20,-20 ], wg);
+    g.strokeStyle=OUT;g.lineWidth=1;g.stroke();
+    poly(g,[10,-18,20,-28,26,-22,18,-15],wc);
+    g.strokeStyle='#ff44aa';g.lineWidth=2;g.beginPath();g.moveTo(18,-28);g.lineTo(13,-36);g.stroke();
+    disc(g,22,-24,1.4,'#ff44aa',false);
+    lim(g,-8,-12,-8,-2,3.2,'#1a0c20');lim(g,8,-12,8,-2,3.2,'#1a0c20');
+  } else if(mId==='stag'){
+    // CIERVO CELESTIAL
+    g.fillStyle='rgba(0,0,0,0.3)';g.beginPath();g.ellipse(0,1,18,5,0,0,6.283);g.fill();
+    const sc='#5a8050',sg='#a0f0a0';
+    lim(g,-8,-12,-8,-2,3,'#3a5430');lim(g,8,-12,8,-2,3,'#3a5430');
+    g.fillStyle=sc;g.beginPath();g.ellipse(0,-16,15,6.5,0,0,6.283);g.fill();g.strokeStyle=OUT;g.lineWidth=1;g.stroke();
+    g.strokeStyle=sg;g.lineWidth=2;g.beginPath();
+    g.moveTo(18,-27);g.lineTo(15,-38);g.lineTo(11,-35);g.moveTo(15,-38);g.lineTo(20,-42);
+    g.stroke();
+    poly(g,[10,-18,18,-27,24,-24,18,-15],sc);
+    disc(g,20,-24,1.3,'#b0ffb0',false);
+    lim(g,-6,-12,-6,-2,3,'#3a5430');lim(g,10,-12,10,-2,3,'#3a5430');
   } else {
     // Caballo tradicional
     _drawHorse(g,t,mv,fast);
@@ -540,7 +579,7 @@ drawHorse=function(g,t,mv,fast){
 
 /* ---------- 6. TECLAS PERSONALIZABLES CON CTRL Y SHIFT ---------- */
 const DEFAULT_BINDS={
-  '1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
+  '1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','10':'0','11':'-','12':'=',
   'q':'q','r':'r','t':'t','e':'e',
   'dodge':' ','target':'Tab','interact':'f','loot':'z','mount':'h',
   'map':'m','inv':'b','char':'c','talents':'n','quests':'l','guild':'g','opts':'o'
@@ -571,6 +610,7 @@ const ACTION_DEFS=[
   {id:'1',label:'Habilidad 1'},{id:'2',label:'Habilidad 2'},{id:'3',label:'Habilidad 3'},
   {id:'4',label:'Habilidad 4'},{id:'5',label:'Habilidad 5'},{id:'6',label:'Habilidad 6'},
   {id:'7',label:'Habilidad 7'},{id:'8',label:'Habilidad 8'},{id:'9',label:'Habilidad 9'},
+  {id:'10',label:'Habilidad 10'},{id:'11',label:'Habilidad 11'},{id:'12',label:'Habilidad 12'},
   {id:'q',label:'Ranura Rápida 1 (Q)'},{id:'r',label:'Ranura Rápida 2 (R)'},{id:'t',label:'Ranura Rápida 3 (T)'},
   {id:'dodge',label:'Esquivar (Espacio)'},{id:'target',label:'Cambiar Objetivo (Tab)'},
   {id:'interact',label:'Interactuar (F)'},{id:'loot',label:'Saquear botín (Z)'},
@@ -949,12 +989,31 @@ buildActionBar=function(){
   const bar=$('actionbar');bar.innerHTML='';AB=[];
   const c=CLS[P.cls];
   
-  // Añadir todas las habilidades de clase (1 a 9)
+  // Añadir todas las habilidades de clase (1 a 12)
   c.ab.forEach((ab,i)=>{
     const b=document.createElement('button');b.className='slot'+(ab.ul>P.level?' lock':'');b.dataset.ul=ab.ul;b.setAttribute('data-tip','ab:'+i);
     const bindKey=KEYBINDS[String(i+1)]||String(i+1);
     b.innerHTML=svg(ab.ic,ab.col)+'<span class="k">'+esc(prettyCombo(bindKey))+'</span><span class="cd"></span><span class="cdt"></span>';
-    b.onclick=()=>tryUse(i);bar.appendChild(b);
+    b.onclick=()=>tryUse(i);
+    b.draggable=true;
+    b.ondragstart=e=>{DRAG={t:'ab',i:i};try{e.dataTransfer.setData('text/plain','ab:'+i)}catch(_){}};
+    b.ondragover=e=>{e.preventDefault()};
+    b.ondrop=e=>{
+      e.preventDefault();
+      if(DRAG&&DRAG.t==='ab'&&DRAG.i!==i){
+        const tmp=c.ab[DRAG.i];c.ab[DRAG.i]=c.ab[i];c.ab[i]=tmp;
+        buildActionBar();
+      }else if(DRAG&&DRAG.t==='inv'){
+        const it=P.inv[DRAG.i];
+        if(it&&(it.t==='cons'||ITEMS[it.key])){
+          if(!QUICK)QUICK=[null,null,null];
+          QUICK[0]=it.key;saveQuick();buildQuick();
+          toast('Asignado a barra: '+(ITEMS[it.key]?ITEMS[it.key].name:it.key));
+        }
+      }
+      DRAG=null;
+    };
+    bar.appendChild(b);
     AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul});
   });
 
@@ -967,7 +1026,21 @@ buildActionBar=function(){
   for(const [kind,key,ic,col,fn,tip] of extra){
     const b=document.createElement('button');b.className='slot';b.setAttribute('data-tip',tip);
     b.innerHTML=svg(ic,col)+'<span class="k">'+esc(kind.toUpperCase())+'</span><span class="cd"></span><span class="cdt"></span><span class="cnt"></span>';
-    b.onclick=fn;bar.appendChild(b);
+    b.onclick=fn;
+    b.ondragover=e=>{e.preventDefault()};
+    b.ondrop=e=>{
+      e.preventDefault();
+      if(DRAG&&DRAG.t==='inv'){
+        const it=P.inv[DRAG.i];
+        if(it&&(it.t==='cons'||ITEMS[it.key])){
+          if(!QUICK)QUICK=[null,null,null];
+          QUICK[0]=it.key;saveQuick();buildQuick();
+          toast('Asignado a barra: '+(ITEMS[it.key]?ITEMS[it.key].name:it.key));
+        }
+      }
+      DRAG=null;
+    };
+    bar.appendChild(b);
     AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),cnt:b.querySelector('.cnt'),kind:kind});
   }
 };
@@ -1130,7 +1203,7 @@ window.addEventListener('keydown',e=>{
   }
   if(!boundAct)return;
 
-  if(boundAct>='1'&&boundAct<='9'){
+  if(+boundAct>=1&&+boundAct<=12){
     tryUse(+boundAct-1);
   } else if(boundAct==='q')useQuick(0);
   else if(boundAct==='r')useQuick(1);

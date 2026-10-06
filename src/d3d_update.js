@@ -222,8 +222,19 @@ function updateCamAndRest(dt){
       if(d<=ab.range&&P.res>=(ab.cost||0)&&!P.moving){P.dir=t.x>=P.x?1:-1;tryUse(0)}
     }
   }
-  // enemigos con foco en objetivo caído
+  // enemigos con foco en objetivo caído o fijado automático en combate
   if(P.target&&P.target.dead&&!P.target.lootable)P.target=null;
+  if(P.combatT>0&&!P.dead){
+    if(!P.target||P.target.dead||dist(P,P.target)>360){
+      let best=null,minD=360;
+      for(const m of G.mobs){
+        if(m.dead||!m.hostile)continue;
+        const d=dist(P,m);
+        if(d<minD&&(m.state==='chase'||d<240)){minD=d;best=m}
+      }
+      if(best)P.target=best;
+    }
+  }
 }
 function updateWorld(dt){
   for(let i=G.mobs.length-1;i>=0;i--){const m=G.mobs[i];updateMob(m,dt);if(m.remove)G.mobs.splice(i,1)}

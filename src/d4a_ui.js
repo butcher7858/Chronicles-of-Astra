@@ -125,7 +125,11 @@ function updateHUD(dt){
   const t=P.target&&(!P.target.dead)?P.target:null,tf=$('tframe');
   if(t){
     if(tf.hidden)tf.hidden=false;
-    if(lastTarget!==t){lastTarget=t;$('tName').textContent=t.name;$('tLvl').textContent=t.level;$('tPort').innerHTML=svg(t.boss?'crown':'skull',t.boss?'#ff7a5a':t.elite?'#ffcf6a':'#e8dcc0');$('tTag').textContent=t.boss?'Jefe':t.rare?'Élite · Raro':t.elite?'Élite':''}
+    if(lastTarget!==t){
+      lastTarget=t;$('tName').textContent=t.name;$('tLvl').textContent=t.level;
+      $('tTag').textContent=t.boss?'Jefe':t.rare?'Élite · Raro':t.elite?'Élite':'';
+      if(typeof updatePortraits==='function')updatePortraits();
+    }
     setW('tHp',t.hp/t.maxhp);setTxt('tHpTxt',Math.ceil(t.hp)+' / '+t.maxhp);
   }else if(!tf.hidden){tf.hidden=true;lastTarget=null}
   // habilidades
@@ -172,8 +176,9 @@ let dlgView=null;
 function refreshUI(){
   if(!P||!G.started)return;
   $('pName').textContent=P.name;$('pLvl').textContent=P.level;
-  const c=CLS[P.cls];$('pPort').innerHTML=svg(c.icon,c.color);
+  const c=CLS[P.cls];
   $('pRes').style.background=c.resCol;
+  if(typeof updatePortraits==='function')updatePortraits();
   renderTracker();
   if(!$('pInv').hidden)renderInv();
   if(!$('pChar').hidden)renderChar();
@@ -198,12 +203,43 @@ function renderInv(){
   for(let i=0;i<MAXINV;i++){const it=P.inv[i];h+=it?itemBtn(it,'inv:'+i,i):'<div class="it"></div>'}
   $('invGrid').innerHTML=h;$('invCount').textContent=P.inv.length+' / '+MAXINV+' · '+P.gold+' oro';
 }
+function renderCharPaperdoll(){
+  const cv=$('pCharCv');if(!cv||!P)return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const grad=ctx.createRadialGradient(cv.width/2,cv.height-20,4,cv.width/2,cv.height-20,55);
+  grad.addColorStop(0,'rgba(0,0,0,0.5)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grad;
+  ctx.beginPath();ctx.ellipse(cv.width/2,cv.height-20,50,14,0,0,Math.PI*2);ctx.fill();
+  const L=lookFor(P);
+  drawHuman(ctx, cv.width/2, cv.height-28, L, {scale:3.2, dir:P.paperDir||1, t:G.worldT||0, moving:false});
+}
 function renderChar(){
-  let h='';
-  for(const s of SLOTS){const it=P.eq[s];h+=it?itemBtn(it,'eq:'+s,s):'<div class="it" title="'+SLOT_NAME[s]+'">'+svg(SLOT_IC[s],'#5a4a30')+'</div>'}
-  $('eqGrid').innerHTML=h;
+  if(!$('pChar')||$('pChar').hidden)return;
+  const leftSlots=['head','shoulders','chest','cape','amulet'];
+  const rightSlots=['gloves','legs','boots','weapon','shield','ring'];
+  const slotBtn=s=>{
+    const it=P.eq[s];
+    return it?itemBtn(it,'eq:'+s,s):'<div class="it" title="'+(SLOT_NAME[s]||s)+'">'+svg(SLOT_IC[s]||'shield','#5a4a30')+'</div>';
+  };
+  if($('eqLeft'))$('eqLeft').innerHTML=leftSlots.map(slotBtn).join('');
+  if($('eqRight'))$('eqRight').innerHTML=rightSlots.map(slotBtn).join('');
+  if($('eqGrid'))$('eqGrid').innerHTML=SLOTS.map(slotBtn).join('');
+  renderCharPaperdoll();
+  if($('btnRotChar'))$('btnRotChar').onclick=()=>{P.paperDir=-(P.paperDir||1);renderCharPaperdoll()};
   const c=CLS[P.cls],red=Math.round(P.armor/(P.armor+40+P.level*10)*100);
-  const rows=[['Clase',c.name],['Nivel',P.level+(P.level<MAXLV?' ('+P.xp+'/'+xpNeed(P.level)+' XP)':' (máx.)')],['Vida',P.maxhp],[c.resName,P.maxres],['Ataque',Math.round(A())],['Armadura',P.armor+' ('+red+'% menos daño)'],['Crítico',P.crit.toFixed(1)+'%'],['Velocidad',Math.round(P.mounted?mountSpeed():150)+(P.level>=4?' · montura '+mountSpeed():'')],['Enemigos abatidos',P.kills],['Oro',P.gold]];
+  const rows=[
+    ['Clase',c.name],
+    ['Nivel',P.level+(P.level<MAXLV?' ('+P.xp+'/'+xpNeed(P.level)+' XP)':' (máx.)')],
+    ['Vida',P.maxhp],[c.resName,P.maxres],
+    ['Ataque',Math.round(A())],
+    ['Armadura',P.armor+' ('+red+'% menos daño)'],
+    ['Crítico',P.crit.toFixed(1)+'%'],
+    ['Velocidad',Math.round(P.mounted?mountSpeed():150)+(P.level>=4?' · montura '+mountSpeed():'')],
+    ['Enemigos abatidos',P.kills],
+    ['Oro',P.gold]
+  ];
   $('stats').innerHTML=rows.map(r=>'<div class="stat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
 }
 function rewardText(q){return '<span class="reward">Recompensa: <b>'+q.gold+' oro</b> · '+q.xp+' XP'+(q.item?' · objeto '+RAR[q.item.rar].n.toLowerCase():'')+'</span>'}

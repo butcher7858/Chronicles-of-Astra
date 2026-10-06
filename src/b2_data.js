@@ -63,21 +63,38 @@ const IC={
 function svg(name,color,sw){return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="'+(sw||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[name]||'')+'</svg>'}
 
 /* ---------- Objetos ---------- */
-const RAR=[{n:'Común',c:'#d8d2c0'},{n:'Poco común',c:'#4fd04f'},{n:'Raro',c:'#4aa0ff'},{n:'Épico',c:'#b868ff'}];
-const SLOTS=['weapon','head','chest','boots'];
-const SLOT_NAME={weapon:'Arma',head:'Casco',chest:'Pechera',boots:'Botas'};
-const SLOT_IC={weapon:'sword',head:'helm',chest:'chest',boots:'boots'};
+const RAR=[{n:'Común',c:'#d8d2c0'},{n:'Poco común',c:'#4fd04f'},{n:'Raro',c:'#4aa0ff'},{n:'Épico',c:'#b868ff'},{n:'Legendario',c:'#ffd700'}];
+const SLOTS=['weapon','shield','head','shoulders','chest','cape','gloves','legs','boots','ring','amulet'];
+const SLOT_NAME={weapon:'Arma',shield:'Escudo',head:'Casco',shoulders:'Hombreras',chest:'Pechera',cape:'Capa',gloves:'Guantes',legs:'Grebas',boots:'Botas',ring:'Anillo',amulet:'Amuleto'};
+const SLOT_IC={weapon:'sword',shield:'shield',head:'helm',shoulders:'shoulder',chest:'chest',cape:'wing',gloves:'glove',legs:'legs',boots:'boots',ring:'crown',amulet:'star'};
 const BASES={
-  head:['Yelmo','Capucha','Casco','Capelo','Corona'],
-  chest:['Coraza','Túnica','Jubón','Peto','Manto'],
-  boots:['Botas','Grebas','Zapatos','Botines'],
-  weapon:{war:['Espada','Hacha','Maza','Mandoble'],mage:['Bastón','Varita','Cetro'],priest:['Maza sagrada','Bastón','Cetro'],paladin:['Martillo','Maza sagrada','Martillo de guerra'],rogue:['Daga','Puñal','Estilete'],hunter:['Arco','Arco largo','Arco de caza'],necro:['Bastón negro','Cetro óseo','Vara'],druid:['Bastón de roble','Vara viva','Cayado']}
+  head:['Yelmo','Capucha','Casco','Celada','Corona','Diadema'],
+  shoulders:['Hombreras','Espaldares','Mantelete','Pauldrons','Guardahombros'],
+  chest:['Coraza','Túnica','Cota de malla','Peto','Manto de placas'],
+  cape:['Capa de seda','Manto del viento','Capa de terciopelo','Capa de guerra'],
+  gloves:['Guantes','Manoplas','Mitones','Guanteletes','Brazales'],
+  legs:['Grebas','Pantalones','Faldón','Quijotes','Calzas'],
+  boots:['Botas','Grebas','Zapatos','Sabatons','Botines'],
+  shield:['Escudo cometa','Rodela','Baluarte','Broquel','Escudo de la orden'],
+  ring:['Sortija sellada','Anillo de zafiro','Banda de bronce','Anillo rúnico'],
+  amulet:['Amuleto del Alba','Colgante astral','Medallón solar','Talismán'],
+  weapon:{
+    war:['Espada','Hacha','Maza','Mandoble'],
+    mage:['Bastón','Varita','Cetro'],
+    priest:['Maza sagrada','Bastón','Cetro'],
+    paladin:['Martillo','Maza sagrada','Martillo de guerra'],
+    rogue:['Daga','Puñal','Estilete'],
+    hunter:['Arco','Arco largo','Arco de caza'],
+    necro:['Bastón negro','Cetro óseo','Vara'],
+    druid:['Bastón de roble','Vara viva','Cayado']
+  }
 };
 const SUFFIX=[
   ['de Recluta','de Entrenamiento','de Viajero','de Aldeano'],
   ['de Acero','del Vigía','de la Guardia','del Cazador'],
   ['de la Aurora','de Tormenta','del Roble Antiguo','de Cenizas'],
-  ['del Rey Caído','de la Eternidad','del Alba Eterna']
+  ['del Rey Caído','de la Eternidad','del Alba Eterna'],
+  ['de los Titanes','del Dragón Ancestral','del Cosmos']
 ];
 const ITEMS={
   hp1:{t:'cons',name:'Poción de vida menor',ic:'potion',col:'#e0554a',heal:70,price:6,desc:'Restaura 70 de vida.'},
@@ -100,16 +117,26 @@ const ITEMS={
   wrap:{t:'misc',name:'Vendaje antiguo',ic:'silk',col:'#d8c9a0',price:12,desc:'Basura. Se puede vender.'},
   fur:{t:'misc',name:'Piel nívea',ic:'pelt',col:'#e6eef7',price:16,desc:'Basura. Se puede vender.'},
   frost:{t:'misc',name:'Corazón helado',ic:'shard',col:'#8fd6ff',price:24,desc:'Basura. Se puede vender.'},
-  ore:{t:'misc',name:'Mineral de hierro',ic:'ore',col:'#9aa6b8',price:14,desc:'Se puede vender.'}
+  ore:{t:'misc',name:'Mineral de hierro',ic:'ore',col:'#9aa6b8',price:14,desc:'Se puede vender.'},
+  dragon_scale:{t:'misc',name:'Escama de dragón',ic:'shield',col:'#ff5533',price:60,desc:'Material legendario de dragón.'},
+  magma_core:{t:'misc',name:'Núcleo de magma',ic:'fire',col:'#ff7733',price:45,desc:'Piedra viva con calor volcánico.'},
+  crystal_gem:{t:'misc',name:'Gema de cristal',ic:'shard',col:'#a855f7',price:35,desc:'Cristal resonante de las cavernas.'},
+  titan_ore:{t:'misc',name:'Mineral de titanio',ic:'ore',col:'#38bdf8',price:28,desc:'Metal pesado de las altas cumbres.'},
+  shadow_essence:{t:'misc',name:'Esencia de sombra',ic:'moon',col:'#7c3aed',price:30,desc:'Restos de magia oscura ancestral.'}
 };
 function genItem(ilvl,rar,slot,cls){
   slot=slot||pick(SLOTS);
-  const base=slot==='weapon'?pick(BASES.weapon[cls]||BASES.weapon.war):pick(BASES[slot]);
+  const base=slot==='weapon'?pick(BASES.weapon[cls]||BASES.weapon.war):pick(BASES[slot]||BASES.chest);
   const bud=ilvl*(1+rar*0.45)+2;
-  const it={t:'gear',id:uid(),name:base+' '+pick(SUFFIX[rar]),slot:slot,rar:rar,lvl:Math.max(1,ilvl),atk:0,armor:0,hp:0,crit:0};
+  const it={t:'gear',id:uid(),name:base+' '+pick(SUFFIX[rar]||SUFFIX[0]),slot:slot,rar:rar,lvl:Math.max(1,ilvl),atk:0,armor:0,hp:0,crit:0};
   if(slot==='weapon'){it.atk=Math.round(bud*1.15+2)}
-  else{
-    it.armor=Math.round(bud*(slot==='chest'?2.6:slot==='head'?2:1.5)+1);
+  else if(slot==='shield'){it.armor=Math.round(bud*2.8+2);it.hp=Math.round(bud*rar*1.8)}
+  else if(slot==='ring'||slot==='amulet'||slot==='cape'||slot==='gloves'){
+    it.atk=Math.round(bud*(0.25+rar*0.12));
+    it.hp=Math.round(bud*rar*1.4);
+    if(slot==='gloves'||slot==='cape')it.armor=Math.round(bud*0.9);
+  }else{
+    it.armor=Math.round(bud*(slot==='chest'?2.6:slot==='head'||slot==='legs'?2.1:1.6)+1);
     it.hp=Math.round(bud*rar*1.6);
     if(rar>=1)it.atk=Math.round(bud*0.18*rar);
   }
@@ -126,6 +153,10 @@ function bossLoot(kind,cls){
   if(kind==='boss'){
     const wn={war:'Hoja Parte-Rocas',mage:'Bastón de la Brasa Eterna',priest:'Cetro del Amanecer',paladin:'Martillo de la Llama Primera',rogue:'Colmillo de Sombra',hunter:'Arco del Cazador de Estrellas',necro:'Vara de Huesos Cantores',druid:'Cayado de la Raíz Antigua'}[cls]||'Reliquia de Gorrak';
     return [namedGear(11,3,'weapon',cls,wn,1.1),namedGear(11,3,'chest',cls,'Coraza de Gorrak',1.1)];
+  }
+  if(kind==='ignis'){
+    const wn={war:'Espada Volcánica de Ignis',mage:'Báculo de la Llama Primigenia',priest:'Cetro del Fénix Sagrado',paladin:'Martillo Devastador Solar',rogue:'Daga de Obsidiana Ígnea',hunter:'Arco de Fuego Dragónico',necro:'Vara del Apocalipsis Ardiente',druid:'Cayado de Magma Vivo'}[cls]||'Reliquia de Ignis';
+    return [namedGear(21,4,'weapon',cls,wn,1.25),namedGear(21,4,'chest',cls,'Armadura de Placas de Dragón',1.2),namedGear(21,4,'cape',cls,'Manto Llameante de Ignis',1.2)];
   }
   const wn={war:'Filo de la Tormenta Blanca',mage:'Cetro de la Reina Escarcha',priest:'Vara del Invierno Eterno',paladin:'Martillo del Amanecer Gélido',rogue:'Daga del Último Aliento',hunter:'Arco del Viento Blanco',necro:'Cetro del Silencio',druid:'Cayado del Deshielo'}[cls]||'Reliquia de Escarcha';
   return [namedGear(21,3,'weapon',cls,wn,1.12),namedGear(21,3,'head',cls,'Corona de Escarcha',1.1),namedGear(21,3,'boots',cls,'Botas del Viento Glacial',1.1)];
@@ -164,7 +195,14 @@ const MOBS={
   abyss_stalker:{name:'Acechador Abisal',lv:[12,14],speed:92,aggro:180,size:14,hpM:1.3,dmgM:1.2,atkCd:1.8,kind:'arach',look:{body:'#241830',dark:'#120a18',eye:'#a030ff'},junk:'shard'},
   abyss_gargoyle:{name:'Gárgola Pétrea',lv:[13,15],speed:85,aggro:190,size:17,hpM:1.6,dmgM:1.4,atkCd:2.0,kind:'quad',look:{body:'#55505c',dark:'#322e38',eye:'#ff5040'},junk:'ore'},
   abyss_boss:{name:'Malok, Tirano del Abismo',lv:[15,15],speed:82,aggro:240,size:32,hpM:13,dmgM:2.3,atkCd:2.1,kind:'human',scale:2.5,look:{body:'#1f152b',trim:'#a040ff',legs:'#120c1c',weapon:'sword',blade:'#c080ff',skin:'#705088',hat:'#2a183d',hatType:'horns',eye:'#c030ff',pads:'#603099',cape:'#3a1050'},elite:true,boss:true},
-  mountain_drake:{name:'Draco de las Cumbres',lv:[16,18],speed:102,aggro:210,size:22,hpM:2.2,dmgM:1.6,atkCd:1.9,kind:'quad',look:{body:'#304a60',dark:'#1a2d3c',eye:'#ffaa20',ears:1},elite:true,junk:'shard'}
+  mountain_drake:{name:'Draco de las Cumbres',lv:[16,18],speed:102,aggro:210,size:22,hpM:2.2,dmgM:1.6,atkCd:1.9,kind:'quad',look:{body:'#304a60',dark:'#1a2d3c',eye:'#ffaa20',ears:1},elite:true,junk:'shard'},
+  crystal_spider:{name:'Araña de Cristal',lv:[12,14],speed:86,aggro:160,size:13,hpM:1.2,dmgM:1.2,atkCd:1.8,kind:'arach',look:{body:'#5b328a',dark:'#371d58',eye:'#c084fc'},drops:{crystal_gem:0.6}},
+  shadow_stalker:{name:'Acechador Sombrío',lv:[14,16],speed:94,aggro:190,size:15,hpM:1.4,dmgM:1.3,atkCd:1.8,kind:'arach',look:{body:'#1e1b4b',dark:'#0f172a',eye:'#a855f7'},drops:{shadow_essence:0.55}},
+  wyvern:{name:'Wyvern de los Picos',lv:[16,18],speed:106,aggro:220,size:24,hpM:2.5,dmgM:1.7,atkCd:1.8,kind:'quad',look:{body:'#334155',dark:'#1e293b',eye:'#38bdf8',ears:1},drops:{titan_ore:0.5}},
+  magma_golem:{name:'Gólem de Magma',lv:[18,20],speed:68,aggro:160,size:26,hpM:3.0,dmgM:1.9,atkCd:2.4,kind:'golem',look:{body:'#7c2d12',dark:'#431407',eye:'#f97316'},drops:{magma_core:0.6}},
+  fire_elemental:{name:'Elemental Ígneo',lv:[18,20],speed:92,aggro:200,size:18,hpM:1.8,dmgM:1.8,atkCd:1.7,kind:'human',scale:1.4,look:{body:'#ea580c',trim:'#fbbf24',legs:'#9a3412',weapon:'staff',orb:'#f97316',skin:'#fdba74',eye:'#facc15'},drops:{magma_core:0.5}},
+  bandit_warlord:{name:'Lord Malakor el Tirano',lv:[15,15],speed:90,aggro:230,size:26,hpM:12,dmgM:2.2,atkCd:2.0,kind:'human',scale:2.2,look:{body:'#1c1917',trim:'#eab308',legs:'#292524',hat:'#44403c',hatType:'helm',weapon:'axe',blade:'#f59e0b',skin:'#a8a29e',pads:'#eab308',cape:'#7f1d1d'},elite:true,boss:true},
+  dragon_ignis:{name:'Ignis, Dragón Ancestral',lv:[20,20],speed:88,aggro:260,size:36,hpM:20,dmgM:2.8,atkCd:2.0,kind:'quad',scale:3.2,look:{body:'#991b1b',dark:'#450a0a',eye:'#fef08a',snout:1,ears:1},elite:true,boss:true,drops:{dragon_scale:1.0}}
 };
 
 /* ---------- Misiones ---------- */
@@ -220,7 +258,27 @@ const QUESTS={
   q13:{title:'La Reina Escarcha',giver:'bruna',lvl:19,pre:'q12',
     text:'En el Palacio de Escarcha, al noreste, reina un invierno sin fin. Su señora congela todo lo que se acerca. Entra al palacio y acaba con la Reina Escarcha.',
     done:'El invierno retrocede. Astra te recordará, héroe.',
-    obj:{kill:['queen'],n:1,label:'Reina Escarcha'},xp:7000,gold:700,item:{slot:'head',rar:3,lvl:21}}
+    obj:{kill:['queen'],n:1,label:'Reina Escarcha'},xp:7000,gold:700,item:{slot:'head',rar:3,lvl:21}},
+  q14:{title:'Llamada a la Gran Capital',giver:'elara',lvl:8,pre:'q4',
+    text:'El Alto Mando de la Gran Ciudad Imperial de Astra ha oído hablar de tus hazañas. Viaja hacia el este por la Calzada Real y preséntate ante el Gran Mariscal Lord Vane en la Plaza Imperial.',
+    done:'¡Bienvenido a la capital de Astra, héroe! Tu espada nos servirá bien en estos tiempos oscuros.',
+    obj:{visit:'capital',label:'Llega a la Gran Ciudad de Astra',n:1},xp:1200,gold:150,item:{slot:'cape',rar:2,lvl:9}},
+  q15:{title:'Patrulla Imperial',giver:'vane',lvl:9,pre:'q14',
+    text:'Los bandidos y saqueadores se atreven a merodear en los accesos de la capital. Demuéstrales el peso de la ley imperial abatiendo a diez de ellos.',
+    done:'La calma vuelve a las murallas. Acepta estas hombreras de oficial imperial.',
+    obj:{kill:['bandit','archer'],n:10,label:'Forajidos abatidos'},xp:1600,gold:180,item:{slot:'shoulders',rar:2,lvl:10}},
+  q16:{title:'Cristales de la Gruta Profunda',giver:'lyra',lvl:12,pre:null,
+    text:'En las Cavernas del Abismo y la Gruta de Cristal habitan arañas cubiertas de gemas arcanas. Consígueme cinco gemas de cristal para la alquimia imperial.',
+    done:'¡Magnífico brillo! Estas gemas potenciarán los elixires de toda la orden.',
+    obj:{collect:'crystal_gem',from:['crystal_spider','abyss_stalker'],chance:0.6,n:5,label:'Gemas de cristal arcanas'},xp:2200,gold:240,item:{slot:'ring',rar:3,lvl:13}},
+  q17:{title:'Terror en las Cumbres',giver:'vane',lvl:15,pre:'q15',
+    text:'Los exploradores informan de Wyverns alados sobrevolando la Cordillera de los Titanes. Derriba a cuatro de estas bestias.',
+    done:'Impresionante coraje. Los cielos de la cordillera son más seguros gracias a ti.',
+    obj:{kill:['wyvern','mountain_drake'],n:4,label:'Wyverns de las cumbres abatidos'},xp:3200,gold:320,item:{slot:'amulet',rar:3,lvl:16}},
+  q18:{title:'El Despertar de Ignis',giver:'vane',lvl:20,pre:'q17',
+    text:'En la Caldera de Ignis, al sureste, el Dragón Ancestral ha despertado y amenaza con consumir Astra en fuego. Reúne todo tu poder y abate a Ignis.',
+    done:'¡LO HAS LOGRADO! ¡El Dragón Ancestral ha caído y Astra entra en una era de paz y gloria legendaria!',
+    obj:{kill:['dragon_ignis'],n:1,label:'Ignis, Dragón Ancestral abatido'},xp:12000,gold:1500,item:{slot:'weapon',rar:4,lvl:20}}
 };
 
 /* ---------- Mundo ---------- */
@@ -235,6 +293,10 @@ const Z=[
   {id:'desert',name:'Dunas Ardientes',lv:'Niveles 13 – 17',tile:T.DUNE},
   {id:'snow',name:'Cumbres Heladas',lv:'Niveles 16 – 20',tile:T.SNOW},
   {id:'town',name:'Villa Alba',lv:'Zona segura',safe:true},
+  {id:'capital',name:'Gran Ciudad de Astra',lv:'Capital Imperial · Zona segura',safe:true},
+  {id:'peaks',name:'Cordillera de los Titanes',lv:'Niveles 15 – 18',tile:T.HILL},
+  {id:'deepcave',name:'Gruta de Cristal Profundo',lv:'Niveles 12 – 16'},
+  {id:'volcano',name:'Caldera de Ignis',lv:'Niveles 19 – 20',tile:T.DUNE},
   {id:'bastion',name:'Bastión de Piedra',lv:'Zona segura',safe:true},
   {id:'cieno',name:'Aldea Cieno',lv:'Zona segura',safe:true},
   {id:'oasis',name:'Oasis Sol',lv:'Zona segura',safe:true},
@@ -244,17 +306,27 @@ const Z=[
 ];
 const ZI={};Z.forEach((z,i)=>{ZI[z.id]=i});
 const AREAS={
-  town:{x:28,y:62,w:30,h:26},bastion:{x:78,y:18,w:22,h:18},cieno:{x:27,y:125,w:18,h:14},oasis:{x:151,y:119,w:18,h:14},cumbre:{x:147,y:34,w:18,h:14},
-  cave:{x:106,y:4,w:24,h:22},abyss:{x:54,y:8,w:22,h:20},palace:{x:172,y:4,w:24,h:22}
+  town:{x:28,y:62,w:30,h:26},
+  capital:{x:86,y:50,w:42,h:34},
+  bastion:{x:78,y:18,w:22,h:18},
+  cieno:{x:27,y:125,w:18,h:14},
+  oasis:{x:151,y:119,w:18,h:14},
+  cumbre:{x:147,y:34,w:18,h:14},
+  cave:{x:106,y:4,w:24,h:22},
+  deepcave:{x:18,y:8,w:24,h:22},
+  abyss:{x:54,y:8,w:22,h:20},
+  palace:{x:172,y:4,w:24,h:22},
+  volcano:{x:166,y:82,w:26,h:24}
 };
 const WAYPOINTS=[
   {id:'town',name:'Villa Alba',tx:40,ty:76,gx:40,gy:78},
+  {id:'capital',name:'Gran Ciudad de Astra',tx:107,ty:67,gx:107,gy:69},
   {id:'bastion',name:'Bastión de Piedra',tx:88,ty:26,gx:88,gy:28},
   {id:'cieno',name:'Aldea Cieno',tx:36,ty:131,gx:36,gy:133},
   {id:'oasis',name:'Oasis Sol',tx:160,ty:123,gx:160,gy:125},
   {id:'cumbre',name:'Campamento Cumbre',tx:156,ty:40,gx:156,gy:42}
 ];
-const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16};
+const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16},BOSS_DRAGON={x:179*TILE+16,y:94*TILE+16};
 const SPAWN_P={x:43*TILE+16,y:77*TILE+16};
 const tiles=new Uint8Array(W*H),block=new Uint8Array(W*H),deco=new Uint8Array(W*H),shade=new Uint8Array(W*H),zmap=new Uint8Array(W*H);
 const shore=new Uint8Array(W*H),wdepth=new Uint8Array(W*H),pathNear=new Uint8Array(W*H),keep=new Uint8Array(W*H);
@@ -355,11 +427,11 @@ function genWorld(){
     const i=idx(x,y),z=biomeBase(x,y);
     zmap[i]=z;tiles[i]=Z[z].tile;shade[i]=Math.floor(hash2(x,y)*4);
   }
-  for(const id of ['town','cieno','oasis','cumbre','bastion']){
+  for(const id of ['town','capital','cieno','oasis','cumbre','bastion']){
     const r=AREAS[id];
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){
       const i=idx(x,y);zmap[i]=ZI[id];
-      tiles[i]=id==='town'||id==='bastion'?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:T.SNOW;
+      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:T.SNOW;
     }
   }
   lake(62,104,12,6.5,T.WATER,T.SAND);lake(116,78,6,4.5,T.WATER,T.SAND);lake(20,24,5,3.5,T.WATER,T.SAND);
@@ -374,6 +446,8 @@ function genWorld(){
   dungeon(AREAS.cave,T.CAVE,ZI.cave,15);
   dungeon(AREAS.palace,T.ICE,ZI.palace,15);
   dungeon(AREAS.abyss,T.CAVE,ZI.abyss,18);
+  dungeon(AREAS.deepcave,T.CAVE,ZI.deepcave,18);
+  dungeon(AREAS.volcano,T.DUNE,ZI.volcano,94);
   carve([[43,74],[60,74],[76,73],[90,71],[100,70],[112,70],[126,67],[138,62]],1.7);
   carve([[100,70],[102,86],[112,98],[128,106],[144,116],[152,124],[160,126]],1.4);
   carve([[112,70],[112,52],[110,36],[106,24],[103,15],[107,15]],1.4);
@@ -384,6 +458,8 @@ function genWorld(){
   carve([[28,74],[14,74],[6,70]],1.4);
   carve([[138,62],[146,54],[152,46],[156,41]],1.4);
   carve([[156,41],[160,30],[166,20],[170,15],[173,15]],1.4);
+  carve([[44,50],[32,36],[22,24],[18,18]],1.5);
+  carve([[128,106],[148,96],[166,94]],1.5);
   fillTiles(37,68,49,80,T.COBBLE);fillTiles(42,62,44,87,T.COBBLE);fillTiles(28,73,57,75,T.COBBLE);
   const hs=[
     {x:30,y:63,w:6,h:4,roof:'#8a3a30',wall:'#b7a98c',name:'Cuartel'},
@@ -404,6 +480,35 @@ function genWorld(){
   for(const l of [[37,69],[49,69],[37,79],[49,79],[43,66],[43,83]])LAMPS.push({x:l[0],y:l[1]});
   for(const l of LAMPS)addProp('lamp',l.x,l.y,true);
   for(const t of [[28,70],[28,79],[57,70],[57,79],[35,87],[51,87]]){const i=idx(t[0],t[1]);if(!block[i]){deco[i]=D.OAK;block[i]=1}}
+  /* Gran Capital de Astra */
+  fillTiles(88,52,126,82,T.GRASS);
+  fillTiles(96,58,118,76,T.COBBLE);
+  fillTiles(105,50,109,84,T.COBBLE);
+  fillTiles(86,65,128,69,T.COBBLE);
+  const capBuildings = [
+    {x:100,y:51,w:14,h:7,roof:'#1c3460',wall:'#ded6c4',name:'Palacio Imperial'},
+    {x:88,y:52,w:9,h:6,roof:'#644e82',wall:'#e0d8cb',name:'Catedral Celestial'},
+    {x:117,y:52,w:9,h:6,roof:'#482e22',wall:'#8a8076',name:'Gran Forja'},
+    {x:88,y:72,w:10,h:6,roof:'#1e4a30',wall:'#c8beaa',name:'Sede de Hermandades'},
+    {x:116,y:72,w:10,h:6,roof:'#5c2850',wall:'#c2b6a0',name:'Academia Arcana'},
+    {x:96,y:77,w:8,h:5,roof:'#6b4c1e',wall:'#cbbfae',name:'Cámara Comercial'},
+    {x:110,y:77,w:8,h:5,roof:'#2e3846',wall:'#9c948c',name:'Guardia Real'},
+    {x:88,y:60,w:5,h:4,roof:'#7a3028',wall:'#b7a98c'},{x:94,y:60,w:5,h:4,roof:'#4a6a30',wall:'#bcae90'},
+    {x:115,y:60,w:5,h:4,roof:'#2f4a6a',wall:'#c1b496'},{x:121,y:60,w:5,h:4,roof:'#6a4820',wall:'#b9a88a'}
+  ];
+  for(const h of capBuildings){h.type='house';addBuilding(h)}
+  addProp('fountain',107,67,true);
+  addProp('obelisk',104,67,true,{wp:'capital'});
+  addProp('noticeboard',110,67,true);
+  addProp('anvil',119,59,true);
+  addProp('stall',101,65,true,{col:'#a02a2a'});
+  addProp('stall',101,69,true,{col:'#2a60a0'});
+  addProp('stall',113,65,true,{col:'#2ea050'});
+  addProp('stall',113,69,true,{col:'#d4af37'});
+  for(const l of [[105,54],[109,54],[105,62],[109,62],[105,72],[109,72],[105,80],[109,80],[92,65],[92,69],[122,65],[122,69]]){
+    LAMPS.push({x:l[0],y:l[1]});
+    addProp('lamp',l[0],l[1],true);
+  }
   /* Bastión de Piedra */
   fillTiles(82,20,95,31,T.COBBLE);
   addBuilding({x:84,y:21,w:8,h:5,roof:'#444e5a',wall:'#7a746e',type:'house',name:'Fortaleza'});
@@ -456,33 +561,33 @@ function genWorld(){
     const r=hash2(x+500,y+900),r2=hash2(x+77,y+11),c=fbm(x*0.07+11,y*0.07+5),np=pathNear[i];
     const nearWater=()=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const q=tiles[idx(x+dx,y+dy)];if(q===T.WATER||q===T.BOG)return true}return false};
     if(t===T.GRASS){
-      if(zid==='town'){if(r2<0.08)deco[i]=D.FLOWER;else if(r2<0.2)deco[i]=D.TUFT;continue}
+      if(zid==='town'||zid==='capital'){if(r2<0.08)deco[i]=D.FLOWER;else if(r2<0.2)deco[i]=D.TUFT;continue}
       if(!np){if(c>0.56&&r<0.09)setDeco(i,D.OAK);else if(r<0.007)setDeco(i,D.OAK);else if(r>0.993)setDeco(i,D.ROCK)}
       if(!block[i]){if(r2<0.05)deco[i]=D.FLOWER;else if(r2<0.2)deco[i]=D.TUFT;else if(r2<0.22)deco[i]=D.STONES}
     }else if(t===T.FOREST){
       if(!np&&((c>0.38&&r<0.24)||r<0.04))setDeco(i,r2<0.72?D.PINE:D.OAK);
       if(!block[i]){if(r2<0.05)deco[i]=D.MUSH;else if(r2<0.13)deco[i]=D.FERN;else if(r2<0.3)deco[i]=D.TUFT}
-    }else if(t===T.HILL){
+    }else if(t===T.HILL||zid==='peaks'){
       if(!np){if(r<0.028)setDeco(i,D.ROCK);else if(r<0.034)setDeco(i,D.BOULDER);else if(r<0.04)setDeco(i,D.DEAD);else if(c>0.6&&r<0.09)setDeco(i,D.PINE)}
-      if(!block[i]){if(r2<0.1)deco[i]=D.STONES;else if(r2<0.25)deco[i]=D.TUFT}
+      if(!block[i]){if(r2<0.1)deco[i]=D.STONES;else if(r2<0.25)deco[i]=D.TUFT;else if(r2>0.98)deco[i]=D.CRYSTAL}
     }else if(t===T.SWAMP){
       if(zid==='cieno'){if(r2<0.1)deco[i]=D.SWAMPGRASS;continue}
       if(!np){if((c>0.42&&r<0.10)||r<0.012)setDeco(i,D.DEAD)}
       if(!block[i]){if(nearWater()&&r2<0.4)deco[i]=D.REEDS;else if(r2<0.1)deco[i]=D.SWAMPGRASS;else if(r2<0.14)deco[i]=D.MUSH}
-    }else if(t===T.DUNE){
+    }else if(t===T.DUNE||zid==='volcano'){
       if(zid==='oasis'){if(r2<0.06)deco[i]=D.SHRUB;continue}
-      if(!np){if(r<0.011)setDeco(i,D.CACTUS);else if(r<0.017)setDeco(i,D.ROCK)}
-      if(!block[i]){if(r2<0.02)deco[i]=D.BONES;else if(r2<0.07)deco[i]=D.SHRUB}
+      if(!np){if(r<0.02)setDeco(i,D.CACTUS);else if(r<0.035)setDeco(i,D.ROCK);else if(r<0.045)setDeco(i,D.BOULDER)}
+      if(!block[i]){if(r2<0.03)deco[i]=D.BONES;else if(r2<0.07)deco[i]=D.SHRUB}
     }else if(t===T.SNOW){
       if(zid==='cumbre'){if(r2<0.08)deco[i]=D.SNOWMOUND;continue}
       if(!np){if(c>0.42&&r<0.11)setDeco(i,D.SNOWPINE);else if(r<0.013)setDeco(i,D.ROCK);else if(r>0.996)setDeco(i,D.CRYSTAL)}
       if(!block[i]){if(r2<0.06)deco[i]=D.SNOWMOUND;else if(r2<0.09)deco[i]=D.STONES}
     }else if(t===T.SAND){
       if(nearWater()&&r2<0.3)deco[i]=D.REEDS;else if(r2<0.03)deco[i]=D.STONES;
-    }else if(t===T.CAVE){
-      if(zid!=='cave')continue;
+    }else if(t===T.CAVE||zid==='deepcave'){
+      if(zid!=='cave'&&zid!=='deepcave')continue;
       const corridor=Math.abs(y-15)<=2&&x<113,lair=Math.hypot(x-lair1.x,y-lair1.y)<6;
-      if(!corridor&&!lair){if(r<0.055)setDeco(i,D.ROCK);else if(r>0.99)deco[i]=D.BONES}
+      if(!corridor&&!lair){if(r<0.055)setDeco(i,D.ROCK);else if(r>0.985)deco[i]=D.BONES;else if(r>0.97)deco[i]=D.CRYSTAL}
     }else if(t===T.ICE&&zid==='palace'){
       const corridor=Math.abs(y-15)<=2&&x<180,lair=Math.hypot(x-lair2.x,y-lair2.y)<7;
       if(!corridor&&!lair&&r<0.025)setDeco(i,D.CRYSTAL);
@@ -497,7 +602,7 @@ function genWorld(){
     if(tiles[i]===T.WATER||tiles[i]===T.BOG||tiles[i]===T.BRIDGE)continue;
     if(e<=1||hash2(x+9,y+4)<0.7){
       const zid=Z[zmap[i]].id;
-      const code=zid==='snow'?D.SNOWPINE:zid==='swamp'?D.DEAD:(zid==='desert'||zid==='hills')?D.ROCK:hash2(x,y)<0.6?D.PINE:D.OAK;
+      const code=zid==='snow'?D.SNOWPINE:zid==='swamp'?D.DEAD:(zid==='desert'||zid==='hills'||zid==='volcano'||zid==='peaks')?D.ROCK:hash2(x,y)<0.6?D.PINE:D.OAK;
       deco[i]=code;block[i]=1;
     }
   }
@@ -518,12 +623,17 @@ function genWorld(){
       if(!ok)continue;
       if(zid==='cave'&&Math.hypot(x-lair1.x,y-lair1.y)<7)continue;
       if(zid==='palace'&&Math.hypot(x-lair2.x,y-lair2.y)<8)continue;
+      if(zid==='volcano'&&Math.hypot(x-179,y-94)<7)continue;
       return {x:x*TILE+16,y:y*TILE+16};
     }
     return null;
   }
-  const plan=[['meadow','chest',3],['meadow','herb',6],['forest','chest',3],['forest','herb',5],['hills','chest',3],['hills','ore',6],['cave','chest',2],['cave','ore',4],
-    ['swamp','chest',3],['swamp','herb',5],['desert','chest',3],['desert','ore',5],['snow','chest',3],['snow','ore',5],['palace','chest',2]];
+  const plan=[
+    ['meadow','chest',3],['meadow','herb',6],['forest','chest',3],['forest','herb',5],['hills','chest',3],['hills','ore',6],
+    ['cave','chest',2],['cave','ore',4],['deepcave','chest',3],['deepcave','ore',6],
+    ['swamp','chest',3],['swamp','herb',5],['desert','chest',3],['desert','ore',5],['snow','chest',3],['snow','ore',5],
+    ['palace','chest',2],['capital','chest',4],['peaks','chest',3],['peaks','ore',6],['volcano','chest',3],['volcano','ore',6]
+  ];
   for(const p of plan)for(let k=0;k<p[2];k++){const s=nodeSpot(p[0]);if(s)NODES.push({id:uid(),type:p[1],z:p[0],x:s.x,y:s.y})}
 }
 genWorld();
