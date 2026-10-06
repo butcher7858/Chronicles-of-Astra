@@ -18,7 +18,7 @@ const MP={
   count(){return Object.keys(MP.remote).length+1},
   refreshCount(){const e=$('onl');if(e)e.textContent=MP.on?(MP.count()+(MP.count()===1?' aventurero en línea':' aventureros en línea')):'Sin conexión en tiempo real'},
   addRemote(m){
-    if(!m||m.id===P.charId)return;
+    if(!m||!m.id||m.id===P.charId)return;
     if(MP.res[m.id]){G.bots=G.bots.filter(b=>b!==MP.res[m.id]);delete MP.res[m.id]}
     let e=MP.remote[m.id];
     if(!e){e=MP.mkEnt(m,false);MP.remote[m.id]=e;G.bots.push(e);log('<span style="color:#7fd0ff">'+esc(m.name)+' ha entrado en Astra.</span>','sys')}
@@ -59,11 +59,12 @@ const MP={
       onMeta(m){MP.addRemote(m)},
       onLeave(id){MP.delRemote(id)},
       onPos(d){
+        if(!d||!d.id)return;
         const e=MP.remote[d.id];if(!e)return;
         e.tx=d.x;e.ty=d.y;e.dir=d.d>=0?1:-1;e.mounted=!!d.mo;e.lastPos=Date.now();
         if(d.l)e.level=d.l;
       },
-      onChat(d){log('<b style="color:#7fd0ff">['+esc(d.n)+']</b> '+esc(d.b),'gen')},
+      onChat(d){if(!d||!d.n||!d.b)return;log('<b style="color:#7fd0ff">['+esc(d.n)+']</b> '+esc(d.b),'gen')},
       onDown(){MP.on=false;MP.down=true;MP.refreshCount()},
       onError(e){console.warn('realtime',e)}
     });

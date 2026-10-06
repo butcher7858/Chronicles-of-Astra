@@ -78,11 +78,18 @@ function clickWorld(wx,wy,onlyEnt){
   for(const n of G.npcs)cons('npc',n,Math.hypot(n.x-wx,n.y-22-wy),30);
   for(const n of G.nodes)if(!n.open)cons('node',n,Math.hypot(n.x-wx,n.y-wy),28);
   for(const p of PROPS)if(p.t==='obelisk')cons('wp',p,Math.hypot(p.x-wx,p.y-30-wy),38);
+  if(G.bots){
+    for(const b of G.bots){
+      if(!b||b.dead)continue;
+      cons('player',b,Math.hypot(b.x-wx,b.y-22-wy),28);
+    }
+  }
   if(best){
     P.cast=P.cast&&(P.cast.gather)?null:P.cast;
     if(best.k==='mob'){P.target=best.e;P.autoAtk=true}
+    else if(best.k==='player'){P.target=best.e;P.autoAtk=false;ring(best.e.x,best.e.y,24,'#50e3c2')}
     P.intent={k:best.k,e:best.e,rep:0};P.path=[];
-    if(best.k!=='mob')ring(best.e.x,best.e.y,22,'#ffe08a');
+    if(best.k!=='mob'&&best.k!=='player')ring(best.e.x,best.e.y,22,'#ffe08a');
     return;
   }
   if(onlyEnt)return;

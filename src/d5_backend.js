@@ -202,7 +202,7 @@ const SupaBE=USE_SB?(function(){
       return r&&r[0]||null;
     },
     async saveChar(ch,st,beacon){
-      await fresh();
+      if(!beacon)await fresh();
       const now=new Date().toISOString();
       const a=raw('/rest/v1/characters?id=eq.'+q(ch.id)+'&user_id=eq.'+q(S.user.id),{method:'PATCH',keepalive:!!beacon,headers:{Prefer:'return=minimal'},
         body:{level:ch.level,x:ch.x,y:ch.y,zone:ch.zone,kills:ch.kills,appearance:ch.appearance,last_seen:now}});

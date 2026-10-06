@@ -7,7 +7,7 @@ const G={time:0,worldT:0,mobs:[],npcs:[],bots:[],nodes:[],projs:[],parts:[],floa
   dlgNpc:null,dlgQuest:null,lootM:null,botChat:8,sfxOn:true,autoLoot:true,sprintToggle:false,shake:0,zoom:1,explored:new Uint8Array(GW*GH),keys:{},joy:null};
 let P=null;
 const xpNeed=l=>Math.round(45*l*(1+0.18*l));
-const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28,jungle:25,desert_ruins:36,crystal_woods:45,vortex:55,dungeon_crypt:30,dungeon_frost:50};
+const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,peaks:18,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28,jungle:25,desert_ruins:36,crystal_woods:45,vortex:55,dungeon_crypt:30,dungeon_frost:50};
 
 /* ---------- Clases y habilidades ---------- */
 const CLS={
@@ -152,9 +152,17 @@ function sfx(n){
 }
 
 /* ---------- Inventario ---------- */
+function getBagSlots(b){
+  if(!b)return 0;
+  return b.slots||b.extraSlots||(ITEMS[b.key]&&(ITEMS[b.key].slots||ITEMS[b.key].extraSlots))||0;
+}
 function maxInventorySlots(){
   let s=24;
-  if(P&&P.bags){for(const b of P.bags)if(b&&b.slots)s+=b.slots}
+  if(P&&P.bags){
+    for(const b of P.bags){
+      if(b)s+=getBagSlots(b);
+    }
+  }
   return Math.min(120,s);
 }
 function countItem(key){let c=0;for(const x of P.inv)if(x.key===key)c+=x.n;return c}
@@ -194,7 +202,9 @@ function equipBag(it,slotIdx){
     slotIdx=free>=0?free:0;
   }
   const old=P.bags[slotIdx];
-  const oldS=old?(old.slots||0):0,newS=it.slots||0;
+  const oldS=old?getBagSlots(old):0;
+  const newS=getBagSlots(it);
+  it.slots=newS;it.extraSlots=newS;
   if(newS<oldS){
     const fut=maxInventorySlots()-oldS+newS;
     if(P.inv.length>fut){toast('No puedes equipar una bolsa más pequeña: libera espacio primero');return}
@@ -208,7 +218,8 @@ function equipBag(it,slotIdx){
 }
 function unequipBag(slotIdx){
   const b=P.bags[slotIdx];if(!b)return;
-  const fut=maxInventorySlots()-(b.slots||0);
+  const sl=getBagSlots(b);
+  const fut=maxInventorySlots()-sl;
   if(P.inv.length+1>fut){toast('Libera espacio en la mochila antes de retirar la bolsa');return}
   P.bags[slotIdx]=null;P.inv.push(b);
   sfx('equip');toast('Bolsa desequipada: '+b.name);
@@ -259,13 +270,13 @@ function bankWithdrawItem(bankIdx){
   refreshUI();
 }
 function bankDepositGold(amt){
-  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  amt=Math.floor(amt);if(!isFinite(amt)||isNaN(amt)||amt<=0)return;
   if(P.gold<amt){toast('No tienes suficiente oro');return}
   P.gold-=amt;P.bankGold=(P.bankGold||0)+amt;
   sfx('coin');toast('Depositaste '+amt+' de oro en tu banco');refreshUI();
 }
 function bankWithdrawGold(amt){
-  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  amt=Math.floor(amt);if(!isFinite(amt)||isNaN(amt)||amt<=0)return;
   if((P.bankGold||0)<amt){toast('No tienes tanto oro en el banco');return}
   P.bankGold-=amt;P.gold+=amt;
   sfx('coin');toast('Retiraste '+amt+' de oro de tu banco');refreshUI();
@@ -292,7 +303,7 @@ function guildBankWithdrawItem(gbIdx){
   sfx('loot');toast('Retirado de hermandad: '+nm);refreshUI();
 }
 function guildBankDepositGold(amt){
-  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  amt=Math.floor(amt);if(!isFinite(amt)||isNaN(amt)||amt<=0)return;
   if(P.gold<amt){toast('No tienes suficiente oro');return}
   P.gold-=amt;GUILD_BANK.gold=(GUILD_BANK.gold||0)+amt;
   GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Depositó '+amt+' de oro'});
@@ -300,7 +311,7 @@ function guildBankDepositGold(amt){
   sfx('coin');toast('Depositaste '+amt+' de oro en la hermandad');refreshUI();
 }
 function guildBankWithdrawGold(amt){
-  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  amt=Math.floor(amt);if(!isFinite(amt)||isNaN(amt)||amt<=0)return;
   if((GUILD_BANK.gold||0)<amt){toast('No hay suficiente oro en la hermandad');return}
   GUILD_BANK.gold-=amt;P.gold+=amt;
   GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Retiró '+amt+' de oro'});
@@ -712,16 +723,38 @@ function doBlink(){
   G.fx.push({k:'ghost',x:P.x,y:P.y,dir:P.dir,t:0,life:0.4,col:'#e0b0ff'});
   burst(P.x,P.y-10,'#e0b0ff',16,120);P.x=x;P.y=y;burst(P.x,P.y-10,'#e0b0ff',16,120);sfx('cast');
 }
+function useConsumableFromBar(key, slotIdx){
+  if(!G.started||!P||P.dead||P.stun>0)return;
+  const idx=P.inv.findIndex(x=>x.key===key);
+  if(idx===-1){
+    const def=ITEMS[key];
+    toast('No te quedan '+(def?def.name:'pociones'));
+    return;
+  }
+  useInv(idx);
+  flashSlot(slotIdx);
+  buildActionBarSafe();
+  refreshUI();
+}
 function tryUse(i){
   if(!G.started||!P||P.dead||P.stun>0||(P.cast&&!P.cast.gather&&!P.cast.travel))return;
-  let abIdx=i;
+  let raw=null;
   if(i>=12){
     const s2=i-12;
-    if(P.actionBar2&&P.actionBar2[s2]!==undefined)abIdx=P.actionBar2[s2];
-    else abIdx=s2;
+    raw=(P.actionBar2&&P.actionBar2[s2]!==undefined)?P.actionBar2[s2]:null;
   }else{
-    if(P.actionBar&&P.actionBar[i]!==undefined)abIdx=P.actionBar[i];
+    raw=(P.actionBar&&P.actionBar[i]!==undefined)?P.actionBar[i]:null;
   }
+  if(raw===null||raw===undefined)return;
+  if(typeof raw==='object'&&raw&&raw.type==='item'){
+    useConsumableFromBar(raw.key, i);
+    return;
+  }
+  if(typeof raw==='string'&&raw.startsWith('item:')){
+    useConsumableFromBar(raw.slice(5), i);
+    return;
+  }
+  const abIdx = typeof raw==='number' ? raw : (raw.id!==undefined ? raw.id : (raw.ab!==undefined ? raw.ab : i));
   const ab=CLS[P.cls].ab[abIdx];if(!ab)return;
   if(ab.ul>P.level){toast(ab.name+' se desbloquea en el nivel '+ab.ul);return}
   if((P.cds[ab.id]||0)>0){if(ab.cd>=6)toast(ab.name+' no está listo');return}
@@ -828,10 +861,14 @@ const SPAWN_PLAN=[
   ['fskel','dungeon_frost',6,2,50],['golem','dungeon_frost',4,1,0]
 ];
 const RARE_PLAN=[['alpha','meadow'],['chief','forest'],['grukk','hills'],['bogking','swamp'],['scorpk','desert'],['yetik','snow'],['bandit_warlord','forest']];
-function nearArea(id,tx,ty,m){const r=AREAS[id];return r?tx>=r.x-m&&ty>=r.y-m&&tx<r.x+r.w+m&&ty<r.y+r.h+m:false}
+function nearArea(id,tx,ty,m){
+  const r=AREAS[id];if(!r)return false;
+  const margin=m!==undefined?m:(id==='capital'?14:id==='town'?10:8);
+  return tx>=r.x-margin&&ty>=r.y-margin&&tx<r.x+r.w+margin&&ty<r.y+r.h+margin;
+}
 function avoidFor(zone){
   return (tx,ty)=>{
-    for(const id of ['town','capital','cieno','oasis','cumbre'])if(nearArea(id,tx,ty,6))return true;
+    for(const id of ['town','capital','cieno','oasis','cumbre','bastion'])if(nearArea(id,tx,ty))return true;
     if(zone==='cave'&&Math.hypot(tx-122,ty-15)<7)return true;
     if(zone==='cave'&&Math.abs(ty-15)<=2&&tx<111)return true;
     if(zone==='palace'&&Math.hypot(tx-190,ty-15)<8)return true;
@@ -942,10 +979,15 @@ function updateMob(m,dt){
   if(m.stun>0){m.stun-=dt;return}
   const sp=m.speed*(m.slowT>0?m.slowM:1),dP=dist(m,P);
   if(m.state==='idle'){
+    if(inSafe(m)){m.x=m.home.x;m.y=m.home.y;m.wx=m.home.x;m.wy=m.home.y;return}
     m.wander-=dt;
     if(m.wander<=0){
       m.wander=rand(2,5);
-      if(Math.random()<0.6){const a=rand(0,6.283),r=rand(20,70);m.wx=m.home.x+Math.cos(a)*r;m.wy=m.home.y+Math.sin(a)*r}else{m.wx=m.x;m.wy=m.y}
+      if(Math.random()<0.6){
+        const a=rand(0,6.283),r=rand(20,70);
+        const nx=m.home.x+Math.cos(a)*r,ny=m.home.y+Math.sin(a)*r;
+        if(!inSafe({x:nx,y:ny})){m.wx=nx;m.wy=ny}else{m.wx=m.home.x;m.wy=m.home.y}
+      }else{m.wx=m.x;m.wy=m.y}
     }
     const dx=m.wx-m.x,dy=m.wy-m.y,d=Math.hypot(dx,dy);
     if(d>4){const s=sp*0.45*dt;moveEnt(m,dx/d*s,dy/d*s,m.size*0.6);m.moving=true;if(Math.abs(dx)>1)m.dir=dx>0?1:-1}
@@ -955,7 +997,7 @@ function updateMob(m,dt){
     }
   }else if(m.state==='chase'){
     const leash=m.boss?900:560;
-    if(P.dead||inSafe(P)||dist(m,m.home)>leash){m.state='return';return}
+    if(P.dead||inSafe(P)||inSafe(m)||dist(m,m.home)>leash){m.state='return';return}
     const range=m.def.ranged?m.def.range:m.size+20+P.size;
     const dx=P.x-m.x,dy=P.y-m.y;
     if(Math.abs(dx)>2)m.dir=dx>0?1:-1;
@@ -1213,6 +1255,7 @@ function checkAchievements(){
   if(!P)return;
   P.achievements=P.achievements||{};
   P.titles=P.titles||['novice'];
+  if(!P.titles.includes('novice'))P.titles.unshift('novice');
   if(typeof ACHIEVEMENTS==='undefined')return;
   let anyNew=false;
   for(const a of ACHIEVEMENTS){
@@ -1220,11 +1263,12 @@ function checkAchievements(){
     if(a.check&&a.check(P)){
       P.achievements[a.id]=Date.now();
       anyNew=true;
-      if(a.title&&!P.titles.includes(a.title)){
-        P.titles.push(a.title);
-        toast('¡Nuevo título desbloqueado: «'+(TITLES[a.title]?TITLES[a.title].name:a.title)+'»!');
+      const rew=a.title||a.reward;
+      if(rew&&TITLES[rew]&&!P.titles.includes(rew)){
+        P.titles.push(rew);
+        toast('¡Nuevo título desbloqueado: «'+getTitleName(rew)+'»!');
       }
-      banner('¡LOGRO DESBLOQUEADO!',a.name+' (+'+a.points+' pts)');
+      banner('¡LOGRO DESBLOQUEADO!',a.name+' (+'+(a.points||a.pts||0)+' pts)');
       log('¡Logro completado: <b>'+a.name+'</b>! '+a.desc,'loot');
       burst(P.x,P.y-12,'#ffd700',25,200);
       sfx('level');
@@ -1232,12 +1276,31 @@ function checkAchievements(){
   }
   if(anyNew)refreshUI();
 }
+function claimAllEligibleTitles(){
+  if(!P)return;
+  P.titles=P.titles||['novice'];
+  if(!P.titles.includes('novice'))P.titles.unshift('novice');
+  if(typeof ACHIEVEMENTS==='undefined')return;
+  let n=0;
+  for(const a of ACHIEVEMENTS){
+    if(P.achievements[a.id]){
+      const rew=a.title||a.reward;
+      if(rew&&TITLES[rew]&&!P.titles.includes(rew)){
+        P.titles.push(rew);
+        n++;
+      }
+    }
+  }
+  if(n>0){toast('¡Has reclamado '+n+' título(s) nuevo(s)!');sfx('level')}
+  else toast('Todos los títulos disponibles ya están en tu lista.');
+  refreshUI();
+}
 function setTitle(titleId){
   if(!P)return;
   P.titles=P.titles||['novice'];
   if(titleId&&!P.titles.includes(titleId)){toast('No tienes este título desbloqueado');return}
   P.title=titleId||'';
-  toast(titleId?'Título equipado: «'+(TITLES[titleId]?TITLES[titleId].name:titleId)+'»':'Título retirado');
+  toast(titleId?'Título equipado: «'+getTitleName(titleId)+'»':'Título retirado');
   refreshUI();
 }
 

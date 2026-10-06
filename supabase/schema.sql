@@ -184,10 +184,19 @@ create policy "chat_insert_own" on public.chat_messages
 -- Políticas para: guilds
 drop policy if exists "guilds_select_all" on public.guilds;
 drop policy if exists "guilds_insert_own" on public.guilds;
+drop policy if exists "guilds_update_own" on public.guilds;
+drop policy if exists "guilds_delete_own" on public.guilds;
 create policy "guilds_select_all" on public.guilds
   for select to anon, authenticated using (true);
 create policy "guilds_insert_own" on public.guilds
   for insert to authenticated with check (leader_id = auth.uid());
+create policy "guilds_update_own" on public.guilds
+  for update to authenticated
+  using (leader_id = auth.uid())
+  with check (leader_id = auth.uid());
+create policy "guilds_delete_own" on public.guilds
+  for delete to authenticated
+  using (leader_id = auth.uid());
 
 -- ---------- 6. PERMISOS Y ROLES (Grants) ----------
 grant usage on schema public to anon, authenticated;
@@ -201,7 +210,7 @@ grant select on public.chat_messages to anon, authenticated;
 grant insert on public.chat_messages to authenticated;
 
 grant select on public.guilds to anon, authenticated;
-grant insert, update on public.guilds to authenticated;
+grant insert, update, delete on public.guilds to authenticated;
 
 grant usage, select on all sequences in schema public to authenticated;
 

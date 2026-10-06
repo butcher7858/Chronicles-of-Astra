@@ -319,7 +319,7 @@ async function enterWorld(row){
     P.titles=st.titles||ext.titles||['novice'];
     P.title=st.title||ext.title||'';
     P.actionBar=st.actionBar||st.action_bar||ext.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
-    P.actionBar2=st.actionBar2||st.action_bar2||ext.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
+    P.actionBar2=st.actionBar2||st.action_bar2||ext.actionBar2||[12,13,14,null,null,null,null,null,null,null,null,null];
     P.recipes=st.recipes||ext.recipes||{hp1:true,mp1:true};
     P.craftedCount=st.craftedCount||ext.craftedCount||0;
     P.duelsWon=st.duelsWon||ext.duelsWon||0;

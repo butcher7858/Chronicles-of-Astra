@@ -13,21 +13,31 @@ function bindPanels(){
     const c=e.target.closest('[data-close]');if(c){closePanel(c.getAttribute('data-close'))}
     const b=e.target.closest('button');if(b&&b.id!=='chatIn')b.blur();
   });
-  if($('invGrid'))$('invGrid').addEventListener('click',e=>{
-    const b=e.target.closest('[data-i]');if(!b)return;
-    const idx=+b.dataset.i;
-    if($('pBank')&&!$('pBank').hidden){
-      if(typeof bankTab!=='undefined'&&bankTab==='personal')bankDepositItem(idx);
-      else guildBankDepositItem(idx);
-      hideTip();return;
-    }
-    if(typeof TRADE_SESSION!=='undefined'&&TRADE_SESSION&&$('pTrade')&&!$('pTrade').hidden){
+  if($('invGrid')){
+    $('invGrid').addEventListener('click',e=>{
+      const b=e.target.closest('[data-i]');if(!b)return;
+      const idx=+b.dataset.i;
+      if($('pBank')&&!$('pBank').hidden){
+        if(typeof bankTab!=='undefined'&&bankTab==='personal')bankDepositItem(idx);
+        else guildBankDepositItem(idx);
+        hideTip();return;
+      }
+      if(typeof TRADE_SESSION!=='undefined'&&TRADE_SESSION&&$('pTrade')&&!$('pTrade').hidden){
+        const it=P.inv[idx];
+        if(it&&typeof tradeAddItem==='function')tradeAddItem(it);
+        hideTip();return;
+      }
+      useInv(idx);hideTip();
+    });
+    $('invGrid').addEventListener('dragstart',e=>{
+      const b=e.target.closest('[data-i]');if(!b)return;
+      const idx=+b.dataset.i;
       const it=P.inv[idx];
-      if(it&&typeof tradeAddItem==='function')tradeAddItem(it);
-      hideTip();return;
-    }
-    useInv(idx);hideTip();
-  });
+      if(it&&it.key){
+        e.dataTransfer.setData('text/plain','item:'+it.key);
+      }
+    });
+  }
   if($('bagSlotsRow'))$('bagSlotsRow').addEventListener('click',e=>{
     const b=e.target.closest('[data-bag-idx]');
     if(b&&b.classList.contains('equipped')){unequipBag(+b.dataset.bagIdx);hideTip()}
@@ -38,13 +48,22 @@ function bindPanels(){
   if($('eqRight'))$('eqRight').addEventListener('click',onEqClick);
   if($('btnSort'))$('btnSort').onclick=sortInv;
   if($('btnJunk'))$('btnJunk').onclick=sellJunk;
-  if($('btnBankDepGold'))$('btnBankDepGold').onclick=()=>{
-    const amt=prompt('¿Cuánto oro deseas depositar en tu banco personal?',String(P.gold));
-    if(amt)bankDepositGold(+amt);
+  const bDepGold=$('btnBankDepGold');
+  if(bDepGold)bDepGold.onclick=()=>{
+    const amt=prompt('¿Cuánto oro deseas depositar en '+(typeof bankTab!=='undefined'&&bankTab==='guild'?'la hermandad':'tu banco')+'?',String(P.gold));
+    if(amt){
+      if(typeof bankTab!=='undefined'&&bankTab==='guild')guildBankDepositGold(+amt);
+      else bankDepositGold(+amt);
+    }
   };
-  if($('btnBankWdGold'))$('btnBankWdGold').onclick=()=>{
-    const amt=prompt('¿Cuánto oro deseas retirar de tu banco personal?',String(P.bankGold||0));
-    if(amt)bankWithdrawGold(+amt);
+  const bWithGold=$('btnBankWithGold')||$('btnBankWdGold');
+  if(bWithGold)bWithGold.onclick=()=>{
+    const curBank=(typeof bankTab!=='undefined'&&bankTab==='guild')?(GUILD_BANK.gold||0):(P.bankGold||0);
+    const amt=prompt('¿Cuánto oro deseas retirar de '+(typeof bankTab!=='undefined'&&bankTab==='guild'?'la hermandad':'tu banco')+'?',String(curBank));
+    if(amt){
+      if(typeof bankTab!=='undefined'&&bankTab==='guild')guildBankWithdrawGold(+amt);
+      else bankWithdrawGold(+amt);
+    }
   };
   if($('btnGbankDepGold'))$('btnGbankDepGold').onclick=()=>{
     const amt=prompt('¿Cuánto oro deseas depositar en la hermandad?',String(P.gold));
@@ -102,6 +121,19 @@ function bindPanels(){
   if($('bMount'))$('bMount').onclick=e=>{if(e.shiftKey)togglePanel('pMounts');else toggleMount()};
   if($('bFull'))$('bFull').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{})};
   if($('bChat'))$('bChat').onclick=()=>{if($('chat'))$('chat').classList.toggle('open')};
+  if($('chatTabs')){
+    $('chatTabs').addEventListener('click',e=>{
+      const b=e.target.closest('button[data-cf]');if(!b)return;
+      $('chatTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));
+      const logEl=$('chatLog');
+      if(logEl){
+        const f=b.dataset.cf;
+        if(f==='all')delete logEl.dataset.filter;
+        else logEl.dataset.filter=f;
+        logEl.scrollTop=logEl.scrollHeight;
+      }
+    });
+  }
 }
 
 /* ---------- Chat ---------- */
@@ -207,10 +239,33 @@ function bindInput(){
     const w=screenToWorld(e.clientX,e.clientY);
     clickWorld(w.x,w.y,e.button===2);
     hideTip();
+    if(e.button===2 && P.target && (P.target.isPlayer || P.target.bot)){
+      const tm=$('targetMenu');
+      if(tm){
+        const t=P.target;
+        const canGuildInvite=t&&P.guild&&Array.isArray(P.guild.members)&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
+        tm.innerHTML='<div style="background:#140e08;padding:6px 10px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--line);font-size:12px">'+esc(t.name)+'</div>'+
+          '<button id="tmWhisper">'+svg('shout','#ff7ae8')+' Susurrar</button>'+
+          '<button id="tmParty">'+svg('shield','#5cd0ff')+' Invitar a Grupo</button>'+
+          (canGuildInvite?'<button id="tmGuildInv">'+svg('guild','#5ee88a')+' Invitar a Hermandad</button>':'')+
+          '<button id="tmDuel">'+svg('duel','#ff5544')+' Duelo</button>'+
+          '<button id="tmTrade">'+svg('bag','#e8c24a')+' Comerciar</button>'+
+          '<button id="tmInspect">'+svg('eye','#9ae0ff')+' Inspeccionar</button>';
+        tm.style.left=Math.min(window.innerWidth-160,e.clientX)+'px';
+        tm.style.top=Math.min(window.innerHeight-180,e.clientY)+'px';
+        tm.hidden=false;
+        if(tm.querySelector('#tmWhisper'))tm.querySelector('#tmWhisper').onclick=()=>{tm.hidden=true;openWhisper(t.name)};
+        if(tm.querySelector('#tmParty'))tm.querySelector('#tmParty').onclick=()=>{tm.hidden=true;partyInvite(t.name)};
+        if(tm.querySelector('#tmGuildInv'))tm.querySelector('#tmGuildInv').onclick=()=>{tm.hidden=true;guildInvitePlayer(t.name)};
+        if(tm.querySelector('#tmDuel'))tm.querySelector('#tmDuel').onclick=()=>{tm.hidden=true;startDuel(t)};
+        if(tm.querySelector('#tmTrade'))tm.querySelector('#tmTrade').onclick=()=>{tm.hidden=true;startTrade(t)};
+        if(tm.querySelector('#tmInspect'))tm.querySelector('#tmInspect').onclick=()=>{tm.hidden=true;openInspector(t)};
+      }
+    }
   });
   cv.addEventListener('wheel',e=>{
     if(!G.started)return;e.preventDefault();
-    G.zoom=clamp(G.zoom*(e.deltaY<0?1.08:0.926),0.7,1.5);ZM=G.zoom*(Math.min(vw,vh)<560?0.8:1);
+    G.zoom=clamp(G.zoom*(e.deltaY<0?1.08:0.926),0.55,1.5);ZM=G.zoom*(Math.min(vw,vh)<560?0.8:1);
   },{passive:false});
   // joystick táctil
   const joy=$('joy'),knob=$('joyKnob');let jid=null;

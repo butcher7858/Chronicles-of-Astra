@@ -12,7 +12,7 @@ const pick=a=>a[Math.floor(Math.random()*a.length)];
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const lerp=(a,b,t)=>a+(b-a)*t;
 const uid=()=>Math.random().toString(36).slice(2,9);
-const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function hash2(x,y){let h=(Math.imul(x|0,374761393)+Math.imul(y|0,668265263))|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967296}
 function vnoise(x,y){
   const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi;
@@ -63,7 +63,21 @@ const IC={
   shoulder:'<path d="M4 15c1-5 4-8 8-8s7 3 8 8M6 14c2-2 5-3 8-1"/>',
   glove:'<path d="M8 19v-7a2 2 0 014 0v1a2 2 0 014 0v2a2 2 0 012 2v2a4 4 0 01-4 4H10a2 2 0 01-2-2z"/>',
   legs:'<path d="M6 3h12l-1 18h-4l-1-10-1 10H7z"/>',
-  star:'<polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.3 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>'
+  star:'<polygon points="12 2 15 8.5 22 9.3 17 14.1 18.5 21 12 17.3 5.5 21 7 14.1 2 9.3 9 8.5 12 2"/>',
+  bank:'<path d="M3 9l9-7 9 7v2H3V9zM5 11v8M9 11v8M15 11v8M19 11v8M2 21h20v2H2z"/>',
+  cup:'<path d="M6 3h12v7a6 6 0 01-12 0V3zM6 6H3a2 2 0 000 4h3M18 6h3a2 2 0 010 4h-3M12 16v5M8 21h8"/>',
+  guild:'<path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6zM9 11a3 3 0 106 0 3 3 0 00-6 0z"/>',
+  duel:'<path d="M5 4l6 6M4 5l6 6M19 4l-6 6M20 5l-6 6M3 21l8-8M21 21l-8-8"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  judgment:'<path d="M12 2v20M4 7l8-2 8 2M2 13l4-6 4 6a4 4 0 01-8 0zM14 13l4-6 4 6a4 4 0 01-8 0z"/>',
+  consecration:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>',
+  aegis:'<path d="M12 2l8 3.5v6.5c0 5-3.5 9-8 10-4.5-1-8-5-8-10V5.5zM12 6v12M7.5 10.5h9"/>',
+  flying_shield:'<path d="M8 3l11 4v5c0 4.5-3 8-7 9.5L8 20V3z"/><path d="M3 10h4M2 14h4"/>',
+  guardian:'<path d="M12 2a4 4 0 014 4v2H8V6a4 4 0 014-4zM5 10h14l-2 11H7L5 10zM9 14h6"/>',
+  holy_shock:'<path d="M13 2L4 13h7l-2 9 11-12h-7zM12 7v3M12 14v3"/>',
+  shield_bash:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><circle cx="12" cy="11" r="3"/><path d="M12 20l4-3"/>',
+  radiant_hammer:'<path d="M15 2l7 7-3 3-7-7zM11 6L2 15l3 3 9-9M12 2v3M22 12h-3"/>',
+  celestial_blade:'<path d="M12 2v16M8 14h8M10 22h4M6 5l6-3 6 3"/>'
 };
 function svg(name,color,sw){return '<svg viewBox="0 0 24 24" fill="none" stroke="'+(color||'currentColor')+'" stroke-width="'+(sw||1.8)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[name]||'')+'</svg>'}
 
@@ -182,11 +196,11 @@ const ITEMS={
   rec_neck_astral:{t:'cons',isRecipe:true,recId:'gear_neck_astral',name:'Receta: Collar Astral Estelar',ic:'map',col:'#b868ff',price:850,desc:'Enseña a engarzar Collar Astral Estelar.'},
   rec_trinket_phoenix:{t:'cons',isRecipe:true,recId:'gear_trinket_phoenix',name:'Receta: Abalorio del Fénix Renacido',ic:'map',col:'#b868ff',price:900,desc:'Enseña a crear Abalorio del Fénix Renacido.'},
   // Bolsas equipables (hasta 5 mochilas)
-  bag_linen:{t:'bag',name:'Bolsa de Lino',ic:'bag',col:'#e8e0d0',extraSlots:6,price:25,desc:'Aumenta tu capacidad de mochila en +6 ranuras.'},
-  bag_leather:{t:'bag',name:'Bolsa de Cuero Reforzado',ic:'bag',col:'#b08050',extraSlots:10,price:80,desc:'Aumenta tu capacidad de mochila en +10 ranuras.'},
-  bag_silk:{t:'bag',name:'Bolsa de Seda de Araña',ic:'bag',col:'#dfe6f0',extraSlots:14,price:200,desc:'Aumenta tu capacidad de mochila en +14 ranuras.'},
-  bag_rune:{t:'bag',name:'Bolsa de Paño Rúnico',ic:'bag',col:'#c084fc',extraSlots:18,price:450,desc:'Aumenta tu capacidad de mochila en +18 ranuras.'},
-  bag_astral:{t:'bag',name:'Mochila Astral Cósmica',ic:'bag',col:'#38bdf8',extraSlots:24,price:1000,desc:'Aumenta tu capacidad de mochila en +24 ranuras.'}
+  bag_linen:{t:'bag',name:'Bolsa de Lino',ic:'bag',col:'#e8e0d0',slots:6,extraSlots:6,price:25,desc:'Aumenta tu capacidad de mochila en +6 ranuras.'},
+  bag_leather:{t:'bag',name:'Bolsa de Cuero Reforzado',ic:'bag',col:'#b08050',slots:10,extraSlots:10,price:80,desc:'Aumenta tu capacidad de mochila en +10 ranuras.'},
+  bag_silk:{t:'bag',name:'Bolsa de Seda de Araña',ic:'bag',col:'#dfe6f0',slots:14,extraSlots:14,price:200,desc:'Aumenta tu capacidad de mochila en +14 ranuras.'},
+  bag_rune:{t:'bag',name:'Bolsa de Paño Rúnico',ic:'bag',col:'#c084fc',slots:18,extraSlots:18,price:450,desc:'Aumenta tu capacidad de mochila en +18 ranuras.'},
+  bag_astral:{t:'bag',name:'Mochila Astral Cósmica',ic:'bag',col:'#38bdf8',slots:24,extraSlots:24,price:1000,desc:'Aumenta tu capacidad de mochila en +24 ranuras.'}
 };
 
 /* ---------- Catálogo de Fabricación (Recetas) ---------- */
@@ -223,11 +237,11 @@ const RECIPES={
   gear_trinket_haste:{id:'gear_trinket_haste',name:'Abalorio de Celeridad Épica',cat:'jewel',lvl:34,mat:{ore_mithril:5,herb_frost:4},slot:'trinket1',rar:2,price:340,desc:'Abalorio que aumenta la velocidad y el crítico.'},
   gear_trinket_phoenix:{id:'gear_trinket_phoenix',name:'Abalorio del Fénix Renacido',cat:'jewel',lvl:55,mat:{magma_core:5,dragon_scale:4},slot:'trinket2',rar:3,price:850,desc:'Abalorio legendario con el fuego del Fénix.'},
   // Sastrería y Peletería (Mochilas)
-  craft_bag_linen:{id:'craft_bag_linen',name:'Bolsa de Lino (+6)',cat:'bags',lvl:3,mat:{cloth_linen:4},out:{t:'bag',key:'bag_linen',n:1},price:20,desc:'Cose una bolsa de lino de 6 ranuras.'},
-  craft_bag_leather:{id:'craft_bag_leather',name:'Bolsa de Cuero (+10)',cat:'bags',lvl:10,mat:{leather_light:6},out:{t:'bag',key:'bag_leather',n:1},price:60,desc:'Fabrica una bolsa de cuero de 10 ranuras.'},
-  craft_bag_silk:{id:'craft_bag_silk',name:'Bolsa de Seda (+14)',cat:'bags',lvl:20,mat:{cloth_silk:6,leather_thick:2},out:{t:'bag',key:'bag_silk',n:1},price:150,desc:'Cose una bolsa de seda de 14 ranuras.'},
-  craft_bag_rune:{id:'craft_bag_rune',name:'Bolsa de Paño Rúnico (+18)',cat:'bags',lvl:35,mat:{cloth_rune:6,crystal_gem:3},out:{t:'bag',key:'bag_rune',n:1},price:350,desc:'Cose una bolsa de paño rúnico de 18 ranuras.'},
-  craft_bag_astral:{id:'craft_bag_astral',name:'Mochila Astral Cósmica (+24)',cat:'bags',lvl:50,mat:{ore_astral:6,essence_void:4,cloth_rune:6},out:{t:'bag',key:'bag_astral',n:1},price:800,desc:'Crea la mochila legendaria de 24 ranuras.'}
+  craft_bag_linen:{id:'craft_bag_linen',name:'Bolsa de Lino (+6)',cat:'bags',lvl:3,mat:{cloth_linen:4},out:{t:'bag',key:'bag_linen',slots:6,extraSlots:6,n:1},price:20,desc:'Cose una bolsa de lino de 6 ranuras.'},
+  craft_bag_leather:{id:'craft_bag_leather',name:'Bolsa de Cuero (+10)',cat:'bags',lvl:10,mat:{leather_light:6},out:{t:'bag',key:'bag_leather',slots:10,extraSlots:10,n:1},price:60,desc:'Fabrica una bolsa de cuero de 10 ranuras.'},
+  craft_bag_silk:{id:'craft_bag_silk',name:'Bolsa de Seda (+14)',cat:'bags',lvl:20,mat:{cloth_silk:6,leather_thick:2},out:{t:'bag',key:'bag_silk',slots:14,extraSlots:14,n:1},price:150,desc:'Cose una bolsa de seda de 14 ranuras.'},
+  craft_bag_rune:{id:'craft_bag_rune',name:'Bolsa de Paño Rúnico (+18)',cat:'bags',lvl:35,mat:{cloth_rune:6,crystal_gem:3},out:{t:'bag',key:'bag_rune',slots:18,extraSlots:18,n:1},price:350,desc:'Cose una bolsa de paño rúnico de 18 ranuras.'},
+  craft_bag_astral:{id:'craft_bag_astral',name:'Mochila Astral Cósmica (+24)',cat:'bags',lvl:50,mat:{ore_astral:6,essence_void:4,cloth_rune:6},out:{t:'bag',key:'bag_astral',slots:24,extraSlots:24,n:1},price:800,desc:'Crea la mochila legendaria de 24 ranuras.'}
 };
 
 function genItem(ilvl,rar,slot,cls){
@@ -263,6 +277,7 @@ function namedGear(ilvl,rar,slot,cls,name,boost){
 
 /* ---------- Sistema de Títulos y Logros ---------- */
 const TITLES={
+  novice:'el Novato',
   explorer:'el Explorador',
   champion_alba:'el Campeón de Alba',
   dragon_slayer:'Matador de Dragones',
@@ -281,37 +296,43 @@ const TITLES={
   mountaineer:'el Alpinista',
   patriarch:'el Patriarca'
 };
+function getTitleName(t){
+  if(!t)return '';
+  const val=TITLES[t];
+  if(!val)return String(t);
+  return typeof val==='string'?val:(val.name||String(t));
+}
 
 const ACHIEVEMENTS=[
   {id:'lvl5',cat:'prog',name:'Primeros Pasos',desc:'Alcanza el nivel 5 de tu clase.',pts:10,check:p=>p.level>=5,max:5,cur:p=>p.level},
-  {id:'lvl20',cat:'prog',name:'Veterano de Alba',desc:'Alcanza el nivel 20.',pts:20,reward:'champion_alba',check:p=>p.level>=20,max:20,cur:p=>p.level},
+  {id:'lvl20',cat:'prog',name:'Veterano de Alba',desc:'Alcanza el nivel 20.',pts:20,reward:'champion_alba',title:'champion_alba',check:p=>p.level>=20,max:20,cur:p=>p.level},
   {id:'lvl40',cat:'prog',name:'Héroe Legendario',desc:'Alcanza el nivel 40.',pts:35,check:p=>p.level>=40,max:40,cur:p=>p.level},
-  {id:'lvl60',cat:'prog',name:'Supremacía Absoluta',desc:'Alcanza el nivel máximo (60).',pts:50,reward:'immortal',check:p=>p.level>=60,max:60,cur:p=>p.level},
+  {id:'lvl60',cat:'prog',name:'Supremacía Absoluta',desc:'Alcanza el nivel máximo (60).',pts:50,reward:'immortal',title:'immortal',check:p=>p.level>=60,max:60,cur:p=>p.level},
   {id:'gold1k',cat:'prog',name:'Bolsillos Llenos',desc:'Acumula 1.000 de oro.',pts:15,check:p=>p.gold>=1000,max:1000,cur:p=>p.gold},
-  {id:'gold10k',cat:'prog',name:'Fortuna Incalculable',desc:'Acumula 10.000 de oro.',pts:30,reward:'tycoon',check:p=>p.gold>=10000,max:1000,cur:p=>p.gold},
+  {id:'gold10k',cat:'prog',name:'Fortuna Incalculable',desc:'Acumula 10.000 de oro.',pts:30,reward:'tycoon',title:'tycoon',check:p=>p.gold>=10000,max:10000,cur:p=>Math.min(10000,p.gold||0)},
   {id:'kill50',cat:'combat',name:'Defensor Novato',desc:'Abate 50 criaturas en Astra.',pts:10,check:p=>(p.kills||0)>=50,max:50,cur:p=>p.kills||0},
   {id:'kill250',cat:'combat',name:'Azote de Fieras',desc:'Abate 250 criaturas hostiles.',pts:25,check:p=>(p.kills||0)>=250,max:250,cur:p=>p.kills||0},
-  {id:'kill1000',cat:'combat',name:'La Muerte Encarnada',desc:'Abate 1.000 criaturas.',pts:50,reward:'high_marshal',check:p=>(p.kills||0)>=1000,max:1000,cur:p=>p.kills||0},
+  {id:'kill1000',cat:'combat',name:'La Muerte Encarnada',desc:'Abate 1.000 criaturas.',pts:50,reward:'high_marshal',title:'high_marshal',check:p=>(p.kills||0)>=1000,max:1000,cur:p=>p.kills||0},
   {id:'crit30',cat:'combat',name:'Golpe Certero',desc:'Alcanza 30% de probabilidad de golpe crítico.',pts:20,check:p=>(p.crit||0)>=30,max:30,cur:p=>Math.min(30,Math.round(p.crit||0))},
   {id:'boss_gorrak',cat:'boss',name:'La Caída de Gorrak',desc:'Derrota a Gorrak, Guardián de la Cueva.',pts:25,check:p=>p.quests&&p.quests.q6&&p.quests.q6.state==='done',max:1,cur:p=>p.quests&&p.quests.q6&&p.quests.q6.state==='done'?1:0},
-  {id:'boss_queen',cat:'boss',name:'Invierno Roto',desc:'Derrota a la Reina Escarcha en su palacio.',pts:30,reward:'frost_walker',check:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done',max:1,cur:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done'?1:0},
-  {id:'boss_ignis',cat:'boss',name:'Fuego Extinguido',desc:'Abate al temible Dragón Ancestral Ignis.',pts:40,reward:'dragon_slayer',check:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done',max:1,cur:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done'?1:0},
-  {id:'boss_titan',cat:'boss',name:'Desmantelar al Titán',desc:'Destruye al Coloso Forjado de los Titanes.',pts:45,reward:'colossus',check:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done',max:1,cur:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done'?1:0},
-  {id:'boss_void',cat:'boss',name:'Grieta Cerrada',desc:'Derrota al Terror del Vacío Infinito.',pts:50,reward:'void_walker',check:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done',max:1,cur:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done'?1:0},
-  {id:'boss_lich',cat:'boss',name:'El Fin del Rey Exánime',desc:'Destruye a Malakor, Rey Exánime de la Plaga.',pts:60,reward:'lich_slayer',check:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done',max:1,cur:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done'?1:0},
-  {id:'dungeon_clear',cat:'boss',name:'Profanador de Criptas',desc:'Completa una mazmorra grupal de instancia.',pts:35,reward:'crypt_keeper',check:p=>p.dungeonsCleared&&p.dungeonsCleared>=1,max:1,cur:p=>p.dungeonsCleared||0},
+  {id:'boss_queen',cat:'boss',name:'Invierno Roto',desc:'Derrota a la Reina Escarcha en su palacio.',pts:30,reward:'frost_walker',title:'frost_walker',check:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done',max:1,cur:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done'?1:0},
+  {id:'boss_ignis',cat:'boss',name:'Fuego Extinguido',desc:'Abate al temible Dragón Ancestral Ignis.',pts:40,reward:'dragon_slayer',title:'dragon_slayer',check:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done',max:1,cur:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done'?1:0},
+  {id:'boss_titan',cat:'boss',name:'Desmantelar al Titán',desc:'Destruye al Coloso Forjado de los Titanes.',pts:45,reward:'colossus',title:'colossus',check:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done',max:1,cur:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done'?1:0},
+  {id:'boss_void',cat:'boss',name:'Grieta Cerrada',desc:'Derrota al Terror del Vacío Infinito.',pts:50,reward:'void_walker',title:'void_walker',check:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done',max:1,cur:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done'?1:0},
+  {id:'boss_lich',cat:'boss',name:'El Fin del Rey Exánime',desc:'Destruye a Malakor, Rey Exánime de la Plaga.',pts:60,reward:'lich_slayer',title:'lich_slayer',check:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done',max:1,cur:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done'?1:0},
+  {id:'dungeon_clear',cat:'boss',name:'Profanador de Criptas',desc:'Completa una mazmorra grupal de instancia.',pts:35,reward:'crypt_keeper',title:'crypt_keeper',check:p=>p.dungeonsCleared&&p.dungeonsCleared>=1,max:1,cur:p=>p.dungeonsCleared||0},
   {id:'exp_wp3',cat:'exp',name:'Viajero del Telar',desc:'Descubre 3 obeliscos de viaje.',pts:15,check:p=>Object.keys(p.disc||{}).length>=3,max:3,cur:p=>Object.keys(p.disc||{}).length},
-  {id:'exp_wpall',cat:'exp',name:'Cartógrafo Imperial',desc:'Descubre 8 obeliscos por toda Astra.',pts:35,reward:'explorer',check:p=>Object.keys(p.disc||{}).length>=8,max:8,cur:p=>Object.keys(p.disc||{}).length},
+  {id:'exp_wpall',cat:'exp',name:'Cartógrafo Imperial',desc:'Descubre 8 obeliscos por toda Astra.',pts:35,reward:'explorer',title:'explorer',check:p=>Object.keys(p.disc||{}).length>=8,max:8,cur:p=>Object.keys(p.disc||{}).length},
   {id:'exp_cap',cat:'exp',name:'La Joya Imperial',desc:'Visita la Gran Ciudad de Astra.',pts:15,check:p=>p.disc&&p.disc.capital,max:1,cur:p=>p.disc&&p.disc.capital?1:0},
-  {id:'exp_peaks',cat:'exp',name:'Sobre las Nubes',desc:'Alcanza las altas cumbres de los Titanes.',pts:20,reward:'mountaineer',check:p=>p.disc&&p.disc.titanpeaks,max:1,cur:p=>p.disc&&p.disc.titanpeaks?1:0},
+  {id:'exp_peaks',cat:'exp',name:'Sobre las Nubes',desc:'Alcanza las altas cumbres de los Titanes.',pts:20,reward:'mountaineer',title:'mountaineer',check:p=>p.disc&&p.disc.titanpeaks,max:1,cur:p=>p.disc&&p.disc.titanpeaks?1:0},
   {id:'craft1',cat:'craft',name:'Primeras Creaciones',desc:'Fabrica tu primera receta en la mesa.',pts:10,check:p=>(p.craftedCount||0)>=1,max:1,cur:p=>p.craftedCount||0},
-  {id:'craft15',cat:'craft',name:'Maestro de la Forja',desc:'Elabora 15 recetas de artesanía.',pts:30,reward:'master_crafter',check:p=>(p.craftedCount||0)>=15,max:15,cur:p=>p.craftedCount||0},
-  {id:'bags4',cat:'craft',name:'El Gran Mochilero',desc:'Equipa las 4 bolsas adicionales en tu mochila.',pts:25,reward:'packrat',check:p=>p.bags&&p.bags.filter(b=>!!b).length>=4,max:4,cur:p=>p.bags?p.bags.filter(b=>!!b).length:0},
+  {id:'craft15',cat:'craft',name:'Maestro de la Forja',desc:'Elabora 15 recetas de artesanía.',pts:30,reward:'master_crafter',title:'master_crafter',check:p=>(p.craftedCount||0)>=15,max:15,cur:p=>p.craftedCount||0},
+  {id:'bags4',cat:'craft',name:'El Gran Mochilero',desc:'Equipa las 4 bolsas adicionales en tu mochila.',pts:25,reward:'packrat',title:'packrat',check:p=>p.bags&&p.bags.filter(b=>!!b).length>=4,max:4,cur:p=>p.bags?p.bags.filter(b=>!!b).length:0},
   {id:'pvp1',cat:'pvp',name:'Primer Duelo',desc:'Gana un duelo honorable contra otro aventurero.',pts:15,check:p=>(p.duelsWon||0)>=1,max:1,cur:p=>p.duelsWon||0},
-  {id:'pvp5',cat:'pvp',name:'Gladiador de las Arenas',desc:'Gana 5 duelos JcJ.',pts:35,reward:'gladiator',check:p=>(p.duelsWon||0)>=5,max:5,cur:p=>p.duelsWon||0},
-  {id:'pvp15',cat:'pvp',name:'El Invicto',desc:'Gana 15 duelos JcJ.',pts:50,reward:'unvanquished',check:p=>(p.duelsWon||0)>=15,max:15,cur:p=>p.duelsWon||0},
+  {id:'pvp5',cat:'pvp',name:'Gladiador de las Arenas',desc:'Gana 5 duelos JcJ.',pts:35,reward:'gladiator',title:'gladiator',check:p=>(p.duelsWon||0)>=5,max:5,cur:p=>p.duelsWon||0},
+  {id:'pvp15',cat:'pvp',name:'El Invicto',desc:'Gana 15 duelos JcJ.',pts:50,reward:'unvanquished',title:'unvanquished',check:p=>(p.duelsWon||0)>=15,max:15,cur:p=>p.duelsWon||0},
   {id:'guild_join',cat:'pvp',name:'Unión de Campeones',desc:'Funda o únete a una hermandad.',pts:15,check:p=>!!p.guild,max:1,cur:p=>p.guild?1:0},
-  {id:'guild_perks',cat:'pvp',name:'Patriarca del Clan',desc:'Alcanza el nivel 3 con tu hermandad.',pts:30,reward:'patriarch',check:p=>p.guild&&p.guild.level>=3,max:3,cur:p=>p.guild?p.guild.level:0}
+  {id:'guild_perks',cat:'pvp',name:'Patriarca del Clan',desc:'Alcanza el nivel 3 con tu hermandad.',pts:30,reward:'patriarch',title:'patriarch',check:p=>p.guild&&p.guild.level>=3,max:3,cur:p=>p.guild?p.guild.level:0}
 ];
 function bossLoot(kind,cls){
   if(kind==='boss'){
@@ -867,16 +888,16 @@ function genWorld(){
     }
   }
   for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=idx(x,y);if(tiles[i]===T.WATER&&wdepth[i]>=2&&hash2(x+3,y+8)<0.05&&zmap[i]!==ZI.snow)deco[i]=D.LILY}
+  // El mapa no tiene muros artificiales en el borde, permitiendo un mundo expansivo y continuo
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const e=Math.min(x,y,W-1-x,H-1-y);
-    if(e>2)continue;
+    if(e>1)continue;
     const i=idx(x,y);
-    if(e<=1)block[i]=1;
     if(tiles[i]===T.WATER||tiles[i]===T.BOG||tiles[i]===T.BRIDGE)continue;
-    if(e<=1||hash2(x+9,y+4)<0.7){
+    if(hash2(x+9,y+4)<0.2){
       const zid=Z[zmap[i]].id;
       const code=zid==='snow'?D.SNOWPINE:zid==='swamp'?D.DEAD:(zid==='desert'||zid==='hills'||zid==='volcano'||zid==='peaks')?D.ROCK:hash2(x,y)<0.6?D.PINE:D.OAK;
-      deco[i]=code;block[i]=1;
+      deco[i]=code;
     }
   }
   const acc={};
@@ -916,13 +937,15 @@ function genWorld(){
 genWorld();
 
 function zoneAt(tx,ty){
-  if(!inb(tx,ty))return Z[0];
-  return Z[zmap[idx(tx,ty)]];
+  const wx=((tx%W)+W)%W,wy=((ty%H)+H)%H;
+  return Z[zmap[wy*W+wx]]||Z[0];
 }
-function zoneIdAt(tx,ty){return inb(tx,ty)?Z[zmap[idx(tx,ty)]].id:'meadow'}
+function zoneIdAt(tx,ty){
+  const wx=((tx%W)+W)%W,wy=((ty%H)+H)%H;
+  return Z[zmap[wy*W+wx]]?Z[zmap[wy*W+wx]].id:'meadow';
+}
 function solidAt(px,py){
-  const tx=Math.floor(px/TILE),ty=Math.floor(py/TILE);
-  if(tx<0||ty<0||tx>=W||ty>=H)return true;
+  const tx=((Math.floor(px/TILE)%W)+W)%W,ty=((Math.floor(py/TILE)%H)+H)%H;
   return block[ty*W+tx]===1;
 }
 function hitsWall(x,y,r){return solidAt(x-r,y-r*0.5)||solidAt(x+r,y-r*0.5)||solidAt(x-r,y+r*0.6)||solidAt(x+r,y+r*0.6)}
@@ -968,6 +991,7 @@ function findPath(sx,sy,gx,gy){
   if(!s||!g)return null;
   const si=idx(s.x,s.y),gi=idx(g.x,g.y);
   if(si===gi)return [{x:gx,y:gy}];
+  if(searchId>=4294967000){searchId=0;seen.fill(0)}
   searchId++;
   const heap=[],hf=[];
   function push(i,f){heap.push(i);hf.push(f);let c=heap.length-1;while(c>0){const p=(c-1)>>1;if(hf[p]<=hf[c])break;[heap[p],heap[c]]=[heap[c],heap[p]];[hf[p],hf[c]]=[hf[c],hf[p]];c=p}}

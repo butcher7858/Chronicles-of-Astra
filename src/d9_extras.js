@@ -184,7 +184,8 @@ function initTargetMenu(){
     if(m.querySelector('#tmAttack'))m.querySelector('#tmAttack').onclick=()=>{m.hidden=true;tryUse(0)};
     if(m.querySelector('#tmInspect'))m.querySelector('#tmInspect').onclick=()=>{
       m.hidden=true;
-      toast(t.name+' · Nivel '+(t.level||1)+' · Vida: '+Math.ceil(t.hp)+'/'+t.maxhp);
+      if(typeof openInspector==='function')openInspector(t);
+      else toast(t.name+' · Nivel '+(t.level||1)+' · Vida: '+Math.ceil(t.hp)+'/'+t.maxhp);
     };
   };
   tframe.addEventListener('contextmenu',openMenu);
@@ -762,6 +763,11 @@ function openKeysModal(){
         b.textContent='Pulsa combo...';b.style.borderColor='var(--gold)';
         const handler=e=>{
           e.preventDefault();e.stopPropagation();
+          if(e.key==='Escape'){
+            window.removeEventListener('keydown',handler,true);
+            draw();
+            return;
+          }
           const combo=comboFromEvent(e);
           if(!combo)return;
           window.removeEventListener('keydown',handler,true);
@@ -1077,9 +1083,9 @@ function renderGuildUI(){
       (isLeader?(m.name===P.name?'<td style="color:var(--muted);font-size:11px">Líder Supremo</td>':'<td><button class="btn xs" data-gprom="'+idx+'" title="Ascender">▲</button> <button class="btn xs sec" data-gdem="'+idx+'" title="Degradar">▼</button> <button class="btn xs err" data-gkick="'+idx+'" title="Expulsar">✕</button></td>'):'')+'</tr>').join('')+
     '</tbody></table>'+
     '<div class="btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn sm" id="btnOpenGBank">'+svg('bank','#e0a93d')+' Banco de Hermandad</button>'+
-    '<button class="btn sm sec" id="btnOpenRankings">'+svg('cup','#ffd700')+' Rankings</button>'+
-    '<button class="btn sm sec" id="btnLeaveGuild">Abandonar Hermandad</button>'+
+    '<button class="btn sm gcard-btn" id="btnOpenGBank">'+svg('bank','#e0a93d')+' Banco de Hermandad</button>'+
+    '<button class="btn sm sec gcard-btn" id="btnOpenRankings">'+svg('cup','#ffd700')+' Rankings</button>'+
+    '<button class="btn sm sec gcard-btn" id="btnLeaveGuild">Abandonar Hermandad</button>'+
     '</div>';
   if(b.querySelector('#btnLeaveGuild'))b.querySelector('#btnLeaveGuild').onclick=()=>{
     P.guild=null;toast('Has salido de la hermandad');renderGuildUI();
