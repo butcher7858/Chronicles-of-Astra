@@ -160,7 +160,11 @@ const MOBS={
   golem:{name:'Gólem de Escarcha',lv:[18,20],speed:62,aggro:140,size:24,hpM:2.6,dmgM:1.8,atkCd:2.8,kind:'golem',look:{body:'#8fc4e0',dark:'#4f86ac',eye:'#c8f4ff'},junk:'frost'},
   yetik:{name:'Brutus, Rey de las Nieves',lv:[19,19],speed:88,aggro:210,size:28,hpM:4,dmgM:1.9,atkCd:2.1,kind:'human',scale:2.2,look:{body:'#cde0f0',trim:'#8fb0d0',legs:'#b0c8dc',weapon:'club',skin:'#b0d0e8',hair:'#ffffff',hairStyle:2,eye:'#ff5a3a',fur:1},elite:true,rare:true,junk:'fur'},
   fskel:{name:'Guardián Helado',lv:[19,20],speed:88,aggro:180,size:14,hpM:1.3,dmgM:1.4,atkCd:2,kind:'human',look:{body:'#9ac8e8',trim:'#d8f2ff',legs:'#7fb0d0',weapon:'sword',blade:'#bfe8ff',skin:'#d8f2ff',hair:null,hairStyle:3,eye:'#3ae0ff',skel:1},junk:'frost'},
-  queen:{name:'Reina Escarcha',lv:[20,20],speed:80,aggro:240,size:28,hpM:14,dmgM:2.4,atkCd:2.2,kind:'human',scale:2.3,ranged:false,look:{body:'#5a8fc8',trim:'#d8f2ff',legs:'#3a5f98',weapon:'staff',orb:'#9fe8ff',skin:'#cfe8f8',hair:'#f4fbff',hairStyle:2,hat:'#bfe8ff',hatType:'crown',eye:'#3ae0ff',cape:'#2f5a9a',pads:'#bfe8ff'},elite:true,boss:true}
+  queen:{name:'Reina Escarcha',lv:[20,20],speed:80,aggro:240,size:28,hpM:14,dmgM:2.4,atkCd:2.2,kind:'human',scale:2.3,ranged:false,look:{body:'#5a8fc8',trim:'#d8f2ff',legs:'#3a5f98',weapon:'staff',orb:'#9fe8ff',skin:'#cfe8f8',hair:'#f4fbff',hairStyle:2,hat:'#bfe8ff',hatType:'crown',eye:'#3ae0ff',cape:'#2f5a9a',pads:'#bfe8ff'},elite:true,boss:true},
+  abyss_stalker:{name:'Acechador Abisal',lv:[12,14],speed:92,aggro:180,size:14,hpM:1.3,dmgM:1.2,atkCd:1.8,kind:'arach',look:{body:'#241830',dark:'#120a18',eye:'#a030ff'},junk:'shard'},
+  abyss_gargoyle:{name:'Gárgola Pétrea',lv:[13,15],speed:85,aggro:190,size:17,hpM:1.6,dmgM:1.4,atkCd:2.0,kind:'quad',look:{body:'#55505c',dark:'#322e38',eye:'#ff5040'},junk:'ore'},
+  abyss_boss:{name:'Malok, Tirano del Abismo',lv:[15,15],speed:82,aggro:240,size:32,hpM:13,dmgM:2.3,atkCd:2.1,kind:'human',scale:2.5,look:{body:'#1f152b',trim:'#a040ff',legs:'#120c1c',weapon:'sword',blade:'#c080ff',skin:'#705088',hat:'#2a183d',hatType:'horns',eye:'#c030ff',pads:'#603099',cape:'#3a1050'},elite:true,boss:true},
+  mountain_drake:{name:'Draco de las Cumbres',lv:[16,18],speed:102,aggro:210,size:22,hpM:2.2,dmgM:1.6,atkCd:1.9,kind:'quad',look:{body:'#304a60',dark:'#1a2d3c',eye:'#ffaa20',ears:1},elite:true,junk:'shard'}
 };
 
 /* ---------- Misiones ---------- */
@@ -231,23 +235,26 @@ const Z=[
   {id:'desert',name:'Dunas Ardientes',lv:'Niveles 13 – 17',tile:T.DUNE},
   {id:'snow',name:'Cumbres Heladas',lv:'Niveles 16 – 20',tile:T.SNOW},
   {id:'town',name:'Villa Alba',lv:'Zona segura',safe:true},
+  {id:'bastion',name:'Bastión de Piedra',lv:'Zona segura',safe:true},
   {id:'cieno',name:'Aldea Cieno',lv:'Zona segura',safe:true},
   {id:'oasis',name:'Oasis Sol',lv:'Zona segura',safe:true},
   {id:'cumbre',name:'Campamento Cumbre',lv:'Zona segura',safe:true},
+  {id:'abyss',name:'Cavernas del Abismo',lv:'Niveles 12 – 15'},
   {id:'palace',name:'Palacio de Escarcha',lv:'Niveles 19 – 20'}
 ];
 const ZI={};Z.forEach((z,i)=>{ZI[z.id]=i});
 const AREAS={
-  town:{x:28,y:62,w:30,h:26},cieno:{x:27,y:125,w:18,h:14},oasis:{x:151,y:119,w:18,h:14},cumbre:{x:147,y:34,w:18,h:14},
-  cave:{x:106,y:4,w:24,h:22},palace:{x:172,y:4,w:24,h:22}
+  town:{x:28,y:62,w:30,h:26},bastion:{x:78,y:18,w:22,h:18},cieno:{x:27,y:125,w:18,h:14},oasis:{x:151,y:119,w:18,h:14},cumbre:{x:147,y:34,w:18,h:14},
+  cave:{x:106,y:4,w:24,h:22},abyss:{x:54,y:8,w:22,h:20},palace:{x:172,y:4,w:24,h:22}
 };
 const WAYPOINTS=[
   {id:'town',name:'Villa Alba',tx:40,ty:76,gx:40,gy:78},
+  {id:'bastion',name:'Bastión de Piedra',tx:88,ty:26,gx:88,gy:28},
   {id:'cieno',name:'Aldea Cieno',tx:36,ty:131,gx:36,gy:133},
   {id:'oasis',name:'Oasis Sol',tx:160,ty:123,gx:160,gy:125},
   {id:'cumbre',name:'Campamento Cumbre',tx:156,ty:40,gx:156,gy:42}
 ];
-const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16};
+const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16};
 const SPAWN_P={x:43*TILE+16,y:77*TILE+16};
 const tiles=new Uint8Array(W*H),block=new Uint8Array(W*H),deco=new Uint8Array(W*H),shade=new Uint8Array(W*H),zmap=new Uint8Array(W*H);
 const shore=new Uint8Array(W*H),wdepth=new Uint8Array(W*H),pathNear=new Uint8Array(W*H),keep=new Uint8Array(W*H);
@@ -348,11 +355,11 @@ function genWorld(){
     const i=idx(x,y),z=biomeBase(x,y);
     zmap[i]=z;tiles[i]=Z[z].tile;shade[i]=Math.floor(hash2(x,y)*4);
   }
-  for(const id of ['town','cieno','oasis','cumbre']){
+  for(const id of ['town','cieno','oasis','cumbre','bastion']){
     const r=AREAS[id];
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){
       const i=idx(x,y);zmap[i]=ZI[id];
-      tiles[i]=id==='town'?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:T.SNOW;
+      tiles[i]=id==='town'||id==='bastion'?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:T.SNOW;
     }
   }
   lake(62,104,12,6.5,T.WATER,T.SAND);lake(116,78,6,4.5,T.WATER,T.SAND);lake(20,24,5,3.5,T.WATER,T.SAND);
@@ -366,10 +373,13 @@ function genWorld(){
   }
   dungeon(AREAS.cave,T.CAVE,ZI.cave,15);
   dungeon(AREAS.palace,T.ICE,ZI.palace,15);
+  dungeon(AREAS.abyss,T.CAVE,ZI.abyss,18);
   carve([[43,74],[60,74],[76,73],[90,71],[100,70],[112,70],[126,67],[138,62]],1.7);
   carve([[100,70],[102,86],[112,98],[128,106],[144,116],[152,124],[160,126]],1.4);
   carve([[112,70],[112,52],[110,36],[106,24],[103,15],[107,15]],1.4);
   carve([[43,62],[44,50],[56,40],[72,34],[90,26],[103,15]],1.4);
+  carve([[56,40],[70,30],[80,26],[88,26]],1.5);
+  carve([[80,26],[68,20],[58,18],[54,18]],1.5);
   carve([[43,88],[44,100],[40,112],[38,122],[36,126]],1.4);
   carve([[28,74],[14,74],[6,70]],1.4);
   carve([[138,62],[146,54],[152,46],[156,41]],1.4);
@@ -388,14 +398,24 @@ function genWorld(){
   for(const h of hs){h.type='house';addBuilding(h)}
   addProp('fountain',43,74,true);
   addProp('obelisk',40,76,true,{wp:'town'});
+  addProp('noticeboard',45,76,true);
   addProp('anvil',49,70,true);addProp('stall',37,78,true,{col:'#3f8a5c'});
   addProp('stall',39,72,true,{col:'#a0452a'});addProp('stall',47,72,true,{col:'#2a5fa0'});
   for(const l of [[37,69],[49,69],[37,79],[49,79],[43,66],[43,83]])LAMPS.push({x:l[0],y:l[1]});
   for(const l of LAMPS)addProp('lamp',l.x,l.y,true);
   for(const t of [[28,70],[28,79],[57,70],[57,79],[35,87],[51,87]]){const i=idx(t[0],t[1]);if(!block[i]){deco[i]=D.OAK;block[i]=1}}
+  /* Bastión de Piedra */
+  fillTiles(82,20,95,31,T.COBBLE);
+  addBuilding({x:84,y:21,w:8,h:5,roof:'#444e5a',wall:'#7a746e',type:'house',name:'Fortaleza'});
+  addBuilding({x:93,y:22,w:5,h:4,roof:'#8a3a30',wall:'#8a847e',type:'house',name:'Herrería'});
+  addProp('obelisk',88,26,true,{wp:'bastion'});
+  addProp('noticeboard',90,26,true);
+  addProp('anvil',94,27,true);
+  addProp('campfire',86,28,true);
+  addProp('lamp',84,27,true);LAMPS.push({x:84,y:27});
   ellipseTiles(36,132,7.5,5.5,T.PATH);
   for(const h of [{x:29,y:127,w:4,h:3},{x:39,y:127,w:4,h:3},{x:29,y:134,w:4,h:3},{x:40,y:134,w:4,h:3}])addBuilding(Object.assign(h,{type:'hut',roof:'#a8873a',wall:'#6a4a2a'}));
-  addProp('obelisk',36,131,true,{wp:'cieno'});addProp('campfire',36,134,true);
+  addProp('obelisk',36,131,true,{wp:'cieno'});addProp('noticeboard',38,131,true);addProp('campfire',36,134,true);
   addProp('lamp',33,129,true);LAMPS.push({x:33,y:129});addProp('lamp',40,129,true);LAMPS.push({x:40,y:129});
   ellipseTiles(160,123,7.5,4.2,T.PATH);
   for(const h of [{x:153,y:120,w:4,h:3,roof:'#c0502e'},{x:164,y:120,w:4,h:3,roof:'#2e6fa0'},{x:152,y:125,w:3,h:3,roof:'#d8a82a'},{x:166,y:125,w:3,h:3,roof:'#7a3a8a'}])addBuilding(Object.assign(h,{type:'tent',wall:'#e8dcc0'}));

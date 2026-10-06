@@ -180,6 +180,18 @@ function drawProp(p,t,night){
       const fl=(sc,col,off)=>{const h=18*sc+Math.sin(t*9+off)*3;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(x-7*sc,y);ctx.quadraticCurveTo(x-8*sc,y-h*0.5,x+Math.sin(t*7+off)*3,y-h);ctx.quadraticCurveTo(x+8*sc,y-h*0.5,x+7*sc,y);ctx.closePath();ctx.fill()};
       fl(1,'#e8571e',0);fl(0.75,'#ffa534',1.7);fl(0.45,'#ffe28a',3.1);
       break}
+    case 'noticeboard':{
+      ell(x,y+6,18,6,'rgba(0,0,0,0.3)');
+      ctx.fillStyle='#4a2f1a';ctx.fillRect(x-2,y-14,4,20);
+      ctx.fillStyle='#6a4a2a';ctx.fillRect(x-16,y-30,32,18);
+      ctx.strokeStyle=OUT;ctx.lineWidth=1.2;ctx.strokeRect(x-16,y-30,32,18);
+      ctx.fillStyle='#f5ebd0';ctx.fillRect(x-13,y-27,11,12);
+      ctx.fillStyle='#eadbb5';ctx.fillRect(x+2,y-26,11,11);
+      blob(ctx,x-8,y-26,1.4,'#c9382a');
+      blob(ctx,x+7,y-25,1.4,'#d9b44a');
+      ctx.fillStyle='#3a2616';ctx.fillRect(x-11,y-22,7,1.2);ctx.fillRect(x-11,y-19,7,1.2);
+      ctx.fillRect(x+4,y-21,7,1.2);ctx.fillRect(x+4,y-18,7,1.2);
+      break}
   }
 }
 function propGlow(p,t,night){ // luces de la noche (modo 'lighter')

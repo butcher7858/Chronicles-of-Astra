@@ -317,8 +317,76 @@ body.touch #tbtns{display:flex}
   .help{grid-template-columns:1fr}
   .shopcols{grid-template-columns:1fr}
   #pInv,#pChar{left:50%;right:auto;top:50%;transform:translate(-50%,-50%);width:min(330px,calc(100% - 2*var(--g)))}
+  #partyFrame{position:absolute;left:var(--g);top:136px;display:flex;flex-direction:column;gap:5px;width:182px;pointer-events:none;z-index:10}
+  .pmem{display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:3px 6px;pointer-events:auto;font-size:12px;cursor:pointer;box-shadow:0 2px 6px #0008;transition:border-color .15s}
+  .pmem:hover{border-color:var(--gold)}
+  .pmem-port{width:28px;height:28px;border-radius:50%;border:1px solid var(--gold);background:#181108;display:grid;place-items:center;flex:none;overflow:hidden}
+  .pmem-port canvas{width:100%;height:100%;display:block}
+  .pmem-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .pmem-name{display:flex;justify-content:space-between;font-weight:700;font-size:11px}
+  .pmem-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pmem-hp{height:7px;background:#000;border-radius:1px;overflow:hidden;position:relative}
+  .pmem-hp>i{position:absolute;inset:0 auto 0 0;width:100%;background:var(--hp);transition:width .15s}
+  .pmem-mana{height:4px;background:#000;border-radius:1px;overflow:hidden;position:relative}
+  .pmem-mana>i{position:absolute;inset:0 auto 0 0;width:100%;background:var(--mana)}
+
+  #targetMenu{position:fixed;background:rgba(20,15,10,.96);border:1px solid var(--gold);border-radius:6px;box-shadow:0 6px 24px #000c;z-index:999;display:flex;flex-direction:column;min-width:145px;overflow:hidden;font-size:13px;backdrop-filter:blur(4px)}
+  #targetMenu button{background:none;border:0;color:var(--ink);padding:8px 12px;text-align:left;display:flex;align-items:center;gap:8px;font-family:var(--f-ui)}
+  #targetMenu button:hover{background:var(--panel2);color:var(--gold)}
+
+  #pTalents{left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100% - 2*var(--g)));max-height:88vh}
+  .tal-header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel2);border-radius:4px;margin-bottom:10px}
+  .tal-trees{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .tal-branch{background:rgba(14,10,6,.75);border:1px solid var(--line);border-radius:6px;padding:8px;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .tal-bname{font-family:var(--f-display);color:var(--gold);font-weight:700;font-size:13px;text-align:center}
+  .tal-tier{display:flex;gap:10px;justify-content:center}
+  .tal-node{position:relative;width:44px;height:44px;background:var(--slot);border:2px solid #5a452a;border-radius:6px;display:grid;place-items:center;cursor:pointer;transition:transform .1s,border-color .15s}
+  .tal-node:hover{transform:scale(1.08);border-color:var(--gold)}
+  .tal-node.learned{border-color:var(--gold);box-shadow:0 0 10px rgba(224,169,61,.4);background:#2c2010}
+  .tal-node.max{border-color:#5cff8a;box-shadow:0 0 12px rgba(92,255,138,.4)}
+  .tal-node svg{width:26px;height:26px}
+  .tal-node .rk{position:absolute;right:2px;bottom:0;font-size:10px;font-weight:900;text-shadow:0 1px 3px #000;color:#fff}
+  .tal-node.locked{opacity:0.35;filter:grayscale(1);pointer-events:none}
+
+  #pMounts{left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 2*var(--g)))}
+  .mount-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .mount-card{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;cursor:pointer;transition:all .15s}
+  .mount-card:hover{border-color:var(--gold)}
+  .mount-card.active{border-color:var(--gold);box-shadow:0 0 12px rgba(224,169,61,.3);background:#2f2215}
+  .mount-ic{width:48px;height:48px;border-radius:50%;background:var(--slot);border:2px solid var(--gold);display:grid;place-items:center}
+  .mount-card b{font-size:13px;color:var(--ink)}
+  .mount-card span{font-size:11px;color:var(--muted)}
+
+  #pTrade{left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 2*var(--g)))}
+  .trade-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .trade-box{background:rgba(10,8,5,.75);border:1px solid var(--line);border-radius:6px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .trade-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+  .trade-gold{display:flex;gap:6px;align-items:center;background:var(--slot);border:1px solid var(--line);border-radius:4px;padding:4px 8px;font-size:13px}
+  .trade-gold input{width:100%;background:transparent;border:0;color:#f4cf5b;font:inherit;font-weight:700}
+  .trade-status{padding:4px 8px;border-radius:3px;font-size:12px;font-weight:700;text-align:center;background:#2a2016;color:var(--muted)}
+  .trade-status.ready{background:#1f4a25;color:#7fe07f}
+
+  #pGuild{left:50%;top:50%;transform:translate(-50%,-50%);width:min(600px,calc(100% - 2*var(--g)))}
+  .gtable{width:100%;border-collapse:collapse;font-size:13px}
+  .gtable th{text-align:left;color:var(--gold);padding:6px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase}
+  .gtable td{padding:6px;border-bottom:1px dotted #3d2f1b}
+  .gmotd{background:var(--panel2);border-left:3px solid var(--gold);padding:8px;border-radius:0 4px 4px 0;font-size:13px;margin-bottom:10px}
+  .gperks{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .gperk{background:rgba(224,169,61,.1);border:1px solid rgba(224,169,61,.3);padding:4px 8px;border-radius:4px;font-size:11px;color:#f5dc9e}
+
+  .m-party{color:#5cd0ff}.m-whisper{color:#ff7ae8}.m-guild{color:#5ee88a}
+  .portrait canvas{width:100%;height:100%;border-radius:50%;display:block;image-rendering:pixelated}
+  .slot .k{position:absolute;left:2px;top:0;font-size:9px;font-weight:700;color:var(--muted);white-space:nowrap;letter-spacing:-0.5px}
+
   #joy{left:20px;bottom:120px}
-  #tbtns{bottom:230px;right:14px}
+  #tbtns{bottom:120px;right:14px;display:none;position:absolute;flex-direction:column;gap:8px;align-items:flex-end}
+  .tb{width:46px;height:46px;border-radius:50%;background:var(--panel);border:2px solid var(--line);display:grid;place-items:center;touch-action:none;box-shadow:0 3px 10px #000c;padding:0;color:var(--ink)}
+  .tb:active{transform:scale(0.92);border-color:var(--gold)}
+  .tb.atk{width:56px;height:56px;border-color:var(--gold);background:radial-gradient(circle,#3a2512,#181008)}
+  .tb svg{width:24px;height:24px}
+  .tb kbd{font-size:9px;color:var(--gold);font-weight:700}
+  body.touch #tbtns{display:flex}
+  body.touch #actionbar{flex-wrap:wrap;max-width:360px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -328,7 +396,7 @@ body.touch #tbtns{display:flex}
 
   <div id="hud" hidden>
     <div class="uf" id="pframe">
-      <div class="portrait" id="pPort"></div>
+      <div class="portrait" id="pPort"><canvas id="pPortCv" width="92" height="92"></canvas></div>
       <div class="ufbody">
         <div class="ufname"><span id="pName">Héroe</span><span class="lv" id="pLvl">1</span></div>
         <div class="bar"><i id="pHp"></i><b id="pHpTxt"></b></div>
@@ -337,14 +405,17 @@ body.touch #tbtns{display:flex}
       </div>
     </div>
     <div id="pBuffs"></div>
+    <div id="partyFrame"></div>
+
     <div class="uf" id="tframe" hidden>
-      <div class="portrait" id="tPort"></div>
+      <div class="portrait" id="tPort"><canvas id="tPortCv" width="92" height="92"></canvas></div>
       <div class="ufbody">
         <div class="ufname"><span id="tName">Objetivo</span><span class="lv" id="tLvl">1</span></div>
         <div class="bar"><i id="tHp"></i><b id="tHpTxt"></b></div>
         <div id="tTag"></div>
       </div>
     </div>
+    <div id="targetMenu" hidden></div>
 
     <div id="mini">
       <div id="miniWrap" title="Clic: abrir el mapa del mundo"><canvas id="miniCv" width="168" height="168"></canvas></div>
@@ -357,7 +428,7 @@ body.touch #tbtns{display:flex}
 
     <div id="chat">
       <div id="chatLog" role="log" aria-live="polite"></div>
-      <input id="chatIn" type="text" maxlength="120" placeholder="Pulsa Enter para escribir · /ayuda" autocomplete="off">
+      <input id="chatIn" type="text" maxlength="120" placeholder="Enter: escribir · /w /p /g /duel /trade /ayuda" autocomplete="off">
     </div>
 
     <div id="hint"></div>
@@ -371,6 +442,8 @@ body.touch #tbtns{display:flex}
       <div id="goldTxt">0 oro</div>
       <div class="row">
         <button class="mb" id="bChat">Chat</button>
+        <button class="mb" id="bTal">Talentos<kbd>N</kbd></button>
+        <button class="mb" id="bGuild">Hermandad<kbd>G</kbd></button>
         <button class="mb" id="bMount">Montura<kbd>H</kbd></button>
         <button class="mb" id="bOpts">Opciones<kbd>O</kbd></button>
       </div>
@@ -379,14 +452,18 @@ body.touch #tbtns{display:flex}
         <button class="mb" id="bChar">Personaje<kbd>C</kbd></button>
         <button class="mb" id="bInv">Mochila<kbd>B</kbd></button>
         <button class="mb" id="bQuest">Misiones<kbd>L</kbd></button>
+        <button class="mb" id="bFull" title="Pantalla Completa">⛶</button>
       </div>
     </div>
 
     <div id="joy"><div id="joyKnob"></div></div>
     <div id="tbtns">
+      <button class="tb atk" id="tbAtk" aria-label="Atacar"><svg viewBox="0 0 24 24" fill="none" stroke="#e0a93d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5-1-1 5-9.5 9.5-3.5-3.5zM6 15l3 3M4.5 19.5l2-2"/></svg></button>
+      <button class="tb" id="tbTargetM" aria-label="Objetivo"><svg viewBox="0 0 24 24" fill="none" stroke="#7fd0ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      <button class="tb" id="tbMountM" aria-label="Montura"><svg viewBox="0 0 24 24" fill="none" stroke="#d9b27a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20v-6l3-2 1-5 4-3 3 3-1 3 3 3v7M9 12h4"/></svg></button>
       <button class="tb" id="tbAct" aria-label="Interactuar"><svg viewBox="0 0 24 24" fill="none" stroke="#e0a93d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5a2 2 0 014 0v6M13 10a2 2 0 014 0v3a6 6 0 01-6 6h-1a5 5 0 01-4-2l-2-3a2 2 0 013-2l1 1"/></svg></button>
-      <button class="tb" id="tbDodge" aria-label="Esquivar"></button>
-      <button class="tb" id="tbRun" aria-label="Correr"></button>
+      <button class="tb" id="tbDodge" aria-label="Esquivar"><svg viewBox="0 0 24 24" fill="none" stroke="#8ac0ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="14" cy="5" r="2"/><path d="M6 20l4-6 3 2 2-6-4-2-3 3M13 16l2 4"/></svg></button>
+      <button class="tb" id="tbRun" aria-label="Correr"><svg viewBox="0 0 24 24" fill="none" stroke="#ffd04a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 14h6l-1 7 9-12h-6z"/></svg></button>
     </div>
 
     <div class="panel" id="pInv" hidden>
@@ -405,6 +482,50 @@ body.touch #tbtns{display:flex}
         <p class="sub">Atributos</p>
         <div id="stats"></div>
       </div>
+    </div>
+    <div class="panel" id="pTalents" hidden>
+      <header><span>ÁRBOL DE TALENTOS</span><button data-close="pTalents" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="tal-header">
+          <div><b style="color:var(--gold)" id="talPointsTxt">Puntos disponibles: 0</b> <span class="reward" style="display:block">1 punto por nivel desde nivel 3</span></div>
+          <button class="btn sm sec" id="btnRespec">Restablecer Talentos</button>
+        </div>
+        <div class="tal-trees" id="talTrees"></div>
+      </div>
+    </div>
+    <div class="panel" id="pMounts" hidden>
+      <header><span>ESTABLO DE MONTURAS</span><button data-close="pMounts" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="mount-grid" id="mountGrid"></div>
+        <p class="reward" style="margin:10px 0 0">Las monturas aumentan drásticamente tu velocidad de movimiento en Astra.</p>
+      </div>
+    </div>
+    <div class="panel" id="pTrade" hidden>
+      <header><span>COMERCIO</span><button data-close="pTrade" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="trade-cols">
+          <div class="trade-box">
+            <b style="color:var(--gold)">Tu Oferta</b>
+            <div class="trade-grid" id="tradeMySlots"></div>
+            <div class="trade-gold"><span>Oro:</span><input type="number" id="tradeMyGold" min="0" value="0"></div>
+            <div class="trade-status" id="tradeMyStatus">Esperando...</div>
+          </div>
+          <div class="trade-box">
+            <b style="color:#7fd0ff" id="tradeOtherName">Oferta</b>
+            <div class="trade-grid" id="tradeOtherSlots"></div>
+            <div class="trade-gold"><span>Oro:</span><span id="tradeOtherGold" style="color:#f4cf5b;font-weight:700">0</span></div>
+            <div class="trade-status" id="tradeOtherStatus">Esperando...</div>
+          </div>
+        </div>
+        <div class="btns" style="margin-top:12px;justify-content:space-between">
+          <button class="btn" id="btnTradeLock">Bloquear Oferta</button>
+          <button class="btn" id="btnTradeAccept" disabled>Aceptar Intercambio</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="pGuild" hidden>
+      <header><span>HERMANDAD DE ASTRA</span><button data-close="pGuild" aria-label="Cerrar">×</button></header>
+      <div class="pbody" id="guildBody"></div>
     </div>
     <div class="panel" id="pQuest" hidden>
       <header><span>DIARIO DE MISIONES</span><button data-close="pQuest" aria-label="Cerrar">×</button></header>
@@ -442,6 +563,7 @@ body.touch #tbtns{display:flex}
         <div class="optrow"><span>Sonido<small>Efectos de combate y de interfaz</small></span><button class="tog" id="tgSound" aria-pressed="true" aria-label="Sonido"></button></div>
         <div class="optrow"><span>Correr siempre<small>Alterna el sprint (Shift lo invierte)</small></span><button class="tog" id="tgRun" aria-pressed="false" aria-label="Correr siempre"></button></div>
         <div class="optrow"><span>Sacudida de cámara<small>En golpes críticos y explosiones</small></span><button class="tog" id="tgShake" aria-pressed="true" aria-label="Sacudida de cámara"></button></div>
+        <div class="optrow"><span>Ahorro de batería (Celular)<small>Optimiza el rendimiento y consumo de energía</small></span><button class="tog" id="tgBattery" aria-pressed="false" aria-label="Ahorro de batería"></button></div>
         <div class="btns"><button class="btn sec" id="btnSave">Guardar ahora</button><button class="btn sec" id="btnSwitch">Cambiar de personaje</button><button class="btn sec" id="btnLogout">Cerrar sesión</button></div>
       </div>
     </div>
