@@ -1,6 +1,6 @@
 /* ---------- Inicio ---------- */
 initSprites();
-bindPanels();initTips();bindInput();
+bindPanels();initTips();bindInput();bindExtras();
 resize();
 requestAnimationFrame(frame);
 bootScreens();
