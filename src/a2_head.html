@@ -446,6 +446,57 @@ body.touch #tbtns{display:flex}
 .tb kbd{font-size:9px;color:var(--gold);font-weight:700}
 body.touch #tbtns{display:flex}
 body.touch #actionbar{flex-wrap:wrap;max-width:360px}
+/* Barras de Poderes Duales */
+#actionbar2{display:flex;gap:4px;justify-content:center;margin-bottom:3px}
+body.touch #actionbar2{flex-wrap:wrap;max-width:360px}
+
+/* Ranuras de Mochilas */
+.bag-slots-wrap{margin-bottom:8px;padding:6px 8px;background:rgba(10,8,5,.85);border:1px solid var(--line);border-radius:5px}
+.bag-slots-title{font-size:10px;color:var(--gold);font-family:var(--f-display);letter-spacing:.1em;margin-bottom:5px;font-weight:700}
+.bag-slots-row{display:flex;gap:6px;align-items:center}
+.bag-slot-box{width:42px;height:42px;background:var(--slot);border:1px dashed #5a452a;border-radius:4px;display:grid;place-items:center;position:relative;cursor:pointer;transition:border-color .15s}
+.bag-slot-box:hover{border-color:var(--gold);background:#22180e}
+.bag-slot-box.equipped{border-style:solid;border-color:var(--gold);box-shadow:0 0 6px rgba(224,169,61,.3)}
+.bag-slot-box svg{width:24px;height:24px}
+.bag-slot-cap{position:absolute;right:2px;bottom:0;font-size:10px;font-weight:700;color:#5cff8a;text-shadow:0 1px 3px #000}
+
+/* Panel de Banco */
+#pBank{left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100% - 2*var(--g)));max-height:88vh}
+.bank-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;max-height:48vh;overflow-y:auto;padding-right:2px}
+
+/* Panel de Logros */
+#pAchieve{left:50%;top:50%;transform:translate(-50%,-50%);width:min(700px,calc(100% - 2*var(--g)));max-height:88vh}
+.ach-card{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 12px;transition:border-color .15s}
+.ach-card:hover{border-color:var(--gold)}
+.ach-card.completed{border-color:var(--gold);background:rgba(44,32,18,.8);box-shadow:inset 0 0 12px rgba(224,169,61,.15)}
+.ach-ic{width:42px;height:42px;background:var(--slot);border:1px solid #5a452a;border-radius:6px;display:grid;place-items:center;flex:none}
+.ach-ic svg{width:26px;height:26px}
+.ach-info{flex:1;min-width:0}
+.ach-title{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.ach-desc{font-size:12px;color:var(--muted);margin:2px 0 4px}
+.ach-bar-wrap{display:flex;align-items:center;gap:8px}
+.ach-bar{flex:1;height:6px;background:#000;border-radius:3px;overflow:hidden}
+.ach-bar>i{display:block;height:100%;background:linear-gradient(90deg,#e0a93d,#5cff8a);transition:width .2s}
+.ach-prog-txt{font-size:11px;color:var(--ink);min-width:40px;text-align:right}
+.ach-pts{font-weight:900;font-size:13px;color:#ffd700;flex:none;text-align:right;min-width:50px}
+.ach-reward-tag{display:inline-block;padding:1px 6px;border-radius:3px;background:#1e3a24;color:#7fe07f;font-size:10px;font-weight:700;margin-top:2px}
+
+/* Panel de Ránkings */
+#pRankings{left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,calc(100% - 2*var(--g)));max-height:88vh}
+.rank-table{width:100%;border-collapse:collapse;font-size:13px}
+.rank-table th{text-align:left;color:var(--gold);padding:8px 6px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase}
+.rank-table td{padding:6px;border-bottom:1px dotted #3d2f1b}
+.rank-medal{display:inline-block;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-weight:900;font-size:11px}
+.rank-medal.m1{background:#ffd700;color:#000}
+.rank-medal.m2{background:#c0c0c0;color:#000}
+.rank-medal.m3{background:#cd7f32;color:#000}
+
+/* Panel de Estilista / Barbería */
+#pBarber{left:50%;top:50%;transform:translate(-50%,-50%);width:min(680px,calc(100% - 2*var(--g)));max-height:88vh}
+
+/* Etiquetas de Títulos */
+.char-title-tag{color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.05em;text-align:center}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -493,6 +544,7 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
     <div id="bottom">
       <div id="castBar"><div id="castFill"></div><div id="castTxt"></div></div>
       <div id="xpBar"><div id="xpFill"></div></div>
+      <div id="actionbar2"></div>
       <div id="actionbar"></div>
     </div>
 
@@ -503,11 +555,14 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
         <button class="mb" id="bCraft">Fabricar<kbd>K</kbd></button>
         <button class="mb" id="bTal">Talentos<kbd>N</kbd></button>
         <button class="mb" id="bGuild">Hermandad<kbd>G</kbd></button>
+        <button class="mb" id="bAchieve">Logros<kbd>Y</kbd></button>
         <button class="mb" id="bMount">Montura<kbd>H</kbd></button>
         <button class="mb" id="bOpts">Opciones<kbd>O</kbd></button>
       </div>
       <div class="row">
         <button class="mb" id="bChat">Chat</button>
+        <button class="mb" id="bRankings">Ránkings</button>
+        <button class="mb" id="bBank">Banco</button>
         <button class="mb" id="bMap">Mapa<kbd>M</kbd></button>
         <button class="mb" id="bChar">Personaje<kbd>C</kbd></button>
         <button class="mb" id="bInv">Mochila<kbd>B</kbd></button>
@@ -529,19 +584,27 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
     <div class="panel" id="pInv" hidden>
       <header><span>MOCHILA</span><button data-close="pInv" aria-label="Cerrar">×</button></header>
       <div class="pbody">
+        <div class="bag-slots-wrap">
+          <div class="bag-slots-title">BOLSAS EQUIPADAS (HASTA 5 MOCHILAS)</div>
+          <div class="bag-slots-row" id="bagSlotsRow"></div>
+        </div>
         <div class="grid5" id="invGrid"></div>
         <div class="invtools"><button class="btn sm sec" id="btnSort">Ordenar</button><span class="reward" id="invCount"></span></div>
-        <p class="reward" style="margin:8px 0 0">Clic: equipar o usar. Con la tienda abierta, clic vende.</p>
+        <p class="reward" style="margin:8px 0 0">Clic: equipar o usar. Con la tienda o banco abiertos, clic transfiere.</p>
       </div>
     </div>
     <div class="panel" id="pChar" hidden>
       <header><span>PERSONAJE</span><button data-close="pChar" aria-label="Cerrar">×</button></header>
       <div class="pbody">
+        <div id="pCharTitleWrap" style="text-align:center;margin-bottom:6px">
+          <select id="pTitleSelect" style="background:#181109;border:1px solid var(--line);color:var(--gold);padding:3px 8px;border-radius:4px;font-size:12px;width:100%"></select>
+        </div>
         <p class="sub">Equipo (clic para quitar)</p>
         <div class="paperdoll-container" id="eqGrid">
           <div class="eq-col" id="eqLeft"></div>
           <div class="doll-center">
             <canvas id="pCharCv" width="140" height="180"></canvas>
+            <div id="pCharTitleDisplay" class="char-title-tag"></div>
             <button class="btn sm sec rot-btn" id="btnRotChar">Rotar ↻</button>
           </div>
           <div class="eq-col" id="eqRight"></div>
@@ -642,6 +705,78 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
         <div class="mapfoot"><span id="mapInfo">Clic en un obelisco descubierto para viajar. Cuesta oro.</span><span id="mapSel"></span></div>
       </div>
     </div>
+    <div class="panel" id="pBank" hidden>
+      <header><span id="bankTitle">BANCO DE ASTRA</span><button data-close="pBank" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="craft-tabs" id="bankTabs">
+          <button class="craft-tab active" data-banktab="personal">Banco Personal</button>
+          <button class="craft-tab" data-banktab="guild">Banco de Hermandad</button>
+        </div>
+        <div id="bankGoldRow" style="display:flex;justify-content:space-between;align-items:center;background:var(--panel2);padding:6px 10px;border-radius:4px;margin-bottom:8px">
+          <span id="bankGoldTxt" style="color:#f4cf5b;font-weight:700">Oro en Banco: 0</span>
+          <div style="display:flex;gap:4px">
+            <button class="btn sm" id="btnBankDepGold">Depositar Oro</button>
+            <button class="btn sm sec" id="btnBankWithGold">Retirar Oro</button>
+          </div>
+        </div>
+        <div class="shopcols">
+          <div><p class="sub" id="bankStorageSub">Depósito (clic para retirar)</p><div class="grid5" id="bankGrid"></div></div>
+          <div><p class="sub">Tu mochila (clic para guardar)</p><div class="grid5" id="bankInvGrid"></div></div>
+        </div>
+        <div id="guildBankLogs" style="margin-top:10px;max-height:100px;overflow-y:auto;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:4px" hidden></div>
+      </div>
+    </div>
+
+    <div class="panel" id="pAchieve" hidden>
+      <header><span>LOGROS Y TÍTULOS DE ASTRA</span><button data-close="pAchieve" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="tal-header" style="margin-bottom:8px">
+          <div><b style="color:var(--gold)" id="achPointsTxt">Puntos de Logro: 0</b> <span class="reward" id="achProgTxt">0 / 35 Completados</span></div>
+          <button class="btn sm sec" id="btnClaimTitles">Reclamar Títulos</button>
+        </div>
+        <div class="craft-tabs" id="achTabs">
+          <button class="craft-tab active" data-acat="all">Todos</button>
+          <button class="craft-tab" data-acat="prog">Progresión</button>
+          <button class="craft-tab" data-acat="combat">Combate</button>
+          <button class="craft-tab" data-acat="boss">Jefes</button>
+          <button class="craft-tab" data-acat="exp">Exploración</button>
+          <button class="craft-tab" data-acat="craft">Artesanía</button>
+          <button class="craft-tab" data-acat="pvp">JcJ y Duelos</button>
+        </div>
+        <div id="achieveList" class="craft-list" style="max-height:55vh;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="pRankings" hidden>
+      <header><span>MONUMENTO DE CLASIFICACIONES</span><button data-close="pRankings" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="craft-tabs" id="rankTabs">
+          <button class="craft-tab active" data-rtab="players">Top Jugadores de Astra</button>
+          <button class="craft-tab" data-rtab="guilds">Top Hermandades</button>
+        </div>
+        <div id="rankingsContent"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="pBarber" hidden>
+      <header><span>SALÓN DE ESTILISTA Y APARIENCIA</span><button data-close="pBarber" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="cbody">
+          <div class="cprev">
+            <canvas id="barberPrevCv" width="180" height="220"></canvas>
+            <button class="btn sm sec rot-btn" id="btnRotBarber">Rotar ↻</button>
+          </div>
+          <div class="cform" id="barberForm">
+            <!-- controles de apariencia -->
+          </div>
+        </div>
+        <div class="btns" style="margin-top:12px;justify-content:flex-end">
+          <button class="btn sec" data-close="pBarber">Cerrar</button>
+          <button class="btn" id="btnSaveBarber">Guardar Aspecto</button>
+        </div>
+      </div>
+    </div>
+
     <div class="panel" id="pOpts" hidden>
       <header><span>OPCIONES</span><button data-close="pOpts" aria-label="Cerrar">×</button></header>
       <div class="pbody">

@@ -140,6 +140,21 @@ function updatePortraits(){
 }
 
 /* ---------- 3. MENÚ CONTEXTUAL DEL OBJETIVO ---------- */
+function guildInvitePlayer(targetName){
+  if(!P.guild){toast('No perteneces a una hermandad');return}
+  const myMem=P.guild.members.find(m=>m.name===P.name);
+  const myRank=myMem?myMem.rank:(P.guild.members[0].name===P.name?'Líder':'Recluta');
+  if(myRank!=='Líder'&&myRank!=='Oficial'){toast('Solo el Líder y Oficiales pueden invitar miembros');return}
+  if(P.guild.members.some(m=>m.name===targetName)){toast(targetName+' ya está en la hermandad');return}
+  const b=G.bots.find(x=>x.name===targetName);
+  const cls=b?b.cls:'war';
+  const lvl=b?b.level:(P.level||1);
+  P.guild.members.push({name:targetName,cls:cls,lvl:lvl,rank:'Recluta'});
+  toast('¡Has invitado a '+targetName+' a '+P.guild.name+'!');
+  log('<span style="color:#5ee88a"><b>[Hermandad]</b> '+esc(targetName)+' se ha unido a la hermandad.</span>','guild');
+  sfx('quest');
+  refreshUI();
+}
 function initTargetMenu(){
   const tframe=$('tframe');if(!tframe)return;
   const openMenu=e=>{
@@ -147,9 +162,11 @@ function initTargetMenu(){
     const t=P&&P.target;if(!t||t.dead)return;
     const m=$('targetMenu');if(!m)return;
     const isPlayerOrBot=t.isPlayer||t.bot;
+    const canGuildInvite=isPlayerOrBot&&P.guild&&(P.guild.members.find(m=>m.name===P.name)?.rank==='Líder'||P.guild.members.find(m=>m.name===P.name)?.rank==='Oficial'||P.guild.members[0]?.name===P.name);
     m.innerHTML='<div style="background:#140e08;padding:6px 10px;font-weight:700;color:var(--gold);border-bottom:1px solid var(--line);font-size:12px">'+esc(t.name)+'</div>'+
       (isPlayerOrBot?'<button id="tmWhisper">'+svg('shout','#ff7ae8')+' Susurrar</button>'+
       '<button id="tmParty">'+svg('shield','#5cd0ff')+' Invitar a Grupo</button>'+
+      (canGuildInvite?'<button id="tmGuildInv">'+svg('guild','#5ee88a')+' Invitar a Hermandad</button>':'')+
       '<button id="tmDuel">'+svg('duel','#ff5544')+' Duelo</button>'+
       '<button id="tmTrade">'+svg('bag','#e8c24a')+' Comerciar</button>':
       '<button id="tmAttack">'+svg('sword','#ff4a3a')+' Atacar</button>')+
@@ -160,6 +177,7 @@ function initTargetMenu(){
 
     if(m.querySelector('#tmWhisper'))m.querySelector('#tmWhisper').onclick=()=>{m.hidden=true;openWhisper(t.name)};
     if(m.querySelector('#tmParty'))m.querySelector('#tmParty').onclick=()=>{m.hidden=true;partyInvite(t.name)};
+    if(m.querySelector('#tmGuildInv'))m.querySelector('#tmGuildInv').onclick=()=>{m.hidden=true;guildInvitePlayer(t.name)};
     if(m.querySelector('#tmDuel'))m.querySelector('#tmDuel').onclick=()=>{m.hidden=true;startDuel(t)};
     if(m.querySelector('#tmTrade'))m.querySelector('#tmTrade').onclick=()=>{m.hidden=true;startTrade(t)};
     if(m.querySelector('#tmAttack'))m.querySelector('#tmAttack').onclick=()=>{m.hidden=true;tryUse(0)};
@@ -878,16 +896,32 @@ function startDuel(target){
 }
 function endDuel(winnerName,loserName){
   if(!ACTIVE_DUEL)return;
+  const isPWinner=(winnerName===P.name);
   ACTIVE_DUEL=null;
   G.duelRing=null;
   banner('¡VICTORIA EN DUELO!','Ganador: '+winnerName);
   log('<span style="color:#ffd700"><b>[Duelo]</b> ¡'+esc(winnerName)+' ha vencido a '+esc(loserName)+' en duelo honorable!</span>','sys');
   burst(P.x,P.y-20,'#ffe066',30,220);
   sfx('level');
+  if(isPWinner){
+    P.duelsWon=(P.duelsWon||0)+1;
+    checkAchievements();
+  }
+  P.hp=Math.max(P.hp,Math.floor(P.maxhp*0.5));
 }
 
 /* ---------- 10. COMERCIO (TRADE) ---------- */
 let TRADE_SESSION=null;
+function tradeAddItem(it){
+  if(!TRADE_SESSION)return false;
+  if(TRADE_SESSION.myLocked){toast('Tu oferta está bloqueada');return true}
+  if(TRADE_SESSION.myItems.length>=4){toast('Límite de 4 objetos por intercambio');return true}
+  if(it.bind==='bound'){toast('No puedes comerciar con objetos ligados al alma');return true}
+  if(TRADE_SESSION.myItems.includes(it)){toast('Este objeto ya está en la oferta');return true}
+  TRADE_SESSION.myItems.push(it);
+  renderTradeUI();
+  return true;
+}
 function startTrade(target){
   if(!target||target.dead){toast('Objetivo inválido para comerciar');return}
   TRADE_SESSION={
@@ -900,8 +934,11 @@ function startTrade(target){
     otherLocked:false
   };
   $('pTrade').hidden=false;
+  showPanel('pTrade');
+  if($('pInv').hidden)showPanel('pInv');
   $('tradeOtherName').textContent='Oferta de '+target.name;
   renderTradeUI();
+  toast('Comercio iniciado. Haz clic en tus objetos para ofertarlos.');
 }
 function renderTradeUI(){
   if(!TRADE_SESSION)return;
@@ -939,6 +976,9 @@ function bindTradeButtons(){
     if(TRADE_SESSION.target.bot&&TRADE_SESSION.myLocked){
       TRADE_SESSION.otherGold=Math.min(30,Math.floor(Math.random()*20+5));
       if($('tradeOtherGold')) $('tradeOtherGold').textContent=TRADE_SESSION.otherGold;
+      if(TRADE_SESSION.otherItems.length===0){
+        TRADE_SESSION.otherItems.push(genItem(Math.max(1,P.level||1),Math.random()<0.35?2:1));
+      }
       TRADE_SESSION.otherLocked=true;
     }
     renderTradeUI();
@@ -953,6 +993,13 @@ function bindTradeButtons(){
       const idx=P.inv.indexOf(it);
       if(idx>=0)P.inv.splice(idx,1);
     }
+    // Añadir objetos recibidos
+    for(const it of TRADE_SESSION.otherItems){
+      if(P.inv.length<maxInventorySlots()){
+        if(it.t==='gear'||it.t==='bag')P.inv.push(it);
+        else addStack(it.key,it.n||1);
+      }
+    }
     toast('¡Intercambio realizado con éxito!');
     sfx('coin');
     $('pTrade').hidden=true;
@@ -962,6 +1009,29 @@ function bindTradeButtons(){
 }
 
 /* ---------- 11. HERMANDADES (GUILDS) ---------- */
+function promoteGuildMember(idx){
+  if(!P.guild)return;
+  const m=P.guild.members[idx];if(!m)return;
+  if(m.rank==='Recluta')m.rank='Miembro';
+  else if(m.rank==='Miembro')m.rank='Oficial';
+  toast(m.name+' ascendido a '+m.rank);
+  renderGuildUI();
+}
+function demoteGuildMember(idx){
+  if(!P.guild)return;
+  const m=P.guild.members[idx];if(!m)return;
+  if(m.rank==='Oficial')m.rank='Miembro';
+  else if(m.rank==='Miembro')m.rank='Recluta';
+  toast(m.name+' degradado a '+m.rank);
+  renderGuildUI();
+}
+function kickGuildMember(idx){
+  if(!P.guild)return;
+  const m=P.guild.members[idx];if(!m)return;
+  P.guild.members.splice(idx,1);
+  toast(m.name+' expulsado de la hermandad');
+  renderGuildUI();
+}
 function renderGuildUI(){
   const b=$('guildBody');if(!b)return;
   if(!P.guild){
@@ -984,19 +1054,35 @@ function renderGuildUI(){
     return;
   }
   const g=P.guild;
+  const myMem=g.members.find(m=>m.name===P.name);
+  const isLeader=myMem?(myMem.rank==='Líder'):(g.members[0].name===P.name);
   b.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
     '<h3 style="margin:0;font-family:var(--f-display);color:var(--gold)">'+esc(g.name)+'</h3>'+
     '<span style="color:var(--muted);font-size:12px">Nivel '+g.level+' · '+(g.members.length)+' miembros</span>'+
     '</div>'+
     '<div class="gmotd"><b>Mensaje del día:</b> '+esc(g.motd)+'</div>'+
     '<div class="gperks"><span class="gperk">+12% Velocidad en Montura</span><span class="gperk">+10% Oro en Misiones</span><span class="gperk">+10% Experiencia de Grupo</span></div>'+
-    '<table class="gtable"><thead><tr><th>Miembro</th><th>Clase</th><th>Nivel</th><th>Rango</th></tr></thead><tbody>'+
-    g.members.map(m=>'<tr><td><b>'+esc(m.name)+'</b></td><td>'+(CLS[m.cls]?CLS[m.cls].name:m.cls)+'</td><td style="color:var(--gold)">'+m.lvl+'</td><td>'+esc(m.rank)+'</td></tr>').join('')+
+    '<table class="gtable"><thead><tr><th>Miembro</th><th>Clase</th><th>Nivel</th><th>Rango</th>'+(isLeader?'<th>Gestión</th>':'')+'</tr></thead><tbody>'+
+    g.members.map((m,idx)=>'<tr><td><b>'+esc(m.name)+'</b></td><td>'+(CLS[m.cls]?CLS[m.cls].name:m.cls)+'</td><td style="color:var(--gold)">'+m.lvl+'</td><td>'+esc(m.rank)+'</td>'+
+      (isLeader?(m.name===P.name?'<td style="color:var(--muted);font-size:11px">Líder Supremo</td>':'<td><button class="btn xs" data-gprom="'+idx+'" title="Ascender">▲</button> <button class="btn xs sec" data-gdem="'+idx+'" title="Degradar">▼</button> <button class="btn xs err" data-gkick="'+idx+'" title="Expulsar">✕</button></td>'):'')+'</tr>').join('')+
     '</tbody></table>'+
-    '<div class="btns" style="margin-top:14px"><button class="btn sm sec" id="btnLeaveGuild">Abandonar Hermandad</button></div>';
-  b.querySelector('#btnLeaveGuild').onclick=()=>{
+    '<div class="btns" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn sm" id="btnOpenGBank">'+svg('bank','#e0a93d')+' Banco de Hermandad</button>'+
+    '<button class="btn sm sec" id="btnOpenRankings">'+svg('cup','#ffd700')+' Rankings</button>'+
+    '<button class="btn sm sec" id="btnLeaveGuild">Abandonar Hermandad</button>'+
+    '</div>';
+  if(b.querySelector('#btnLeaveGuild'))b.querySelector('#btnLeaveGuild').onclick=()=>{
     P.guild=null;toast('Has salido de la hermandad');renderGuildUI();
   };
+  if(b.querySelector('#btnOpenGBank'))b.querySelector('#btnOpenGBank').onclick=()=>{
+    window._bankActiveTab='guild';showPanel('pBank');renderBankUI();
+  };
+  if(b.querySelector('#btnOpenRankings'))b.querySelector('#btnOpenRankings').onclick=()=>{
+    showPanel('pRankings');renderRankingsUI();
+  };
+  b.querySelectorAll('[data-gprom]').forEach(btn=>{btn.onclick=()=>promoteGuildMember(+btn.dataset.gprom)});
+  b.querySelectorAll('[data-gdem]').forEach(btn=>{btn.onclick=()=>demoteGuildMember(+btn.dataset.gdem)});
+  b.querySelectorAll('[data-gkick]').forEach(btn=>{btn.onclick=()=>kickGuildMember(+btn.dataset.gkick)});
 }
 
 /* ---------- 12. TABLÓN DE MISIONES PROCEDURALES ---------- */
@@ -1085,63 +1171,7 @@ function initMobileControls(){
 /* ---------- 14. EXPANDIR LA BARRA DE ACCIÓN A TODAS LAS HABILIDADES ---------- */
 const _buildActionBar=buildActionBar;
 buildActionBar=function(){
-  const bar=$('actionbar');bar.innerHTML='';AB=[];
-  const c=CLS[P.cls];
-  
-  // Añadir todas las habilidades de clase (1 a 12)
-  c.ab.forEach((ab,i)=>{
-    const b=document.createElement('button');b.className='slot'+(ab.ul>P.level?' lock':'');b.dataset.ul=ab.ul;b.setAttribute('data-tip','ab:'+i);
-    const bindKey=KEYBINDS[String(i+1)]||String(i+1);
-    b.innerHTML=svg(ab.ic,ab.col)+'<span class="k">'+esc(prettyCombo(bindKey))+'</span><span class="cd"></span><span class="cdt"></span>';
-    b.onclick=()=>tryUse(i);
-    b.draggable=true;
-    b.ondragstart=e=>{DRAG={t:'ab',i:i};try{e.dataTransfer.setData('text/plain','ab:'+i)}catch(_){}};
-    b.ondragover=e=>{e.preventDefault()};
-    b.ondrop=e=>{
-      e.preventDefault();
-      if(DRAG&&DRAG.t==='ab'&&DRAG.i!==i){
-        const tmp=c.ab[DRAG.i];c.ab[DRAG.i]=c.ab[i];c.ab[i]=tmp;
-        buildActionBar();
-      }else if(DRAG&&DRAG.t==='inv'){
-        const it=P.inv[DRAG.i];
-        if(it&&(it.t==='cons'||ITEMS[it.key])){
-          if(!QUICK)QUICK=[null,null,null];
-          QUICK[0]=it.key;saveQuick();buildQuick();
-          toast('Asignado a barra: '+(ITEMS[it.key]?ITEMS[it.key].name:it.key));
-        }
-      }
-      DRAG=null;
-    };
-    bar.appendChild(b);
-    AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul});
-  });
-
-  // Consumibles (hp, mp, herb)
-  const extra=[
-    ['hp','pot:hp','potion','#e0554a',()=>usePotion('hp'),'pot:hp'],
-    ['mp','pot:mp','potion','#4a8fe0',()=>usePotion('mp'),'pot:mp'],
-    ['herb','herb:1','herb','#7fe07f',useHerb,'herb:1']
-  ];
-  for(const [kind,key,ic,col,fn,tip] of extra){
-    const b=document.createElement('button');b.className='slot';b.setAttribute('data-tip',tip);
-    b.innerHTML=svg(ic,col)+'<span class="k">'+esc(kind.toUpperCase())+'</span><span class="cd"></span><span class="cdt"></span><span class="cnt"></span>';
-    b.onclick=fn;
-    b.ondragover=e=>{e.preventDefault()};
-    b.ondrop=e=>{
-      e.preventDefault();
-      if(DRAG&&DRAG.t==='inv'){
-        const it=P.inv[DRAG.i];
-        if(it&&(it.t==='cons'||ITEMS[it.key])){
-          if(!QUICK)QUICK=[null,null,null];
-          QUICK[0]=it.key;saveQuick();buildQuick();
-          toast('Asignado a barra: '+(ITEMS[it.key]?ITEMS[it.key].name:it.key));
-        }
-      }
-      DRAG=null;
-    };
-    bar.appendChild(b);
-    AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),cnt:b.querySelector('.cnt'),kind:kind});
-  }
+  _buildActionBar();
 };
 
 /* ---------- 15. INTERCEPTAR ATRIBUTOS PARA TALENTOS ---------- */
@@ -1200,25 +1230,8 @@ function useQuick(i){
   useInv(idx);
 }
 function buildQuick(){
-  let q=$('quickbar');
-  if(!q){
-    q=document.createElement('div');q.id='quickbar';
-    q.style.cssText='display:flex;gap:4px;justify-content:center;margin-top:4px';
-    if($('actionbar'))$('actionbar').after(q);
-  }
-  if(!q)return;
-  q.innerHTML='';
-  QKEYS.forEach((kk,i)=>{
-    const b=document.createElement('button');b.className='slot';b.dataset.q=i;
-    const k=QUICK[i],def=k&&ITEMS[k];
-    b.innerHTML=(def?svg(def.ic,def.col):'')+'<span class="k">'+kk.toUpperCase()+'</span>'+(k?'<span class="cnt">'+countItem(k)+'</span>':'');
-    b.title='Arrastra un objeto de la mochila aquí';
-    b.onclick=()=>useQuick(i);
-    b.ondragover=e=>{e.preventDefault()};
-    b.ondrop=e=>{e.preventDefault();if(DRAG&&DRAG.t==='inv'){const it=P.inv[DRAG.i];if(it&&it.t==='cons'||it&&ITEMS[it.key]){QUICK[i]=it.key;saveQuick();buildQuick()}}DRAG=null};
-    b.oncontextmenu=e=>{e.preventDefault();QUICK[i]=null;saveQuick();buildQuick()};
-    q.appendChild(b);
-  });
+  const q=$('quickbar');
+  if(q)q.remove();
 }
 function markDraggable(){
   document.querySelectorAll('#invGrid [data-i]').forEach(b=>{b.draggable=true});

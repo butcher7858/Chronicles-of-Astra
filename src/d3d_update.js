@@ -292,6 +292,8 @@ function update(dt){
     const first=zoneKey==='';zoneKey=z.id;G.zone=z;
     $('zoneName').textContent=z.name;
     if(!first)banner(z.name,z.lv);
+    if(typeof checkVisitQuests==='function')checkVisitQuests(z.id);
+    if(typeof checkAchievements==='function')checkAchievements();
   }
   for(const w of WAYPOINTS){
     if(!P.disc[w.id]&&Math.hypot(w.tx*TILE+16-P.x,w.ty*TILE+16-P.y)<150){

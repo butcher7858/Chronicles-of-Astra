@@ -175,7 +175,13 @@ const ITEMS={
   rec_sword_rare:{t:'cons',isRecipe:true,recId:'gear_axe_mithril',name:'Receta: Hacha de Mitril Rúnico',ic:'map',col:'#4aa0ff',price:350,desc:'Enseña a forjar Hacha de Mitril Rúnico.'},
   rec_chest_epic:{t:'cons',isRecipe:true,recId:'gear_chest_titan',name:'Receta: Coraza de los Titanes',ic:'map',col:'#b868ff',price:750,desc:'Enseña a forjar Coraza de los Titanes.'},
   rec_neck_astral:{t:'cons',isRecipe:true,recId:'gear_neck_astral',name:'Receta: Collar Astral Estelar',ic:'map',col:'#b868ff',price:850,desc:'Enseña a engarzar Collar Astral Estelar.'},
-  rec_trinket_phoenix:{t:'cons',isRecipe:true,recId:'gear_trinket_phoenix',name:'Receta: Abalorio del Fénix Renacido',ic:'map',col:'#b868ff',price:900,desc:'Enseña a crear Abalorio del Fénix Renacido.'}
+  rec_trinket_phoenix:{t:'cons',isRecipe:true,recId:'gear_trinket_phoenix',name:'Receta: Abalorio del Fénix Renacido',ic:'map',col:'#b868ff',price:900,desc:'Enseña a crear Abalorio del Fénix Renacido.'},
+  // Bolsas equipables (hasta 5 mochilas)
+  bag_linen:{t:'bag',name:'Bolsa de Lino',ic:'bag',col:'#e8e0d0',extraSlots:6,price:25,desc:'Aumenta tu capacidad de mochila en +6 ranuras.'},
+  bag_leather:{t:'bag',name:'Bolsa de Cuero Reforzado',ic:'bag',col:'#b08050',extraSlots:10,price:80,desc:'Aumenta tu capacidad de mochila en +10 ranuras.'},
+  bag_silk:{t:'bag',name:'Bolsa de Seda de Araña',ic:'bag',col:'#dfe6f0',extraSlots:14,price:200,desc:'Aumenta tu capacidad de mochila en +14 ranuras.'},
+  bag_rune:{t:'bag',name:'Bolsa de Paño Rúnico',ic:'bag',col:'#c084fc',extraSlots:18,price:450,desc:'Aumenta tu capacidad de mochila en +18 ranuras.'},
+  bag_astral:{t:'bag',name:'Mochila Astral Cósmica',ic:'bag',col:'#38bdf8',extraSlots:24,price:1000,desc:'Aumenta tu capacidad de mochila en +24 ranuras.'}
 };
 
 /* ---------- Catálogo de Fabricación (Recetas) ---------- */
@@ -210,14 +216,20 @@ const RECIPES={
   gear_relic_light:{id:'gear_relic_light',name:'Reliquia de la Primera Luz',cat:'jewel',lvl:26,mat:{ore_gold:4,crystal_gem:3},slot:'relic',rar:2,price:260,desc:'Reliquia sagrada que incrementa poder y vida.'},
   gear_relic_death:{id:'gear_relic_death',name:'Reliquia de las Criptas',cat:'jewel',lvl:44,mat:{ore_darkiron:6,shard:10},slot:'relic',rar:3,price:520,desc:'Reliquia de hueso y hierro oscuro con poder nigromántico.'},
   gear_trinket_haste:{id:'gear_trinket_haste',name:'Abalorio de Celeridad Épica',cat:'jewel',lvl:34,mat:{ore_mithril:5,herb_frost:4},slot:'trinket1',rar:2,price:340,desc:'Abalorio que aumenta la velocidad y el crítico.'},
-  gear_trinket_phoenix:{id:'gear_trinket_phoenix',name:'Abalorio del Fénix Renacido',cat:'jewel',lvl:55,mat:{magma_core:5,dragon_scale:4},slot:'trinket2',rar:3,price:850,desc:'Abalorio legendario con el fuego del Fénix.'}
+  gear_trinket_phoenix:{id:'gear_trinket_phoenix',name:'Abalorio del Fénix Renacido',cat:'jewel',lvl:55,mat:{magma_core:5,dragon_scale:4},slot:'trinket2',rar:3,price:850,desc:'Abalorio legendario con el fuego del Fénix.'},
+  // Sastrería y Peletería (Mochilas)
+  craft_bag_linen:{id:'craft_bag_linen',name:'Bolsa de Lino (+6)',cat:'bags',lvl:3,mat:{cloth_linen:4},out:{t:'bag',key:'bag_linen',n:1},price:20,desc:'Cose una bolsa de lino de 6 ranuras.'},
+  craft_bag_leather:{id:'craft_bag_leather',name:'Bolsa de Cuero (+10)',cat:'bags',lvl:10,mat:{leather_light:6},out:{t:'bag',key:'bag_leather',n:1},price:60,desc:'Fabrica una bolsa de cuero de 10 ranuras.'},
+  craft_bag_silk:{id:'craft_bag_silk',name:'Bolsa de Seda (+14)',cat:'bags',lvl:20,mat:{cloth_silk:6,leather_thick:2},out:{t:'bag',key:'bag_silk',n:1},price:150,desc:'Cose una bolsa de seda de 14 ranuras.'},
+  craft_bag_rune:{id:'craft_bag_rune',name:'Bolsa de Paño Rúnico (+18)',cat:'bags',lvl:35,mat:{cloth_rune:6,crystal_gem:3},out:{t:'bag',key:'bag_rune',n:1},price:350,desc:'Cose una bolsa de paño rúnico de 18 ranuras.'},
+  craft_bag_astral:{id:'craft_bag_astral',name:'Mochila Astral Cósmica (+24)',cat:'bags',lvl:50,mat:{ore_astral:6,essence_void:4,cloth_rune:6},out:{t:'bag',key:'bag_astral',n:1},price:800,desc:'Crea la mochila legendaria de 24 ranuras.'}
 };
 
 function genItem(ilvl,rar,slot,cls){
   slot=slot||pick(SLOTS);
   const base=slot==='weapon'?pick(BASES.weapon[cls]||BASES.weapon.war):pick(BASES[slot]||BASES.chest);
   const bud=ilvl*(1+rar*0.48)+2;
-  const it={t:'gear',id:uid(),name:base+' '+pick(SUFFIX[rar]||SUFFIX[0]),slot:slot,rar:rar,lvl:Math.max(1,ilvl),atk:0,armor:0,hp:0,crit:0};
+  const it={t:'gear',id:uid(),name:base+' '+pick(SUFFIX[rar]||SUFFIX[0]),slot:slot,rar:rar,lvl:Math.max(1,ilvl),atk:0,armor:0,hp:0,crit:0,bind:(rar>=3?'bop':rar>=1?'boe':'unbound')};
   if(slot==='weapon'){it.atk=Math.round(bud*1.2+3)}
   else if(slot==='shield'){it.armor=Math.round(bud*2.9+3);it.hp=Math.round(bud*rar*2.0)}
   else if(slot==='necklace'||slot==='amulet'||slot==='ring'||slot==='relic'||slot==='trinket1'||slot==='trinket2'){
@@ -239,10 +251,63 @@ function genItem(ilvl,rar,slot,cls){
   return it;
 }
 function namedGear(ilvl,rar,slot,cls,name,boost){
-  const it=genItem(ilvl,rar,slot,cls);it.name=name;
+  const it=genItem(ilvl,rar,slot,cls);it.name=name;it.bind='bop';
   if(boost){it.atk=Math.round(it.atk*boost);it.armor=Math.round(it.armor*boost);it.hp=Math.round(it.hp*boost)}
   it.price=Math.round(it.price*1.4);return it;
 }
+
+/* ---------- Sistema de Títulos y Logros ---------- */
+const TITLES={
+  explorer:'el Explorador',
+  champion_alba:'el Campeón de Alba',
+  dragon_slayer:'Matador de Dragones',
+  immortal:'el Inmortal',
+  master_crafter:'el Gran Artesano',
+  gladiator:'el Gladiador',
+  unvanquished:'el Invicto',
+  void_walker:'Viajero del Vacío',
+  lich_slayer:'Salvador de Astra',
+  packrat:'el Gran Mochilero',
+  tycoon:'el Magnate',
+  colossus:'el Titánico',
+  crypt_keeper:'el Profanador',
+  high_marshal:'Gran Mariscal',
+  frost_walker:'el Rompehielos',
+  mountaineer:'el Alpinista',
+  patriarch:'el Patriarca'
+};
+
+const ACHIEVEMENTS=[
+  {id:'lvl5',cat:'prog',name:'Primeros Pasos',desc:'Alcanza el nivel 5 de tu clase.',pts:10,check:p=>p.level>=5,max:5,cur:p=>p.level},
+  {id:'lvl20',cat:'prog',name:'Veterano de Alba',desc:'Alcanza el nivel 20.',pts:20,reward:'champion_alba',check:p=>p.level>=20,max:20,cur:p=>p.level},
+  {id:'lvl40',cat:'prog',name:'Héroe Legendario',desc:'Alcanza el nivel 40.',pts:35,check:p=>p.level>=40,max:40,cur:p=>p.level},
+  {id:'lvl60',cat:'prog',name:'Supremacía Absoluta',desc:'Alcanza el nivel máximo (60).',pts:50,reward:'immortal',check:p=>p.level>=60,max:60,cur:p=>p.level},
+  {id:'gold1k',cat:'prog',name:'Bolsillos Llenos',desc:'Acumula 1.000 de oro.',pts:15,check:p=>p.gold>=1000,max:1000,cur:p=>p.gold},
+  {id:'gold10k',cat:'prog',name:'Fortuna Incalculable',desc:'Acumula 10.000 de oro.',pts:30,reward:'tycoon',check:p=>p.gold>=10000,max:1000,cur:p=>p.gold},
+  {id:'kill50',cat:'combat',name:'Defensor Novato',desc:'Abate 50 criaturas en Astra.',pts:10,check:p=>(p.kills||0)>=50,max:50,cur:p=>p.kills||0},
+  {id:'kill250',cat:'combat',name:'Azote de Fieras',desc:'Abate 250 criaturas hostiles.',pts:25,check:p=>(p.kills||0)>=250,max:250,cur:p=>p.kills||0},
+  {id:'kill1000',cat:'combat',name:'La Muerte Encarnada',desc:'Abate 1.000 criaturas.',pts:50,reward:'high_marshal',check:p=>(p.kills||0)>=1000,max:1000,cur:p=>p.kills||0},
+  {id:'crit30',cat:'combat',name:'Golpe Certero',desc:'Alcanza 30% de probabilidad de golpe crítico.',pts:20,check:p=>(p.crit||0)>=30,max:30,cur:p=>Math.min(30,Math.round(p.crit||0))},
+  {id:'boss_gorrak',cat:'boss',name:'La Caída de Gorrak',desc:'Derrota a Gorrak, Guardián de la Cueva.',pts:25,check:p=>p.quests&&p.quests.q6&&p.quests.q6.state==='done',max:1,cur:p=>p.quests&&p.quests.q6&&p.quests.q6.state==='done'?1:0},
+  {id:'boss_queen',cat:'boss',name:'Invierno Roto',desc:'Derrota a la Reina Escarcha en su palacio.',pts:30,reward:'frost_walker',check:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done',max:1,cur:p=>p.quests&&p.quests.q13&&p.quests.q13.state==='done'?1:0},
+  {id:'boss_ignis',cat:'boss',name:'Fuego Extinguido',desc:'Abate al temible Dragón Ancestral Ignis.',pts:40,reward:'dragon_slayer',check:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done',max:1,cur:p=>p.quests&&p.quests.q18&&p.quests.q18.state==='done'?1:0},
+  {id:'boss_titan',cat:'boss',name:'Desmantelar al Titán',desc:'Destruye al Coloso Forjado de los Titanes.',pts:45,reward:'colossus',check:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done',max:1,cur:p=>p.quests&&p.quests.q24&&p.quests.q24.state==='done'?1:0},
+  {id:'boss_void',cat:'boss',name:'Grieta Cerrada',desc:'Derrota al Terror del Vacío Infinito.',pts:50,reward:'void_walker',check:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done',max:1,cur:p=>p.quests&&p.quests.q25&&p.quests.q25.state==='done'?1:0},
+  {id:'boss_lich',cat:'boss',name:'El Fin del Rey Exánime',desc:'Destruye a Malakor, Rey Exánime de la Plaga.',pts:60,reward:'lich_slayer',check:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done',max:1,cur:p=>p.quests&&p.quests.q26&&p.quests.q26.state==='done'?1:0},
+  {id:'dungeon_clear',cat:'boss',name:'Profanador de Criptas',desc:'Completa una mazmorra grupal de instancia.',pts:35,reward:'crypt_keeper',check:p=>p.dungeonsCleared&&p.dungeonsCleared>=1,max:1,cur:p=>p.dungeonsCleared||0},
+  {id:'exp_wp3',cat:'exp',name:'Viajero del Telar',desc:'Descubre 3 obeliscos de viaje.',pts:15,check:p=>Object.keys(p.disc||{}).length>=3,max:3,cur:p=>Object.keys(p.disc||{}).length},
+  {id:'exp_wpall',cat:'exp',name:'Cartógrafo Imperial',desc:'Descubre 8 obeliscos por toda Astra.',pts:35,reward:'explorer',check:p=>Object.keys(p.disc||{}).length>=8,max:8,cur:p=>Object.keys(p.disc||{}).length},
+  {id:'exp_cap',cat:'exp',name:'La Joya Imperial',desc:'Visita la Gran Ciudad de Astra.',pts:15,check:p=>p.disc&&p.disc.capital,max:1,cur:p=>p.disc&&p.disc.capital?1:0},
+  {id:'exp_peaks',cat:'exp',name:'Sobre las Nubes',desc:'Alcanza las altas cumbres de los Titanes.',pts:20,reward:'mountaineer',check:p=>p.disc&&p.disc.titanpeaks,max:1,cur:p=>p.disc&&p.disc.titanpeaks?1:0},
+  {id:'craft1',cat:'craft',name:'Primeras Creaciones',desc:'Fabrica tu primera receta en la mesa.',pts:10,check:p=>(p.craftedCount||0)>=1,max:1,cur:p=>p.craftedCount||0},
+  {id:'craft15',cat:'craft',name:'Maestro de la Forja',desc:'Elabora 15 recetas de artesanía.',pts:30,reward:'master_crafter',check:p=>(p.craftedCount||0)>=15,max:15,cur:p=>p.craftedCount||0},
+  {id:'bags4',cat:'craft',name:'El Gran Mochilero',desc:'Equipa las 4 bolsas adicionales en tu mochila.',pts:25,reward:'packrat',check:p=>p.bags&&p.bags.filter(b=>!!b).length>=4,max:4,cur:p=>p.bags?p.bags.filter(b=>!!b).length:0},
+  {id:'pvp1',cat:'pvp',name:'Primer Duelo',desc:'Gana un duelo honorable contra otro aventurero.',pts:15,check:p=>(p.duelsWon||0)>=1,max:1,cur:p=>p.duelsWon||0},
+  {id:'pvp5',cat:'pvp',name:'Gladiador de las Arenas',desc:'Gana 5 duelos JcJ.',pts:35,reward:'gladiator',check:p=>(p.duelsWon||0)>=5,max:5,cur:p=>p.duelsWon||0},
+  {id:'pvp15',cat:'pvp',name:'El Invicto',desc:'Gana 15 duelos JcJ.',pts:50,reward:'unvanquished',check:p=>(p.duelsWon||0)>=15,max:15,cur:p=>p.duelsWon||0},
+  {id:'guild_join',cat:'pvp',name:'Unión de Campeones',desc:'Funda o únete a una hermandad.',pts:15,check:p=>!!p.guild,max:1,cur:p=>p.guild?1:0},
+  {id:'guild_perks',cat:'pvp',name:'Patriarca del Clan',desc:'Alcanza el nivel 3 con tu hermandad.',pts:30,reward:'patriarch',check:p=>p.guild&&p.guild.level>=3,max:3,cur:p=>p.guild?p.guild.level:0}
+];
 function bossLoot(kind,cls){
   if(kind==='boss'){
     const wn={war:'Hoja Parte-Rocas',mage:'Bastón de la Brasa Eterna',priest:'Cetro del Amanecer',paladin:'Martillo de la Llama Primera',rogue:'Colmillo de Sombra',hunter:'Arco del Cazador de Estrellas',necro:'Vara de Huesos Cantores',druid:'Cayado de la Raíz Antigua',dk:'Hoja Rúnica de Gorrak',shaman:'Maza de la Roca Telúrica'}[cls]||'Reliquia de Gorrak';
@@ -311,7 +376,18 @@ const MOBS={
   void_reaver:{name:'Atracador del Vacío',lv:[51,55],speed:96,aggro:240,size:26,hpM:3.2,dmgM:2.6,atkCd:1.8,kind:'human',scale:2.0,look:{body:'#3b0764',trim:'#d8b4fe',legs:'#1e1b4b',weapon:'sword',blade:'#a855f7',skin:'#581c87',eye:'#c084fc',pads:'#7e22ce'},drops:{essence_void:0.8}},
   titan_colossus:{name:'Coloso Forjado de los Titanes',lv:[55,55],speed:75,aggro:260,size:34,hpM:22,dmgM:3.2,atkCd:2.1,kind:'golem',scale:3.0,look:{body:'#334155',dark:'#0f172a',eye:'#f59e0b'},elite:true,boss:true,drops:{titan_ore:1.0}},
   void_horror:{name:'Terror del Vacío Infinito',lv:[58,58],speed:90,aggro:270,size:36,hpM:25,dmgM:3.5,atkCd:1.9,kind:'arach',scale:3.2,look:{body:'#180e29',dark:'#090412',eye:'#ec4899'},elite:true,boss:true,drops:{essence_void:1.0}},
-  lich_malakor:{name:'Rey Exánime Malakor',lv:[60,60],speed:85,aggro:280,size:32,hpM:35,dmgM:4.0,atkCd:1.8,kind:'human',scale:2.8,look:{body:'#020617',trim:'#38bdf8',legs:'#0f172a',weapon:'sword',blade:'#00f0ff',hat:'#020617',hatType:'crown',skin:'#cbd5e1',eye:'#00f0ff',pads:'#1e293b',cape:'#0369a1'},elite:true,boss:true,drops:{dragon_scale:1.0}}
+  lich_malakor:{name:'Rey Exánime Malakor',lv:[60,60],speed:85,aggro:280,size:32,hpM:35,dmgM:4.0,atkCd:1.8,kind:'human',scale:2.8,look:{body:'#020617',trim:'#38bdf8',legs:'#0f172a',weapon:'sword',blade:'#00f0ff',hat:'#020617',hatType:'crown',skin:'#cbd5e1',eye:'#00f0ff',pads:'#1e293b',cape:'#0369a1'},elite:true,boss:true,drops:{dragon_scale:1.0}},
+  // Nuevos enemigos para mapa ampliado y mazmorras grupales
+  jungle_tiger:{name:'Tigre de Bengala',lv:[20,23],speed:95,aggro:180,size:16,hpM:1.4,dmgM:1.3,atkCd:1.8,kind:'quad',look:{body:'#ea580c',dark:'#9a3412',eye:'#fef08a'},drops:{leather_thick:0.6}},
+  jungle_serpent:{name:'Serpiente de Zul',lv:[22,25],speed:90,aggro:170,size:15,hpM:1.3,dmgM:1.4,atkCd:1.6,kind:'quad',look:{body:'#15803d',dark:'#14532d',eye:'#ef4444'},drops:{leather_thick:0.5}},
+  zul_witchdoctor:{name:'Médico Brujo de Zul',lv:[25,28],speed:84,aggro:210,size:14,hpM:1.2,dmgM:1.5,atkCd:2.2,kind:'human',ranged:true,range:220,bolt:'#10b981',look:{body:'#065f46',trim:'#34d399',legs:'#047857',hat:'#064e3b',hatType:'horns',weapon:'staff',orb:'#34d399',skin:'#a7f3d0'},drops:{cloth_silk:0.7}},
+  cinder_golem:{name:'Gólem de Ceniza',lv:[32,36],speed:70,aggro:180,size:26,hpM:2.5,dmgM:1.8,atkCd:2.4,kind:'golem',look:{body:'#3f3f46',dark:'#18181b',eye:'#f97316'},drops:{ore_darkiron:0.6}},
+  ash_stalker:{name:'Acechador de Cenizas',lv:[36,40],speed:98,aggro:200,size:15,hpM:1.6,dmgM:1.7,atkCd:1.7,kind:'arach',look:{body:'#27272a',dark:'#09090b',eye:'#ef4444'},drops:{shadow_essence:0.6}},
+  crystal_ancient:{name:'Ancestro de Cristal',lv:[42,46],speed:75,aggro:190,size:28,hpM:2.8,dmgM:2.0,atkCd:2.2,kind:'golem',look:{body:'#4338ca',dark:'#1e1b4b',eye:'#a5b4fc'},drops:{crystal_gem:0.8}},
+  vortex_horror:{name:'Horror del Vórtice',lv:[52,56],speed:96,aggro:240,size:28,hpM:3.4,dmgM:2.8,atkCd:1.8,kind:'arach',scale:2.2,look:{body:'#312e81',dark:'#0f172a',eye:'#ec4899'},drops:{essence_void:0.8}},
+  astral_chimera:{name:'Quimera Astral',lv:[56,59],speed:102,aggro:250,size:26,hpM:3.6,dmgM:3.0,atkCd:1.7,kind:'quad',scale:2.0,look:{body:'#1e1b4b',dark:'#020617',eye:'#38bdf8'},drops:{ore_astral:0.8}},
+  crypt_lord_boss:{name:'Anub’Rek, Señor de las Criptas',lv:[30,30],speed:86,aggro:260,size:32,hpM:18,dmgM:2.6,atkCd:2.0,kind:'arach',scale:2.6,look:{body:'#1c1917',dark:'#09090b',eye:'#22d3ee'},elite:true,boss:true,drops:{cloth_rune:1.0,crystal_gem:1.0}},
+  frost_emperor_boss:{name:'Emperador Glacial Arcturus',lv:[50,50],speed:82,aggro:270,size:34,hpM:24,dmgM:3.2,atkCd:2.0,kind:'human',scale:2.8,look:{body:'#0c4a6e',trim:'#bae6fd',legs:'#075985',weapon:'staff',orb:'#38bdf8',skin:'#e0f2fe',eye:'#0284c7',hat:'#0284c7',hatType:'crown',cape:'#0369a1'},elite:true,boss:true,drops:{titan_ore:1.0,essence_frost:1.0}}
 };
 
 /* ---------- Misiones ---------- */
@@ -447,7 +523,13 @@ const Z=[
   {id:'necropolis',name:'Necrópolis Maldita',lv:'Niveles 25 – 38',tile:T.CORRUPT},
   {id:'shadowlands',name:'Tierras del Ocaso',lv:'Niveles 35 – 48',tile:T.FOREST},
   {id:'titanpeaks',name:'Picos de los Titanes',lv:'Niveles 48 – 55',tile:T.HILL},
-  {id:'astralvoid',name:'Falla Astral del Vacío',lv:'Niveles 55 – 60',tile:T.ASTRAL}
+  {id:'astralvoid',name:'Falla Astral del Vacío',lv:'Niveles 55 – 60',tile:T.ASTRAL},
+  {id:'jungle',name:'Jungla Prohibida de Zul',lv:'Niveles 20 – 30',tile:T.FOREST},
+  {id:'desert_ruins',name:'Ruinas de las Cenizas',lv:'Niveles 30 – 42',tile:T.DUNE},
+  {id:'crystal_woods',name:'Bosque de Cristal',lv:'Niveles 40 – 50',tile:T.FOREST},
+  {id:'vortex',name:'Vórtice Astral del Caos',lv:'Niveles 50 – 60',tile:T.ASTRAL},
+  {id:'dungeon_crypt',name:'Cripta Profanada de Astra',lv:'Mazmorra Grupal · Nivel 30'},
+  {id:'dungeon_frost',name:'Palacio de Escarcha Instanciado',lv:'Mazmorra Grupal · Nivel 50'}
 ];
 const ZI={};Z.forEach((z,i)=>{ZI[z.id]=i});
 const AREAS={
@@ -465,7 +547,13 @@ const AREAS={
   necropolis:{x:60,y:2,w:26,h:20},
   shadowlands:{x:120,y:122,w:28,h:22},
   titanpeaks:{x:168,y:30,w:26,h:20},
-  astralvoid:{x:14,y:26,w:24,h:20}
+  astralvoid:{x:14,y:26,w:24,h:20},
+  jungle:{x:2,y:96,w:26,h:22},
+  desert_ruins:{x:120,y:94,w:26,h:24},
+  crystal_woods:{x:6,y:52,w:24,h:20},
+  vortex:{x:2,y:2,w:26,h:24},
+  dungeon_crypt:{x:52,y:2,w:26,h:22},
+  dungeon_frost:{x:170,y:2,w:26,h:22}
 };
 const WAYPOINTS=[
   {id:'town',name:'Villa Alba',tx:40,ty:76,gx:40,gy:78},
@@ -478,7 +566,13 @@ const WAYPOINTS=[
   {id:'necropolis',name:'Necrópolis Maldita',tx:72,ty:12,gx:72,gy:14},
   {id:'palace',name:'Palacio de Escarcha',tx:184,ty:14,gx:184,gy:16},
   {id:'titanpeaks',name:'Picos de los Titanes',tx:180,ty:40,gx:180,gy:42},
-  {id:'astralvoid',name:'Falla Astral del Vacío',tx:26,ty:36,gx:26,gy:38}
+  {id:'astralvoid',name:'Falla Astral del Vacío',tx:26,ty:36,gx:26,gy:38},
+  {id:'jungle',name:'Jungla de Zul',tx:14,ty:106,gx:14,gy:108},
+  {id:'desert_ruins',name:'Ruinas de Ceniza',tx:132,ty:104,gx:132,gy:106},
+  {id:'crystal_woods',name:'Bosque de Cristal',tx:18,ty:60,gx:18,gy:62},
+  {id:'vortex',name:'Vórtice Astral',tx:14,ty:12,gx:14,gy:14},
+  {id:'dungeon_crypt',name:'Cripta de Astra (Mazmorra)',tx:65,ty:13,gx:65,gy:15},
+  {id:'dungeon_frost',name:'Palacio Escarcha (Mazmorra)',tx:183,ty:13,gx:183,gy:15}
 ];
 const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16},BOSS_DRAGON={x:179*TILE+16,y:94*TILE+16};
 const BOSS_MALAKOR={x:73*TILE+16,y:13*TILE+16},BOSS_TITAN={x:181*TILE+16,y:41*TILE+16},BOSS_VOID={x:26*TILE+16,y:37*TILE+16};

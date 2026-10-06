@@ -13,17 +13,55 @@ function bindPanels(){
     const c=e.target.closest('[data-close]');if(c){closePanel(c.getAttribute('data-close'))}
     const b=e.target.closest('button');if(b&&b.id!=='chatIn')b.blur();
   });
-  if($('invGrid'))$('invGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){useInv(+b.dataset.i);hideTip()}});
+  if($('invGrid'))$('invGrid').addEventListener('click',e=>{
+    const b=e.target.closest('[data-i]');if(!b)return;
+    const idx=+b.dataset.i;
+    if($('pBank')&&!$('pBank').hidden){
+      if(typeof bankTab!=='undefined'&&bankTab==='personal')bankDepositItem(idx);
+      else guildBankDepositItem(idx);
+      hideTip();return;
+    }
+    if(typeof TRADE_SESSION!=='undefined'&&TRADE_SESSION&&$('pTrade')&&!$('pTrade').hidden){
+      const it=P.inv[idx];
+      if(it&&typeof tradeAddItem==='function')tradeAddItem(it);
+      hideTip();return;
+    }
+    useInv(idx);hideTip();
+  });
+  if($('bagSlotsRow'))$('bagSlotsRow').addEventListener('click',e=>{
+    const b=e.target.closest('[data-bag-idx]');
+    if(b&&b.classList.contains('equipped')){unequipBag(+b.dataset.bagIdx);hideTip()}
+  });
   const onEqClick=e=>{const b=e.target.closest('[data-i]');if(b){unequip(b.dataset.i);hideTip()}};
   if($('eqGrid'))$('eqGrid').addEventListener('click',onEqClick);
   if($('eqLeft'))$('eqLeft').addEventListener('click',onEqClick);
   if($('eqRight'))$('eqRight').addEventListener('click',onEqClick);
   if($('btnSort'))$('btnSort').onclick=sortInv;
   if($('btnJunk'))$('btnJunk').onclick=sellJunk;
+  if($('btnBankDepGold'))$('btnBankDepGold').onclick=()=>{
+    const amt=prompt('¿Cuánto oro deseas depositar en tu banco personal?',String(P.gold));
+    if(amt)bankDepositGold(+amt);
+  };
+  if($('btnBankWdGold'))$('btnBankWdGold').onclick=()=>{
+    const amt=prompt('¿Cuánto oro deseas retirar de tu banco personal?',String(P.bankGold||0));
+    if(amt)bankWithdrawGold(+amt);
+  };
+  if($('btnGbankDepGold'))$('btnGbankDepGold').onclick=()=>{
+    const amt=prompt('¿Cuánto oro deseas depositar en la hermandad?',String(P.gold));
+    if(amt)guildBankDepositGold(+amt);
+  };
+  if($('btnGbankWdGold'))$('btnGbankWdGold').onclick=()=>{
+    const amt=prompt('¿Cuánto oro deseas retirar de la hermandad?',String(GUILD_BANK.gold||0));
+    if(amt)guildBankWithdrawGold(+amt);
+  };
   if($('dlgBody'))$('dlgBody').addEventListener('click',e=>{
     const n=G.dlgNpc;if(!n)return;
     const qid=e.target.closest('[data-qid]'),act=e.target.closest('[data-q]'),sh=e.target.closest('[data-shop]');
     if(sh){openShop(n);return}
+    if(e.target.closest('[data-bank]')){closePanel('pDlg');showPanel('pBank');return}
+    if(e.target.closest('[data-barber]')){closePanel('pDlg');showPanel('pBarber');return}
+    if(e.target.closest('[data-rank]')){closePanel('pDlg');showPanel('pRankings');return}
+    if(e.target.closest('[data-guild]')){closePanel('pDlg');showPanel('pGuild');return}
     if(qid){dlgView={id:qid.dataset.qid};renderDlg();return}
     if(act){
       const a=act.dataset.q;
@@ -58,6 +96,9 @@ function bindPanels(){
   if($('bCraft'))$('bCraft').onclick=()=>togglePanel('pCraft');
   if($('bTal'))$('bTal').onclick=()=>togglePanel('pTalents');
   if($('bGuild'))$('bGuild').onclick=()=>togglePanel('pGuild');
+  if($('bAchieve'))$('bAchieve').onclick=()=>togglePanel('pAchieve');
+  if($('bRankings'))$('bRankings').onclick=()=>togglePanel('pRankings');
+  if($('bBank'))$('bBank').onclick=()=>togglePanel('pBank');
   if($('bMount'))$('bMount').onclick=e=>{if(e.shiftKey)togglePanel('pMounts');else toggleMount()};
   if($('bFull'))$('bFull').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{})};
   if($('bChat'))$('bChat').onclick=()=>{if($('chat'))$('chat').classList.toggle('open')};
@@ -119,10 +160,22 @@ function bindInput(){
       return;
     }
 
-    if(k>='1'&&k<='9')tryUse(+k-1);
-    else if(k==='0')tryUse(9);
-    else if(k==='-')tryUse(10);
-    else if(k==='=')tryUse(11);
+    if(k>='1'&&k<='9'){
+      if(e.shiftKey)tryUse(+k-1+12);
+      else tryUse(+k-1);
+    }
+    else if(k==='0'){
+      if(e.shiftKey)tryUse(9+12);
+      else tryUse(9);
+    }
+    else if(k==='-'){
+      if(e.shiftKey)tryUse(10+12);
+      else tryUse(10);
+    }
+    else if(k==='='){
+      if(e.shiftKey)tryUse(11+12);
+      else tryUse(11);
+    }
     else if(k==='q'&&typeof useQuick==='function')useQuick(0);
     else if(k==='r'&&typeof useQuick==='function')useQuick(1);
     else if(k==='t'&&typeof useQuick==='function')useQuick(2);
@@ -140,6 +193,8 @@ function bindInput(){
     else if(k==='k')togglePanel('pCraft');
     else if(k==='n')togglePanel('pTalents');
     else if(k==='g')togglePanel('pGuild');
+    else if(k==='j')togglePanel('pAchieve');
+    else if(k==='u')togglePanel('pRankings');
     else if(k==='Escape'){let any=false;for(const id of PANELS)if(!$(id).hidden){closePanel(id);any=true}if(!any){P.target=null;P.autoAtk=false}}
     else if(k==='Enter'){$('chat').classList.add('open');chatIn.focus();e.preventDefault()}
   });

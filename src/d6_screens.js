@@ -260,6 +260,10 @@ function snapshot(){
   const ch={id:P.charId,level:P.level,x:Math.round(P.x),y:Math.round(P.y),zone:(G.zone&&G.zone.id)||'town',kills:P.kills|0,appearance:P.app};
   const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
     talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null,
+    bags:P.bags||[null,null,null,null],bank:P.bank||[],bankGold:P.bankGold||0,
+    achievements:P.achievements||{},titles:P.titles||['novice'],title:P.title||'',
+    actionBar:P.actionBar||[],actionBar2:P.actionBar2||[],recipes:P.recipes||{},
+    craftedCount:P.craftedCount||0,duelsWon:P.duelsWon||0,dungeonsCleared:P.dungeonsCleared||0,visitedZones:P.visitedZones||{},
     options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff}};
   return {ch:ch,st:st};
 }
@@ -296,6 +300,19 @@ async function enterWorld(row){
     P.mount=st.mount||'horse';
     P.mounts=st.mounts||['horse'];
     P.guild=st.guild||null;
+    P.bags=st.bags||[null,null,null,null];
+    P.bank=st.bank||[];
+    P.bankGold=st.bankGold||0;
+    P.achievements=st.achievements||{};
+    P.titles=st.titles||['novice'];
+    P.title=st.title||'';
+    P.actionBar=st.actionBar||[0,1,2,3,4,5,6,7,8,9,10,11];
+    P.actionBar2=st.actionBar2||[12,13,14,0,1,2,3,4,5,6,7,8];
+    P.recipes=st.recipes||{hp1:true,mp1:true};
+    P.craftedCount=st.craftedCount||0;
+    P.duelsWon=st.duelsWon||0;
+    P.dungeonsCleared=st.dungeonsCleared||0;
+    P.visitedZones=st.visitedZones||{town:1};
     const o=st.options||{};
     G.autoLoot=o.autoLoot!==false;G.sfxOn=o.sfx!==false;G.sprintToggle=!!o.run;G.shakeOff=o.shake===false;
   }

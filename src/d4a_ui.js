@@ -9,9 +9,9 @@ function log(html,cls){
   const box=$('chatLog'),d=document.createElement('div');d.className='m-'+(cls||'gen');d.innerHTML=html;box.appendChild(d);
   while(box.children.length>80)box.removeChild(box.firstChild);box.scrollTop=box.scrollHeight;
 }
-const PANELS=['pInv','pChar','pQuest','pDlg','pShop','pLoot','pMap','pOpts','pSpells','pCraft','pTalents','pMounts','pGuild','pTrade'];
+const PANELS=['pInv','pChar','pQuest','pDlg','pShop','pLoot','pMap','pOpts','pSpells','pCraft','pTalents','pMounts','pGuild','pTrade','pBank','pAchieve','pRankings','pBarber'];
 function showPanel(id){
-  if(id==='pDlg'||id==='pShop'||id==='pLoot'||id==='pMap'||id==='pQuest')for(const o of ['pDlg','pShop','pLoot','pMap','pQuest','pOpts'])if(o!==id&&!(id==='pShop'&&o==='pDlg'&&false))closePanel(o);
+  if(id==='pDlg'||id==='pShop'||id==='pLoot'||id==='pMap'||id==='pQuest'||id==='pBank'||id==='pAchieve'||id==='pRankings'||id==='pBarber')for(const o of ['pDlg','pShop','pLoot','pMap','pQuest','pOpts'])if(o!==id&&!(id==='pShop'&&o==='pDlg'&&false))closePanel(o);
   $(id).hidden=false;refreshUI();
 }
 function closePanel(id){
@@ -25,18 +25,26 @@ function closePanel(id){
 function togglePanel(id){if($(id).hidden)showPanel(id);else closePanel(id)}
 
 /* ---------- Objetos y tooltips ---------- */
-function itemIcon(it){return it.t==='gear'?svg(SLOT_IC[it.slot],RAR[it.rar].c):svg(ITEMS[it.key].ic,ITEMS[it.key].col)}
+function itemIcon(it){
+  if(it.t==='gear')return svg(SLOT_IC[it.slot],RAR[it.rar].c);
+  if(it.t==='bag')return svg(it.key&&ITEMS[it.key]?ITEMS[it.key].ic:'bag',RAR[it.rar||1].c);
+  return svg(ITEMS[it.key].ic,ITEMS[it.key].col);
+}
 function itemBtn(it,tip,i){
-  const r=it.t==='gear'?it.rar:0;
+  const r=it.t==='gear'||it.t==='bag'?(it.rar||0):0;
   return '<button class="it r'+r+'" data-tip="'+tip+'" data-i="'+i+'">'+itemIcon(it)+(it.n>1?'<span class="cnt">'+it.n+'</span>':'')+'</button>';
 }
-function itemLabel(it){return it.t==='gear'?'<span style="color:'+RAR[it.rar].c+'">'+esc(it.name)+'</span>':esc(ITEMS[it.key].name)+(it.n>1?' x'+it.n:'')}
+function itemLabel(it){
+  if(it.t==='gear'||it.t==='bag')return '<span style="color:'+RAR[it.rar||0].c+'">'+esc(it.name)+'</span>';
+  return esc(ITEMS[it.key].name)+(it.n>1?' x'+it.n:'');
+}
 function statLine(it){
   const p=[];if(it.atk)p.push('+'+it.atk+' ataque');if(it.armor)p.push('+'+it.armor+' armadura');if(it.hp)p.push('+'+it.hp+' vida');if(it.crit)p.push('+'+it.crit+'% crít.');
   return p.join(' · ');
 }
 function gearTip(it){
-  let h='<h5 style="color:'+RAR[it.rar].c+'">'+esc(it.name)+'</h5><div class="t2">'+RAR[it.rar].n+' · '+SLOT_NAME[it.slot]+' · Nivel '+it.lvl+'</div>';
+  let bindTxt=it.bind==='bound'?'<div style="color:#a8a8a8;font-size:11px">Ligado al alma</div>':it.bind==='boe'?'<div style="color:#7fb8ff;font-size:11px">Se liga al equipar</div>':it.bind==='bop'?'<div style="color:#ff8a3a;font-size:11px">Se liga al recoger</div>':'<div style="color:#7fe07f;font-size:11px">Comerciable</div>';
+  let h='<h5 style="color:'+RAR[it.rar].c+'">'+esc(it.name)+'</h5><div class="t2">'+RAR[it.rar].n+' · '+SLOT_NAME[it.slot]+' · Nivel '+it.lvl+'</div>'+bindTxt;
   const cur=P.eq[it.slot];
   for(const [k,l,u] of [['atk','Ataque',''],['armor','Armadura',''],['hp','Vida',''],['crit','Crítico','%']]){
     if(!it[k]&&!(cur&&cur[k]))continue;
@@ -53,6 +61,9 @@ function tipHTML(k){
   let it=null;
   if(ty==='inv'||ty==='sell')it=P.inv[+a];
   else if(ty==='eq')it=P.eq[a];
+  else if(ty==='bag')it=P.bags[+a];
+  else if(ty==='bank')it=P.bank[+a];
+  else if(ty==='gbank')it=GUILD_BANK.items[+a];
   else if(ty==='loot')it=G.lootM&&G.lootM.loot?G.lootM.loot.items[+a]:null;
   else if(ty==='buy'){const e=shopStock(G.shopNpc)[+a];it=e?(e.item||{t:'cons',key:e.key,n:1}):null}
   else if(ty==='ab'){
@@ -63,6 +74,14 @@ function tipHTML(k){
     return best?'<h5>'+ITEMS[best].name+'</h5><p>'+ITEMS[best].desc+'</p><div class="t2">Recarga compartida 30 s</div>':'<h5>Sin pociones</h5><div class="t2">Cómpralas a Mira la Alquimista</div>';
   }else if(ty==='herb'){return '<h5>Hierba curativa</h5><p>'+ITEMS.herb.desc+'</p><div class="t2">Recarga 10 s</div>'}
   if(!it)return '';
+  if(it.t==='bag'){
+    let h='<h5 style="color:'+RAR[it.rar||1].c+'">'+esc(it.name)+'</h5><div class="t2">Bolsa de Contenedor · +'+(it.slots||0)+' Casillas</div>';
+    if(it.bind==='bound')h+='<div style="color:#a8a8a8;font-size:11px">Ligado al alma</div>';
+    else if(it.bind==='boe')h+='<div style="color:#7fb8ff;font-size:11px">Se liga al equipar</div>';
+    h+='<p>Aumenta la capacidad de carga de tu inventario al equiparla en una ranura de bolsa.</p>';
+    h+='<div class="t2">Vale '+sellValue(it)+' de oro</div>';
+    return h;
+  }
   if(it.t==='gear')return gearTip(it);
   const d=ITEMS[it.key];
   return '<h5>'+d.name+'</h5><p>'+(d.desc||'Objeto diverso.')+'</p><div class="t2">'+(d.quest?'Objeto de misión':'Vale '+Math.max(1,Math.floor(d.price*0.4))+' de oro')+'</div>';
@@ -92,32 +111,40 @@ function initTips(){
 let AB=[];
 function buildActionBar(){
   const bar=$('actionbar');if(!bar)return;
-  bar.innerHTML='';AB=[];
+  const bar2=$('actionbar2');
+  bar.innerHTML='';
+  if(bar2)bar2.innerHTML='';
+  AB=[];
   const c=CLS[P.cls];
   if(!P.actionBar||!P.actionBar.length){
     P.actionBar=[0,1,2,3,4,5,6,7,8,9,10,11];
   }
+  if(!P.actionBar2||!P.actionBar2.length){
+    P.actionBar2=[12,13,14,0,1,2,3,4,5,6,7,8];
+  }
   const maxSlots=12;
   const keyLabels=['1','2','3','4','5','6','7','8','9','0','-','='];
-  for(let i=0;i<maxSlots;i++){
-    const abIdx=P.actionBar[i]!==undefined?P.actionBar[i]:i;
+  const keyLabels2=['S+1','S+2','S+3','S+4','S+5','S+6','S+7','S+8','S+9','S+0','S+-','S+='];
+
+  function createSlot(i, parentBar, labels, arr){
+    const abIdx=arr[i%12]!==undefined?arr[i%12]:(i%12);
     const ab=c.ab[abIdx];
     const b=document.createElement('button');
     b.className='slot'+(!ab||ab.ul>P.level?' lock':'');
     b.draggable=true;
     b.dataset.slotIdx=i;
-    const keyBadge=(typeof KEYBINDS!=='undefined'&&KEYBINDS[String(i+1)])?prettyCombo(KEYBINDS[String(i+1)]):keyLabels[i];
+    const keyBadge=(i<12&&(typeof KEYBINDS!=='undefined'&&KEYBINDS[String(i+1)]))?prettyCombo(KEYBINDS[String(i+1)]):labels[i%12];
     if(ab){
       b.dataset.ul=ab.ul;
       b.setAttribute('data-tip','ab:'+abIdx);
       b.innerHTML=svg(ab.ic,ab.col)+'<span class="k">'+keyBadge+'</span><span class="cd"></span><span class="cdt"></span>';
       b.onclick=e=>{e.currentTarget.blur();tryUse(i)};
       b.ondragstart=e=>{e.dataTransfer.setData('text/plain','slot:'+i)};
-      AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul});
+      AB[i]={el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul};
     }else{
       b.innerHTML='<span class="k">'+keyBadge+'</span><span class="cd"></span><span class="cdt"></span>';
       b.onclick=e=>{e.currentTarget.blur();tryUse(i)};
-      AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:null,ul:99});
+      AB[i]={el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:null,ul:99};
     }
     b.ondragover=e=>e.preventDefault();
     b.ondrop=e=>{
@@ -125,18 +152,32 @@ function buildActionBar(){
       const data=e.dataTransfer.getData('text/plain');
       if(data&&data.startsWith('spell:')){
         const fromIdx=+data.split(':')[1];
-        P.actionBar[i]=fromIdx;
+        if(i<12)P.actionBar[i]=fromIdx;
+        else P.actionBar2[i-12]=fromIdx;
         buildActionBar();
         toast('Habilidad asignada a la ranura '+(i+1));
       }else if(data&&data.startsWith('slot:')){
         const fromSlot=+data.split(':')[1];
-        const tmp=P.actionBar[i];
-        P.actionBar[i]=P.actionBar[fromSlot];
-        P.actionBar[fromSlot]=tmp;
+        const getV=s=>(s<12?P.actionBar[s]:P.actionBar2[s-12]);
+        const setV=(s,v)=>{if(s<12)P.actionBar[s]=v;else P.actionBar2[s-12]=v};
+        const tmp=getV(i);
+        setV(i,getV(fromSlot));
+        setV(fromSlot,tmp);
         buildActionBar();
       }
     };
-    bar.appendChild(b);
+    parentBar.appendChild(b);
+  }
+
+  // Action Bar 2 (Top row: slots 12-23)
+  if(bar2){
+    for(let i=0;i<maxSlots;i++){
+      createSlot(i+12, bar2, keyLabels2, P.actionBar2);
+    }
+  }
+  // Action Bar 1 (Bottom row: slots 0-11)
+  for(let i=0;i<maxSlots;i++){
+    createSlot(i, bar, keyLabels, P.actionBar);
   }
 }
 function flashSlot(i){const s=AB[i];if(!s)return;s.el.classList.remove('flash');void s.el.offsetWidth;s.el.classList.add('flash')}
@@ -166,7 +207,7 @@ function updateHUD(dt){
   }else if(!tf.hidden){tf.hidden=true;lastTarget=null}
   // habilidades
   for(let i=0;i<AB.length;i++){
-    const s=AB[i];let cd=0,tot=1,off=false;
+    const s=AB[i];if(!s)continue;let cd=0,tot=1,off=false;
     if(s.ab){
       cd=P.cds[s.ab.id]||0;tot=s.ab.cd||1;
       if(!cd&&P.gcd>0&&!s.ab.noGcd){cd=P.gcd;tot=1}
@@ -221,9 +262,14 @@ function refreshUI(){
   if(!$('pMap').hidden)renderMapInfo();
   if(!$('pSpells').hidden)renderSpellsUI();
   if(!$('pCraft').hidden)renderCraftUI();
+  if($('pBank')&&!$('pBank').hidden)renderBankUI();
+  if($('pAchieve')&&!$('pAchieve').hidden)renderAchievementsUI();
+  if($('pRankings')&&!$('pRankings').hidden)renderRankingsUI();
+  if($('pBarber')&&!$('pBarber').hidden)renderBarberUI();
   for(const [btnId,pId] of [
     ['bInv','pInv'],['bChar','pChar'],['bQuest','pQuest'],['bMap','pMap'],['bOpts','pOpts'],
-    ['bSpells','pSpells'],['bCraft','pCraft'],['bTal','pTalents'],['bMount','pMounts'],['bGuild','pGuild']
+    ['bSpells','pSpells'],['bCraft','pCraft'],['bTal','pTalents'],['bMount','pMounts'],['bGuild','pGuild'],
+    ['bAchieve','pAchieve'],['bRankings','pRankings'],['bBank','pBank']
   ]){
     if($(btnId)&&$(pId))$(btnId).classList.toggle('on',!$(pId).hidden);
   }
@@ -238,9 +284,31 @@ function renderTracker(){
   if(HC.trk!==h){HC.trk=h;$('tracker').innerHTML=h}
 }
 function renderInv(){
+  const cap=maxInventorySlots();
   let h='';
-  for(let i=0;i<MAXINV;i++){const it=P.inv[i];h+=it?itemBtn(it,'inv:'+i,i):'<div class="it"></div>'}
-  $('invGrid').innerHTML=h;$('invCount').textContent=P.inv.length+' / '+MAXINV+' · '+P.gold+' oro';
+  for(let i=0;i<cap;i++){const it=P.inv[i];h+=it?itemBtn(it,'inv:'+i,i):'<div class="it"></div>'}
+  $('invGrid').innerHTML=h;$('invCount').textContent=P.inv.length+' / '+cap+' · '+P.gold+' oro';
+
+  const bagRow=$('bagSlotsRow');
+  if(bagRow){
+    let bh='<div class="bag-slots-label">Bolsas:</div>';
+    bh+='<div class="bag-slot-box" title="Mochila Principal (24 casillas)"><span class="bag-ic">'+svg('bag','#ffd700')+'</span><span class="bag-slots-tag">24</span></div>';
+    for(let b=0;b<4;b++){
+      const bag=P.bags[b];
+      if(bag){
+        bh+='<div class="bag-slot-box equipped r'+(bag.rar||1)+'" data-bag-idx="'+b+'" data-tip="bag:'+b+'">'+
+          svg(bag.key&&ITEMS[bag.key]?ITEMS[bag.key].ic:'bag',RAR[bag.rar||1].c)+
+          '<span class="bag-slots-tag">+'+(bag.slots||0)+'</span>'+
+        '</div>';
+      }else{
+        bh+='<div class="bag-slot-box empty" data-bag-idx="'+b+'" title="Ranura de Bolsa vacía. Equipa una bolsa para ampliar espacio">'+
+          svg('bag','#444')+
+          '<span class="bag-slots-tag" style="color:#666">+0</span>'+
+        '</div>';
+      }
+    }
+    bagRow.innerHTML=bh;
+  }
 }
 function renderCharPaperdoll(){
   const cv=$('pCharCv');if(!cv||!P)return;
@@ -264,9 +332,20 @@ function renderChar(){
   };
   if($('eqLeft'))$('eqLeft').innerHTML=leftSlots.map(slotBtn).join('');
   if($('eqRight'))$('eqRight').innerHTML=rightSlots.map(slotBtn).join('');
-  if($('eqGrid'))$('eqGrid').innerHTML=SLOTS.map(slotBtn).join('');
   renderCharPaperdoll();
   if($('btnRotChar'))$('btnRotChar').onclick=()=>{P.paperDir=-(P.paperDir||1);renderCharPaperdoll()};
+
+  const titleSel=$('pTitleSelect');
+  if(titleSel){
+    P.titles=P.titles||['novice'];
+    titleSel.innerHTML='<option value="">Sin título</option>'+P.titles.map(t=>'<option value="'+t+'"'+(P.title===t?' selected':'')+'>'+(TITLES[t]?TITLES[t].name:t)+'</option>').join('');
+    titleSel.onchange=()=>{setTitle(titleSel.value);renderChar()};
+  }
+  const titleDisp=$('pCharTitleDisplay');
+  if(titleDisp){
+    titleDisp.textContent=P.title&&TITLES[P.title]?'«'+TITLES[P.title].name+'»':'';
+  }
+
   const c=CLS[P.cls],red=Math.round(P.armor/(P.armor+40+P.level*10)*100);
   const rows=[
     ['Clase',c.name],
@@ -292,14 +371,22 @@ function renderSpellsUI(){
     const cdText=ab.cd?ab.cd+' s recarga':'Sin recarga';
     
     let assignedSlot=-1;
-    if(P.actionBar){
+    if(P.actionBar&&P.actionBar.indexOf(i)>=0){
       assignedSlot=P.actionBar.indexOf(i);
+    }else if(P.actionBar2&&P.actionBar2.indexOf(i)>=0){
+      assignedSlot=12+P.actionBar2.indexOf(i);
     }
     
     let selectOpts='<option value="-1">Asignar a barra...</option>';
+    selectOpts+='<optgroup label="Barra 1">';
     for(let s=0;s<12;s++){
       selectOpts+='<option value="'+s+'"'+(assignedSlot===s?' selected':'')+'>Ranura '+(s+1)+'</option>';
     }
+    selectOpts+='</optgroup><optgroup label="Barra 2 (Superior)">';
+    for(let s=12;s<24;s++){
+      selectOpts+='<option value="'+s+'"'+(assignedSlot===s?' selected':'')+'>Ranura '+(s+1)+'</option>';
+    }
+    selectOpts+='</optgroup>';
 
     h+='<div class="spell-card'+(unlocked?'':' locked')+'" draggable="'+unlocked+'" data-spell-idx="'+i+'">'+
       '<div class="spell-ic">'+svg(ab.ic,ab.col)+'</div>'+
@@ -337,6 +424,11 @@ function renderSpellsUI(){
         buildActionBar();
         renderSpellsUI();
         toast('Habilidad asignada a Ranura '+(targetSlot+1));
+      }else if(targetSlot>=12&&targetSlot<24){
+        P.actionBar2[targetSlot-12]=abIdx;
+        buildActionBar();
+        renderSpellsUI();
+        toast('Habilidad asignada a Ranura '+(targetSlot+1));
       }
     };
   });
@@ -359,7 +451,7 @@ function renderCraftUI(){
     const lvlOk=P.level>=r.lvl;
     const craftable=canCraft(id);
     
-    const outIc=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].ic:'potion'):(SLOT_IC[r.slot]||'sword');
+    const outIc=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].ic:(r.out.t==='bag'?'bag':'potion')):(SLOT_IC[r.slot]||'sword');
     const outCol=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].col:'#f4cf5b'):RAR[r.rar||2].c;
     const outName=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].name:r.name):r.name;
     const outCnt=r.out&&r.out.n>1?' x'+r.out.n:'';
@@ -391,7 +483,7 @@ function renderCraftUI(){
       '<div class="craft-info">'+
         '<div class="craft-title">'+
           '<span style="color:'+outCol+'">'+esc(outName)+outCnt+'</span>'+
-          '<span class="reward" style="font-size:11px">Nv. '+r.lvl+' · '+(r.cat==='alch'?'Alquimia':r.cat==='blacksmith'?'Herrería':'Joyería')+'</span>'+
+          '<span class="reward" style="font-size:11px">Nv. '+r.lvl+' · '+(r.cat==='alch'?'Alquimia':r.cat==='blacksmith'?'Herrería':r.cat==='bags'?'Sastrería (Bolsas)':'Joyería')+'</span>'+
           (!known?'<span class="badge-lock" style="color:#ff8a7a;font-size:10px;font-weight:700">BLOQUEADA</span>':'<span style="color:#7fe07f;font-size:10px;font-weight:700">CONOCIDA</span>')+
         '</div>'+
         '<div class="reward" style="font-size:12px;margin:2px 0">'+esc(r.desc||'')+'</div>'+
@@ -409,6 +501,243 @@ function renderCraftUI(){
     };
   });
 }
+
+/* ---------- Banco y Banco de Hermandad ---------- */
+let bankTab='personal';
+function renderBankUI(){
+  const p=$('pBank');if(!p||p.hidden)return;
+  const pTabBtn=$('btnBankPersonal'), gTabBtn=$('btnBankGuild');
+  if(pTabBtn)pTabBtn.onclick=()=>{bankTab='personal';renderBankUI()};
+  if(gTabBtn)gTabBtn.onclick=()=>{bankTab='guild';renderBankUI()};
+  if(pTabBtn)pTabBtn.classList.toggle('active',bankTab==='personal');
+  if(gTabBtn)gTabBtn.classList.toggle('active',bankTab==='guild');
+
+  const goldTxt=$('bankGoldTxt'), gGoldTxt=$('gbankGoldTxt');
+  if(goldTxt)goldTxt.textContent='Oro en banco: '+(P.bankGold||0)+' | Tu oro: '+P.gold;
+  if(gGoldTxt)gGoldTxt.textContent='Oro hermandad: '+(GUILD_BANK.gold||0)+' | Tu oro: '+P.gold;
+
+  const pWrap=$('bankPersonalSection'), gWrap=$('bankGuildSection');
+  if(pWrap)pWrap.hidden=(bankTab!=='personal');
+  if(gWrap)gWrap.hidden=(bankTab!=='guild');
+
+  if(bankTab==='personal'){
+    const grid=$('bankGrid');
+    if(grid){
+      let h='';
+      for(let i=0;i<MAX_BANK_SLOTS;i++){
+        const it=P.bank[i];
+        h+=it?itemBtn(it,'bank:'+i,i):'<div class="it"></div>';
+      }
+      grid.innerHTML=h;
+      grid.onclick=e=>{
+        const b=e.target.closest('[data-i]');
+        if(b){bankWithdrawItem(+b.dataset.i);hideTip()}
+      };
+    }
+  }else{
+    const grid=$('gbankGrid');
+    if(grid){
+      let h='';
+      for(let i=0;i<MAX_GUILD_BANK_SLOTS;i++){
+        const it=GUILD_BANK.items[i];
+        h+=it?itemBtn(it,'gbank:'+i,i):'<div class="it"></div>';
+      }
+      grid.innerHTML=h;
+      grid.onclick=e=>{
+        const b=e.target.closest('[data-i]');
+        if(b){guildBankWithdrawItem(+b.dataset.i);hideTip()}
+      };
+    }
+    const logEl=$('gbankLog');
+    if(logEl){
+      logEl.innerHTML=GUILD_BANK.logs.map(l=>'<div class="gbank-log-row"><span>'+esc(l.who)+'</span>: '+esc(l.text)+'</div>').join('')||'<div style="color:var(--muted);font-size:12px;padding:8px">Sin movimientos recientes.</div>';
+    }
+  }
+}
+
+/* ---------- Logros ---------- */
+let achieveCat='all';
+function renderAchievementsUI(){
+  const p=$('pAchieve');if(!p||p.hidden)return;
+  if(typeof ACHIEVEMENTS==='undefined')return;
+  P.achievements=P.achievements||{};
+  
+  let totalPts=0, earnedPts=0;
+  ACHIEVEMENTS.forEach(a=>{
+    totalPts+=a.points||0;
+    if(P.achievements[a.id])earnedPts+=a.points||0;
+  });
+  if($('achievePoints'))$('achievePoints').textContent=earnedPts+' / '+totalPts+' pts ('+Math.round(earnedPts/Math.max(1,totalPts)*100)+'%)';
+
+  const tabs=$('achieveTabs');
+  if(tabs){
+    tabs.querySelectorAll('.achieve-tab').forEach(b=>{
+      b.classList.toggle('active',b.dataset.cat===achieveCat);
+      b.onclick=()=>{achieveCat=b.dataset.cat;renderAchievementsUI()};
+    });
+  }
+
+  const list=$('achieveList');
+  if(!list)return;
+  let h='';
+  ACHIEVEMENTS.forEach(a=>{
+    if(achieveCat!=='all'&&a.cat!==achieveCat)return;
+    const done=!!P.achievements[a.id];
+    let prog=0, maxP=1;
+    if(a.progress){
+      const pr=a.progress(P);
+      prog=pr[0];maxP=pr[1];
+    }else{
+      prog=done?1:0;maxP=1;
+    }
+    const pct=Math.min(100,Math.round(prog/Math.max(1,maxP)*100));
+    const titleReward=a.title&&TITLES[a.title]?'<span class="achieve-title-tag">Título: «'+TITLES[a.title].name+'»</span>':'';
+
+    h+='<div class="achieve-card'+(done?' done':'')+'">'+
+      '<div class="achieve-ic">'+svg(a.ic||'star',done?'#ffd700':'#666')+'</div>'+
+      '<div class="achieve-info">'+
+        '<div class="achieve-header">'+
+          '<span class="achieve-name">'+esc(a.name)+'</span>'+
+          '<span class="achieve-pts">+'+(a.points||0)+' pts</span>'+
+        '</div>'+
+        '<div class="achieve-desc">'+esc(a.desc)+'</div>'+
+        '<div class="achieve-bar-wrap">'+
+          '<div class="achieve-bar-fill" style="width:'+pct+'%"></div>'+
+          '<span class="achieve-bar-txt">'+(done?'¡Completado!':prog+' / '+maxP)+'</span>'+
+        '</div>'+
+        (titleReward?'<div class="achieve-rewards">'+titleReward+'</div>':'')+
+      '</div>'+
+    '</div>';
+  });
+  list.innerHTML=h;
+}
+
+/* ---------- Clasificaciones (Rankings) ---------- */
+let rankTab='players';
+function renderRankingsUI(){
+  const p=$('pRankings');if(!p||p.hidden)return;
+  const tPlay=$('btnRankPlayers'), tGuild=$('btnRankGuilds');
+  if(tPlay)tPlay.onclick=()=>{rankTab='players';renderRankingsUI()};
+  if(tGuild)tGuild.onclick=()=>{rankTab='guilds';renderRankingsUI()};
+  if(tPlay)tPlay.classList.toggle('active',rankTab==='players');
+  if(tGuild)tGuild.classList.toggle('active',rankTab==='guilds');
+
+  const list=$('rankingsList');if(!list)return;
+  let h='';
+  if(rankTab==='players'){
+    const topP=[
+      {name:P.name,cls:P.cls,lvl:P.level,kills:P.kills,duels:P.duelsWon||0,pts:Object.keys(P.achievements||{}).length*10,isSelf:true},
+      {name:'Aldrik el Temerario',cls:'war',lvl:60,kills:1240,duels:42,pts:320},
+      {name:'Lyra Sombraluna',cls:'mage',lvl:58,kills:980,duels:29,pts:280},
+      {name:'Thorvan Escudoacerado',cls:'paladin',lvl:57,kills:890,duels:31,pts:260},
+      {name:'Brunhild la Feroz',cls:'dk',lvl:55,kills:810,duels:22,pts:240},
+      {name:'Kaelis Vientorápido',cls:'hunter',lvl:53,kills:750,duels:18,pts:210},
+      {name:'Mirelle de la Luz',cls:'priest',lvl:52,kills:620,duels:15,pts:190},
+      {name:'Zephyr Sombrío',cls:'rogue',lvl:50,kills:590,duels:25,pts:180}
+    ].sort((a,b)=>(b.lvl-a.lvl)||(b.kills-a.kills));
+
+    h='<div class="rank-header"><span>#</span><span>Jugador</span><span>Clase</span><span>Nivel</span><span>Bajas</span><span>JcJ</span></div>';
+    topP.forEach((x,idx)=>{
+      const c=CLS[x.cls];
+      h+='<div class="rank-row'+(x.isSelf?' self':'')+'">'+
+        '<span class="rank-pos">'+(idx+1)+'</span>'+
+        '<span class="rank-name">'+esc(x.name)+'</span>'+
+        '<span style="color:'+(c?c.color:'#fff')+'">'+(c?c.name:x.cls)+'</span>'+
+        '<span>'+x.lvl+'</span>'+
+        '<span>'+x.kills+'</span>'+
+        '<span>'+x.duels+'</span>'+
+      '</div>';
+    });
+  }else{
+    const topG=[
+      {name:'Los Cruzados de Astra',lvl:10,members:48,gold:125000,leader:'Aldrik'},
+      {name:'Orden del Fénix Eterno',lvl:9,members:42,gold:98000,leader:'Thorvan'},
+      {name:'Vanguardia Imperial',lvl:8,members:36,gold:85000,leader:'Brunhild'},
+      {name:'Hermandad de las Sombras',lvl:7,members:29,gold:62000,leader:'Zephyr'},
+      {name:'Guardianes del Bosque',lvl:6,members:24,gold:43000,leader:'Teo'}
+    ];
+    if(typeof GUILD!=='undefined'&&GUILD&&GUILD.name){
+      topG.unshift({name:GUILD.name,lvl:GUILD.level||1,members:(GUILD.members||[]).length||1,gold:GUILD_BANK.gold||0,leader:GUILD.leader||P.name,isSelf:true});
+    }
+    h='<div class="rank-header"><span>#</span><span>Hermandad</span><span>Líder</span><span>Nivel</span><span>Miembros</span><span>Oro</span></div>';
+    topG.forEach((g,idx)=>{
+      h+='<div class="rank-row'+(g.isSelf?' self':'')+'">'+
+        '<span class="rank-pos">'+(idx+1)+'</span>'+
+        '<span class="rank-name" style="color:var(--gold)">'+esc(g.name)+'</span>'+
+        '<span>'+esc(g.leader)+'</span>'+
+        '<span>Nv '+g.lvl+'</span>'+
+        '<span>'+g.members+'</span>'+
+        '<span>'+g.gold+'</span>'+
+      '</div>';
+    });
+  }
+  list.innerHTML=h;
+}
+
+/* ---------- Salón de belleza y estilo (Barbería) ---------- */
+function renderBarberUI(){
+  const p=$('pBarber');if(!p||p.hidden)return;
+  const cv=$('barberCv');
+  if(cv){
+    const ctx=cv.getContext('2d');
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const grad=ctx.createRadialGradient(cv.width/2,cv.height-20,4,cv.width/2,cv.height-20,55);
+    grad.addColorStop(0,'rgba(0,0,0,0.5)');grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(cv.width/2,cv.height-20,45,12,0,0,Math.PI*2);ctx.fill();
+    const L=lookFor(P);
+    drawHuman(ctx, cv.width/2, cv.height-26, L, {scale:3.4, dir:1, t:G.worldT||0, moving:false});
+  }
+
+  const hsWrap=$('barberHairStyles');
+  if(hsWrap){
+    let h='';
+    for(let i=1;i<=6;i++){
+      h+='<button class="btn sm '+(P.app&&P.app.hairStyle===i?'active':'sec')+'" data-bstyle="'+i+'">Estilo '+i+'</button>';
+    }
+    hsWrap.innerHTML=h;
+    hsWrap.onclick=e=>{
+      const b=e.target.closest('[data-bstyle]');
+      if(b){P.app.hairStyle=+b.dataset.bstyle;renderBarberUI();sfx('equip')}
+    };
+  }
+
+  const hcWrap=$('barberHairColors');
+  if(hcWrap){
+    hcWrap.innerHTML=HAIRS.map(c=>'<div class="swatch'+(P.app&&P.app.hair===c?' active':'')+'" style="background:'+c+'" data-bhair="'+c+'"></div>').join('');
+    hcWrap.onclick=e=>{
+      const b=e.target.closest('[data-bhair]');
+      if(b){P.app.hair=b.dataset.bhair;renderBarberUI();sfx('equip')}
+    };
+  }
+
+  const scWrap=$('barberSkinColors');
+  if(scWrap){
+    scWrap.innerHTML=SKINS.map(c=>'<div class="swatch'+(P.app&&P.app.skin===c?' active':'')+'" style="background:'+c+'" data-bskin="'+c+'"></div>').join('');
+    scWrap.onclick=e=>{
+      const b=e.target.closest('[data-bskin]');
+      if(b){P.app.skin=b.dataset.bskin;renderBarberUI();sfx('equip')}
+    };
+  }
+
+  const tSel=$('barberTitleSelect');
+  if(tSel){
+    P.titles=P.titles||['novice'];
+    tSel.innerHTML='<option value="">Sin título</option>'+P.titles.map(t=>'<option value="'+t+'"'+(P.title===t?' selected':'')+'>'+(TITLES[t]?TITLES[t].name:t)+'</option>').join('');
+    tSel.onchange=()=>{setTitle(tSel.value);renderBarberUI()};
+  }
+
+  const btnSave=$('btnSaveBarber');
+  if(btnSave){
+    btnSave.onclick=()=>{
+      save(true);
+      burst(P.x,P.y-10,'#f4cf5b',20,150);
+      sfx('level');
+      toast('¡Aspecto y título guardados con éxito!');
+      closePanel('pBarber');
+      refreshUI();
+    };
+  }
+}
 function rewardText(q){return '<span class="reward">Recompensa: <b>'+q.gold+' oro</b> · '+q.xp+' XP'+(q.item?' · objeto '+RAR[q.item.rar].n.toLowerCase():'')+'</span>'}
 function renderQuests(){
   let h='';
@@ -421,6 +750,9 @@ function renderQuests(){
   $('questList').innerHTML=(h||'<p class="reward">No tienes misiones activas. Habla con los habitantes que tengan un <b>!</b> sobre la cabeza.</p>')+(done?'<p class="reward" style="margin-top:8px">Misiones completadas: '+done+'</p>':'');
 }
 function talkNpc(n){
+  if(n.id==='arnold'){closePanel('pDlg');showPanel('pBank');return}
+  if(n.id==='barber'){closePanel('pDlg');showPanel('pBarber');return}
+  if(n.id==='board_rank'){closePanel('pDlg');showPanel('pRankings');return}
   G.dlgNpc=n;dlgView=null;closePanel('pShop');closePanel('pLoot');closePanel('pMap');
   $('dlgName').textContent=n.name;showPanel('pDlg');sfx('open');
 }
@@ -445,6 +777,10 @@ function renderDlg(){
       if(!r&&!av&&!ac)continue;
       h+='<button class="qlink" data-qid="'+id+'"><span class="mark'+(ac&&!r?' grey':'')+'">'+(av?'!':'?')+'</span><span>'+esc(q.title)+(q.lvl>P.level?'':'')+'</span></button>';
     }
+    if(n.id==='arnold')h+='<button class="qlink" data-bank="1"><span class="mark">'+svg('bag','#ffd700')+'</span><span>Acceder a la Bóveda Bancaria</span></button>';
+    if(n.id==='barber')h+='<button class="qlink" data-barber="1"><span class="mark">'+svg('star','#ff70d6')+'</span><span>Salón de Belleza y Títulos</span></button>';
+    if(n.id==='board_rank')h+='<button class="qlink" data-rank="1"><span class="mark">'+svg('star','#ffd700')+'</span><span>Ver Clasificaciones</span></button>';
+    if(n.id==='valerius')h+='<button class="qlink" data-guild="1"><span class="mark">'+svg('shield','#50e3c2')+'</span><span>Gestionar Hermandad</span></button>';
     if(n.def.shop)h+='<button class="qlink" data-shop="1"><span class="mark">'+svg('bag','#f4cf5b')+'</span><span>Comerciar</span></button>';
     h+='<div class="btns"><button class="btn sec" data-q="close">Despedirse</button></div>';
   }

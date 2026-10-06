@@ -67,8 +67,9 @@ function abDesc(ab){
 
 /* ---------- Jugador ---------- */
 function makePlayer(cls,name){
-  return {isPlayer:true,cls:cls,name:name,x:SPAWN_P.x,y:SPAWN_P.y,dir:1,fa:0,level:1,xp:0,gold:5,inv:[],eq:{weapon:null,head:null,chest:null,boots:null},quests:{},
-    hp:1,res:0,maxhp:1,maxres:1,atk:1,armor:0,crit:5,buffs:[],cast:null,gcd:0,cds:{},autoAtk:false,swing:0,swingA:0,target:null,dead:false,combatT:0,
+  return {isPlayer:true,cls:cls,name:name,x:SPAWN_P.x,y:SPAWN_P.y,dir:1,fa:0,level:1,xp:0,gold:5,inv:[],eq:{weapon:null,head:null,chest:null,boots:null},
+    bags:[null,null,null,null],bank:[],bankGold:0,achievements:{},titles:['novice'],title:'',duelsWon:0,dungeonsCleared:0,craftedCount:0,actionBar2:[],visitedZones:{town:1},
+    quests:{},hp:1,res:0,maxhp:1,maxres:1,atk:1,armor:0,crit:5,buffs:[],cast:null,gcd:0,cds:{},autoAtk:false,swing:0,swingA:0,target:null,dead:false,combatT:0,
     mounted:false,path:[],pathT:0,intent:null,dash:null,anim:0,moving:false,flash:0,size:10,stun:0,sta:100,staDelay:0,exh:0,sprinting:false,iframes:0,
     slowT:0,slowM:1,dots:[],disc:{town:1},rollP:0,gather:false,spd:0,castPose:0,dance:0,kills:0};
 }
@@ -90,6 +91,13 @@ function newGame(cls,name,app){
   P.eq.weapon.name=({war:'Espada de Recluta',mage:'Bastón de Aprendiz',priest:'Maza de Novicio',paladin:'Martillo de Escudero',rogue:'Daga de Recluta',hunter:'Arco de Cazador',necro:'Bastón de Adepto',druid:'Cayado de Brote',dk:'Hoja Rúnica de Aprendiz',shaman:'Maza de los Elementos'})[cls]||'Arma de Recluta';
   P.recipes=P.recipes||{hp1:true,mp1:true};
   P.actionBar=P.actionBar||[];
+  P.actionBar2=P.actionBar2||[];
+  P.bags=P.bags||[null,null,null,null];
+  P.bank=P.bank||[];
+  P.bankGold=P.bankGold||0;
+  P.achievements=P.achievements||{};
+  P.titles=P.titles||['novice'];
+  P.title=P.title||'';
   recalc();P.hp=P.maxhp;P.res=CLS[cls].res==='rage'?0:P.maxres;
   addStack('hp1',3);
   if(CLS[cls].res!=='rage')addStack('mp1',2);
@@ -144,12 +152,17 @@ function sfx(n){
 }
 
 /* ---------- Inventario ---------- */
+function maxInventorySlots(){
+  let s=24;
+  if(P&&P.bags){for(const b of P.bags)if(b&&b.slots)s+=b.slots}
+  return Math.min(120,s);
+}
 function countItem(key){let c=0;for(const x of P.inv)if(x.key===key)c+=x.n;return c}
 function addStack(key,n){
   const def=ITEMS[key];
   while(n>0){
     let st=P.inv.find(x=>x.key===key&&x.n<20);
-    if(!st){if(P.inv.length>=MAXINV)return n;st={t:def.t,key:key,n:0};P.inv.push(st)}
+    if(!st){if(P.inv.length>=maxInventorySlots())return n;st={t:def.t,key:key,n:0};P.inv.push(st)}
     const add=Math.min(20-st.n,n);st.n+=add;n-=add;
   }
   return 0;
@@ -160,33 +173,139 @@ function removeItem(key,n){
     const r=Math.min(x.n,n);x.n-=r;n-=r;if(x.n<=0)P.inv.splice(i,1);
   }
 }
-function addGear(it){if(P.inv.length>=MAXINV)return false;P.inv.push(it);return true}
+function addGear(it){
+  if(P.inv.length>=maxInventorySlots())return false;
+  if(it.bind==='bop')it.bind='bound';
+  P.inv.push(it);return true;
+}
 function itemName(it){
-  if(it.t==='gear')return '<span style="color:'+RAR[it.rar].c+'">['+esc(it.name)+']</span>';
+  if(it.t==='gear'||it.t==='bag'){
+    const c=RAR[it.rar||0].c;
+    const bTag=it.bind==='bound'?' <span style="color:#a8a8a8;font-size:10px;">[Ligado]</span>':it.bind==='boe'?' <span style="color:#7fb8ff;font-size:10px;">[Se liga al equipar]</span>':it.bind==='bop'?' <span style="color:#ff8a3a;font-size:10px;">[Se liga al recoger]</span>':'';
+    return '<span style="color:'+c+'">['+esc(it.name)+']</span>'+bTag;
+  }
   return '<span style="color:'+RAR[0].c+'">['+esc(ITEMS[it.key].name)+(it.n>1?' x'+it.n:'')+']</span>';
 }
+function equipBag(it,slotIdx){
+  if(!it||it.t!=='bag')return;
+  if(it.bind==='boe'){it.bind='bound';toast('¡'+it.name+' ahora está ligado a tu alma!')}
+  if(slotIdx===undefined||slotIdx===null){
+    let free=P.bags.findIndex(b=>!b);
+    slotIdx=free>=0?free:0;
+  }
+  const old=P.bags[slotIdx];
+  const oldS=old?(old.slots||0):0,newS=it.slots||0;
+  if(newS<oldS){
+    const fut=maxInventorySlots()-oldS+newS;
+    if(P.inv.length>fut){toast('No puedes equipar una bolsa más pequeña: libera espacio primero');return}
+  }
+  const idx=P.inv.indexOf(it);
+  if(idx>=0)P.inv.splice(idx,1);
+  P.bags[slotIdx]=it;
+  if(old)P.inv.push(old);
+  sfx('equip');toast('Equipada: '+it.name+' (+'+newS+' casillas)');
+  checkAchievements();refreshUI();
+}
+function unequipBag(slotIdx){
+  const b=P.bags[slotIdx];if(!b)return;
+  const fut=maxInventorySlots()-(b.slots||0);
+  if(P.inv.length+1>fut){toast('Libera espacio en la mochila antes de retirar la bolsa');return}
+  P.bags[slotIdx]=null;P.inv.push(b);
+  sfx('equip');toast('Bolsa desequipada: '+b.name);
+  refreshUI();
+}
 function equip(i){
-  const it=P.inv[i];if(!it||it.t!=='gear')return;
+  const it=P.inv[i];if(!it)return;
+  if(it.t==='bag'){equipBag(it);return}
+  if(it.t!=='gear')return;
   if(P.level<it.lvl-2){toast('Necesitas nivel '+(it.lvl-2)+' para equiparlo');return}
+  if(it.bind==='boe'){it.bind='bound';toast('¡'+it.name+' ahora está ligado a tu alma!')}
   const old=P.eq[it.slot];P.eq[it.slot]=it;P.inv.splice(i,1);if(old)P.inv.push(old);
-  recalc();sfx('equip');refreshUI();
+  recalc();sfx('equip');checkAchievements();refreshUI();
 }
 function unequip(slot){
   if(!P.eq[slot])return;
-  if(P.inv.length>=MAXINV){toast('Mochila llena');return}
+  if(P.inv.length>=maxInventorySlots()){toast('Mochila llena');return}
   P.inv.push(P.eq[slot]);P.eq[slot]=null;recalc();refreshUI();
 }
 function sortInv(){
-  const order={gear:0,cons:1,misc:2};
+  const order={bag:0,gear:1,cons:2,misc:3};
   P.inv.sort((a,b)=>{
     if(order[a.t]!==order[b.t])return order[a.t]-order[b.t];
     if(a.t==='gear'){
       const sa=SLOTS.indexOf(a.slot),sb=SLOTS.indexOf(b.slot);
       return sa!==sb?sa-sb:(b.rar-a.rar)||(b.lvl-a.lvl);
     }
-    return String(a.key).localeCompare(String(b.key));
+    return String(a.key||a.name).localeCompare(String(b.key||b.name));
   });
   refreshUI();
+}
+const MAX_BANK_SLOTS=80,MAX_GUILD_BANK_SLOTS=80;
+let GUILD_BANK={items:[],gold:0,logs:[]};
+function bankDepositItem(invIdx){
+  if(!P||!P.bank)return;
+  const it=P.inv[invIdx];if(!it)return;
+  if(P.bank.length>=MAX_BANK_SLOTS){toast('Banco personal lleno (máx '+MAX_BANK_SLOTS+')');return}
+  P.inv.splice(invIdx,1);P.bank.push(it);
+  sfx('coin');toast('Guardado en banco: '+(it.name||(ITEMS[it.key]?ITEMS[it.key].name:it.key)));
+  refreshUI();
+}
+function bankWithdrawItem(bankIdx){
+  if(!P||!P.bank)return;
+  const it=P.bank[bankIdx];if(!it)return;
+  if(P.inv.length>=maxInventorySlots()){toast('Mochila llena');return}
+  P.bank.splice(bankIdx,1);P.inv.push(it);
+  sfx('loot');toast('Retirado del banco: '+(it.name||(ITEMS[it.key]?ITEMS[it.key].name:it.key)));
+  refreshUI();
+}
+function bankDepositGold(amt){
+  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  if(P.gold<amt){toast('No tienes suficiente oro');return}
+  P.gold-=amt;P.bankGold=(P.bankGold||0)+amt;
+  sfx('coin');toast('Depositaste '+amt+' de oro en tu banco');refreshUI();
+}
+function bankWithdrawGold(amt){
+  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  if((P.bankGold||0)<amt){toast('No tienes tanto oro en el banco');return}
+  P.bankGold-=amt;P.gold+=amt;
+  sfx('coin');toast('Retiraste '+amt+' de oro de tu banco');refreshUI();
+}
+function guildBankDepositItem(invIdx){
+  if(!P)return;
+  const it=P.inv[invIdx];if(!it)return;
+  if(it.bind==='bound'){toast('¡No puedes depositar objetos ligados al alma en el banco de hermandad!');return}
+  if(GUILD_BANK.items.length>=MAX_GUILD_BANK_SLOTS){toast('Banco de hermandad lleno');return}
+  P.inv.splice(invIdx,1);GUILD_BANK.items.push(it);
+  const nm=it.name||(ITEMS[it.key]?ITEMS[it.key].name:it.key);
+  GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Depositó '+nm});
+  if(GUILD_BANK.logs.length>30)GUILD_BANK.logs.pop();
+  sfx('coin');toast('Depositado en hermandad: '+nm);refreshUI();
+}
+function guildBankWithdrawItem(gbIdx){
+  if(!P)return;
+  const it=GUILD_BANK.items[gbIdx];if(!it)return;
+  if(P.inv.length>=maxInventorySlots()){toast('Mochila llena');return}
+  GUILD_BANK.items.splice(gbIdx,1);P.inv.push(it);
+  const nm=it.name||(ITEMS[it.key]?ITEMS[it.key].name:it.key);
+  GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Retiró '+nm});
+  if(GUILD_BANK.logs.length>30)GUILD_BANK.logs.pop();
+  sfx('loot');toast('Retirado de hermandad: '+nm);refreshUI();
+}
+function guildBankDepositGold(amt){
+  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  if(P.gold<amt){toast('No tienes suficiente oro');return}
+  P.gold-=amt;GUILD_BANK.gold=(GUILD_BANK.gold||0)+amt;
+  GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Depositó '+amt+' de oro'});
+  if(GUILD_BANK.logs.length>30)GUILD_BANK.logs.pop();
+  sfx('coin');toast('Depositaste '+amt+' de oro en la hermandad');refreshUI();
+}
+function guildBankWithdrawGold(amt){
+  amt=Math.floor(amt);if(isNaN(amt)||amt<=0)return;
+  if((GUILD_BANK.gold||0)<amt){toast('No hay suficiente oro en la hermandad');return}
+  GUILD_BANK.gold-=amt;P.gold+=amt;
+  GUILD_BANK.logs.unshift({time:Date.now(),who:P.name,text:'Retiró '+amt+' de oro'});
+  if(GUILD_BANK.logs.length>30)GUILD_BANK.logs.pop();
+  sfx('coin');toast('Retiraste '+amt+' de oro de la hermandad');refreshUI();
 }
 function usePotion(prefix){
   if(!G.started||P.dead)return;
@@ -245,23 +364,34 @@ function craftItem(id){
   }
   for(const k in r.mat)removeItem(k,r.mat[k]);
   if(r.out){
-    addStack(r.out.key,r.out.n||1);
-    lootFeedAdd({t:r.out.t||'cons',key:r.out.key,n:r.out.n||1});
-    log('Has fabricado '+(ITEMS[r.out.key]?ITEMS[r.out.key].name:r.out.key)+' x'+(r.out.n||1),'loot');
+    if(r.out.t==='bag'){
+      const bagDef=ITEMS[r.out.key];
+      const bagIt={t:'bag',key:r.out.key,name:bagDef.name,slots:bagDef.slots,bind:bagDef.bind||'unbound',rar:bagDef.rar||1,price:bagDef.price||20,id:uid()};
+      P.inv.push(bagIt);
+      lootFeedAdd(bagIt);
+      log('Has confeccionado '+bagIt.name,'loot');
+    }else{
+      addStack(r.out.key,r.out.n||1);
+      lootFeedAdd({t:r.out.t||'cons',key:r.out.key,n:r.out.n||1});
+      log('Has fabricado '+(ITEMS[r.out.key]?ITEMS[r.out.key].name:r.out.key)+' x'+(r.out.n||1),'loot');
+    }
   }else if(r.slot){
     const it=genItem(r.lvl,r.rar||2,r.slot,P.cls);
     it.name=r.name;
+    if(r.rar>=3)it.bind='bop';
     addGear(it);lootFeedAdd(it);
     log('Has forjado '+itemName(it),'loot');
   }
+  P.craftedCount=(P.craftedCount||0)+1;
   burst(P.x,P.y-10,'#ffd700',20,160);ring(P.x,P.y,50,'#ffd700');sfx('equip');
   toast('¡Fabricación completada: '+r.name+'!');
+  checkAchievements();
   refreshUI();
 }
 function useInv(i){
   const it=P.inv[i];if(!it)return;
   if(G.shopNpc){sellInv(i);return}
-  if(it.t==='gear'){equip(i);return}
+  if(it.t==='gear'||it.t==='bag'){equip(i);return}
   if(it.t==='cons'){
     if(it.isRecipe&&it.recId){learnRecipe(it.recId,i);return}
     const d=ITEMS[it.key];
@@ -295,7 +425,12 @@ function buyStock(entry){
     if(addStack(entry.key,1)>0){toast('Mochila llena');return}
   }else{
     const cp=Object.assign({},entry.item,{id:uid()});
-    if(!addGear(cp)){toast('Mochila llena');return}
+    if(cp.t==='bag'){
+      if(P.inv.length>=maxInventorySlots()){toast('Mochila llena');return}
+      P.inv.push(cp);
+    }else{
+      if(!addGear(cp)){toast('Mochila llena');return}
+    }
   }
   P.gold-=price;sfx('coin');refreshUI();
 }
@@ -305,7 +440,7 @@ function shopStock(npc){
   for(const kind of sh.kinds){
     if(kind==='potions'){
       for(const k of sh.pots)out.push({key:k,price:ITEMS[k].price*2});
-    }else{
+    }else if(kind==='gear'){
       for(const lv of sh.lv)for(const s of SLOTS){
         const it=genItem(lv,(lv>=10&&s==='weapon')?2:1,s,P.cls);
         out.push({item:it,price:it.price*2});
@@ -315,6 +450,12 @@ function shopStock(npc){
   if(sh.recipes){
     for(const rk of sh.recipes){
       if(ITEMS[rk])out.push({key:rk,price:ITEMS[rk].price});
+    }
+  }
+  if(sh.bags){
+    for(const bk of sh.bags){
+      const def=ITEMS[bk];
+      if(def)out.push({item:{t:'bag',key:bk,name:def.name,slots:def.slots,bind:def.bind||'unbound',rar:def.rar||1,price:def.price||20,id:uid()},price:def.price*1.5});
     }
   }
   npc.stock=out;return out;
@@ -394,7 +535,7 @@ function openNode(n){
   if(n.open)return;
   const lv=ZLV[n.z]||5;
   if(n.type==='chest'){
-    if(P.inv.length>=MAXINV-1){toast('Libera espacio en la mochila');return}
+    if(P.inv.length>=maxInventorySlots()-1){toast('Libera espacio en la mochila');return}
     n.open=true;n.t=0;
     const gold=Math.round(lv*ri(4,8));P.gold+=gold;lootFeedAdd({gold:gold});log('Cofre: '+gold+' de oro.','loot');
     const r=Math.random(),rar=r<0.5?0:r<0.84?1:r<0.985?2:3;
@@ -574,7 +715,13 @@ function doBlink(){
 function tryUse(i){
   if(!G.started||!P||P.dead||P.stun>0||(P.cast&&!P.cast.gather&&!P.cast.travel))return;
   let abIdx=i;
-  if(P.actionBar&&P.actionBar[i]!==undefined)abIdx=P.actionBar[i];
+  if(i>=12){
+    const s2=i-12;
+    if(P.actionBar2&&P.actionBar2[s2]!==undefined)abIdx=P.actionBar2[s2];
+    else abIdx=s2;
+  }else{
+    if(P.actionBar&&P.actionBar[i]!==undefined)abIdx=P.actionBar[i];
+  }
   const ab=CLS[P.cls].ab[abIdx];if(!ab)return;
   if(ab.ul>P.level){toast(ab.name+' se desbloquea en el nivel '+ab.ul);return}
   if((P.cds[ab.id]||0)>0){if(ab.cd>=6)toast(ab.name+' no está listo');return}
@@ -712,7 +859,7 @@ function initWorldEntities(){
 const NPC_DEF=[
   {id:'elara',name:'Capitana Elara',title:'Capitana de la Guardia',tx:38,ty:70,dir:1,greet:'La Guardia de Alba vela por los caminos. ¿Necesitas algo, viajero?',
     look:{skin:'#e0b890',hair:'#d9b44a',hairStyle:2,body:'#3a5f9a',trim:'#d4dcec',legs:'#2a3a5a',hat:'#aab4c4',hatType:'helm',weapon:'sword',blade:'#d8dce4',shield:1,cape:'#8a2a2a',pads:'#aab4c4'}},
-  {id:'doran',name:'Doran el Herrero',title:'Herrero',tx:48,ty:70,dir:-1,shop:{kinds:['gear'],lv:[2,5,8]},greet:'Acero bueno, precio justo. Mira lo que tengo.',
+  {id:'doran',name:'Doran el Herrero',title:'Herrero',tx:48,ty:70,dir:-1,shop:{kinds:['gear'],lv:[2,5,8],bags:['bag_linen','bag_leather']},greet:'Acero bueno, precio justo. Mira lo que tengo.',
     look:{skin:'#d6a67a',hair:'#3a2a1a',hairStyle:3,beard:'#3a2a1a',body:'#6b4a2a',trim:'#8a8a8a',legs:'#3a2a1c',weapon:'hammer',apron:1}},
   {id:'mira',name:'Mira la Alquimista',title:'Alquimista',tx:38,ty:79,dir:1,shop:{kinds:['potions'],pots:['hp1','hp2','hp3','mp1','mp2','mp3'],recipes:['rec_hp3']},greet:'Pociones frescas de esta mañana. Una gota y vuelves a la pelea.',
     look:{skin:'#e6bd98',hair:'#b04a3a',hairStyle:5,body:'#3f7a5c',trim:'#e8d9a0',legs:'#2a4a3a',hat:'#2f5a44',hatType:'hood',weapon:null}},
@@ -722,23 +869,33 @@ const NPC_DEF=[
     look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:2,beard:'#eaeaea',body:'#5a3f8a',trim:'#d9b44a',legs:'#3a2a5a',hat:'#3a2a5a',hatType:'pointy',weapon:'staff',orb:'#c9a6ff'}},
   {id:'aurelius',name:'Comandante Aurelius',title:'Comandante de Astra',tx:107,ty:59,dir:1,greet:'Bienvenido a la Gran Ciudad de Astra. Aquí se forjan las leyendas del imperio.',
     look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:3,beard:'#eaeaea',body:'#243f70',trim:'#ffd700',legs:'#1c2b4d',hat:'#e0d0a0',hatType:'crown',weapon:'sword',blade:'#ffd700',shield:1,cape:'#7a1a1a',pads:'#ffd700'}},
+  {id:'vane',name:'Lord Mariscal Vane',title:'Mariscal de Campaña',tx:108,ty:62,dir:1,greet:'El Imperio de Astra enfrenta amenazas en todos sus frentes. ¿Estás listo para las misiones de élite?',
+    look:{skin:'#d9b08c',hair:'#333',hairStyle:2,beard:'#333',body:'#5a1a1a',trim:'#ffd700',legs:'#242424',hat:'#ffd700',hatType:'crown',weapon:'sword',blade:'#ffd700',shield:1,cape:'#8a1818',pads:'#ffd700'}},
+  {id:'lyra',name:'Erudita Suprema Lyra',title:'Guardiana del Telar Astral',tx:114,ty:72,dir:-1,greet:'Los hilos de la realidad vibran con caos. Los secretos del Vacío Astral solo son para los más valientes.',
+    look:{skin:'#ebd0b5',hair:'#70d6ff',hairStyle:5,body:'#32184e',trim:'#70d6ff',legs:'#201032',hat:'#70d6ff',hatType:'horns',weapon:'staff',orb:'#70d6ff',cape:'#4a287a'}},
+  {id:'arnold',name:'Banquero Arnold',title:'Custodio de la Bóveda Imperial',tx:97,ty:76,dir:1,greet:'Tus posesiones y oro estarán más seguros aquí que en cualquier castillo. ¿Deseas acceder a tu bóveda o al banco de hermandad?',
+    look:{skin:'#d6a67a',hair:'#6b4a2a',hairStyle:3,beard:'#6b4a2a',body:'#2e4a38',trim:'#ffd700',legs:'#1c2e22',hat:'#ffd700',hatType:'beret',weapon:null}},
+  {id:'barber',name:'Fígaro el Estilista',title:'Maestro de Apariencia y Títulos',tx:93,ty:60,dir:1,greet:'¡Un campeón legendario debe lucir impecable! Siéntate y cambiaremos tu peinado, tinte o título honorífico.',
+    look:{skin:'#f0c8a0',hair:'#e04080',hairStyle:4,body:'#7a2850',trim:'#ffd700',legs:'#4a1830',hat:null,weapon:null}},
+  {id:'board_rank',name:'Monumento de la Fama',title:'Tablón de Clasificaciones',tx:106,ty:64,dir:1,greet:'Aquí están esculpidos en oro los nombres de los mayores héroes y las hermandades más ilustres de Astra.',
+    look:{skin:'#d8dce4',hair:'#8a94a6',hairStyle:1,body:'#4a5568',trim:'#ffd700',legs:'#2d3748',hat:null,weapon:'sword',blade:'#ffd700'}},
   {id:'seraphina',name:'Archimaga Seraphina',title:'Gran Maestra Arcana',tx:116,ty:75,dir:-1,shop:{kinds:['potions'],pots:['hp3','hp4','hp5','mp3','mp4','mp5'],recipes:['rec_hp4','rec_hp5','rec_elixir_atk','rec_elixir_armor']},greet:'El Telar resuena con un poder antiguo. ¿Deseas elixires de la más alta pureza?',
     look:{skin:'#ebd0b5',hair:'#c7a0ff',hairStyle:2,body:'#5c2850',trim:'#ffd700',legs:'#381830',hat:'#5c2850',hatType:'horns',weapon:'staff',orb:'#c7a0ff',cape:'#24183a'}},
   {id:'valerius',name:'Maestro Valerius',title:'Maestro de Hermandades',tx:90,ty:75,dir:1,greet:'Aquí se fundan y gestionan las hermandades de Astra. ¡Únete a otros campeones!',
     look:{skin:'#d6a67a',hair:'#6a4a2a',hairStyle:1,beard:'#6a4a2a',body:'#1e4a30',trim:'#d9b44a',legs:'#183824',hat:'#b8905a',hatType:'beret',weapon:'sword',blade:'#d8dce4',shield:1}},
-  {id:'kaelen',name:'Maestro Kaelen',title:'Armero Imperial',tx:119,ty:56,dir:-1,shop:{kinds:['gear'],lv:[12,16,20,30,40],recipes:['rec_sword_rare','rec_chest_epic']},greet:'Las mejores aleaciones de mithril y obsidiana para los héroes del reino.',
+  {id:'kaelen',name:'Maestro Kaelen',title:'Armero Imperial',tx:119,ty:56,dir:-1,shop:{kinds:['gear'],lv:[12,16,20,30,40],recipes:['rec_sword_rare','rec_chest_epic'],bags:['bag_rune','bag_astral']},greet:'Las mejores aleaciones de mithril y obsidiana para los héroes del reino.',
     look:{skin:'#cfa075',hair:'#333',hairStyle:3,beard:'#333',body:'#482e22',trim:'#ffd700',legs:'#2c1d16',weapon:'hammer',apron:1}},
   {id:'nyx',name:'Hechicera Nyx',title:'Guardiana del Cieno',tx:33,ty:130,dir:1,greet:'El pantano susurra por las noches. No todo lo que se mueve entre la niebla es amigo.',
     look:{skin:'#c8d8c0',hair:'#7a3a8a',hairStyle:2,body:'#3b5a4a',trim:'#9bff5a',legs:'#243a30',hat:'#2a4a3a',hatType:'pointy',weapon:'staff',orb:'#9bff5a'}},
-  {id:'bram',name:'Bram el Mercader',title:'Mercader del Cieno',tx:39,ty:133,dir:-1,shop:{kinds:['potions','gear'],pots:['hp2','hp3','hp4','mp2','mp3','mp4'],lv:[10,12,14]},greet:'Llevo mercancía de todas partes. Tú pones el oro, yo el resto.',
+  {id:'bram',name:'Bram el Mercader',title:'Mercader del Cieno',tx:39,ty:133,dir:-1,shop:{kinds:['potions','gear'],pots:['hp2','hp3','hp4','mp2','mp3','mp4'],lv:[10,12,14],bags:['bag_leather','bag_silk']},greet:'Llevo mercancía de todas partes. Tú pones el oro, yo el resto.',
     look:{skin:'#d6a67a',hair:'#4a3a2a',hairStyle:1,beard:'#4a3a2a',body:'#7a5a2a',trim:'#d9b44a',legs:'#3a2a1a',hat:'#6a4a1a',hatType:'bandana',weapon:null}},
   {id:'zahir',name:'Capitán Zahir',title:'Capitán de caravanas',tx:157,ty:124,dir:1,greet:'El sol en estas dunas no perdona. Bebe, y mantén la espada a mano.',
     look:{skin:'#b98a5a',hair:'#111',hairStyle:3,beard:'#111',body:'#2e6fa0',trim:'#f0d070',legs:'#1c3a58',hat:'#e8dcc0',hatType:'turban',weapon:'sword',blade:'#d8dce4',shield:1,cape:'#c0502e'}},
-  {id:'safiya',name:'Safiya la Mercadora',title:'Mercadora del Oasis',tx:163,ty:124,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[14,16,18],recipes:['rec_neck_astral','rec_trinket_phoenix']},greet:'Seda, especias y acero. ¿Qué te hace falta, viajero?',
+  {id:'safiya',name:'Safiya la Mercadora',title:'Mercadora del Oasis',tx:163,ty:124,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[14,16,18],recipes:['rec_neck_astral','rec_trinket_phoenix'],bags:['bag_silk','bag_rune']},greet:'Seda, especias y acero. ¿Qué te hace falta, viajero?',
     look:{skin:'#c9966a',hair:'#2a1c12',hairStyle:5,body:'#7a3a8a',trim:'#f0d070',legs:'#4a2458',hat:'#e8dcc0',hatType:'hood',weapon:null}},
   {id:'bruna',name:'Mariscal Bruna',title:'Mariscal de las Cumbres',tx:153,ty:41,dir:1,greet:'Aquí el invierno no es una estación: es un enemigo. Pelea o vete.',
     look:{skin:'#e0b8a0',hair:'#c8d4e0',hairStyle:5,body:'#4a6a8a',trim:'#e8f2fc',legs:'#2a3f58',hat:'#bfc8d4',hatType:'helm',weapon:'axe',blade:'#cfd8e4',shield:1,cape:'#2f5a9a',pads:'#bfc8d4'}},
-  {id:'ulf',name:'Ulf el Peletero',title:'Mercader de las Cumbres',tx:159,ty:41,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[17,19,21]},greet:'Abrígate. Y compra algo, que el frío da hambre.',
+  {id:'ulf',name:'Ulf el Peletero',title:'Mercader de las Cumbres',tx:159,ty:41,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[17,19,21],bags:['bag_leather','bag_silk']},greet:'Abrígate. Y compra algo, que el frío da hambre.',
     look:{skin:'#d9b08c',hair:'#8a5a2a',hairStyle:1,beard:'#8a5a2a',body:'#8a5a3a',trim:'#f0f4f8',legs:'#4a3020',hat:'#e8eef4',hatType:'hood',weapon:null,fur:1}}
 ];
 function inSafe(e){const z=zoneAt(Math.floor(e.x/TILE),Math.floor(e.y/TILE));return !!z.safe}
@@ -903,6 +1060,7 @@ function killMob(m){
   burst(m.x,m.y-8,'#d8c8a0',10,100);
   if(m.boss)banner(m.name.split(',')[0]+' ha caído','Jefe derrotado');
   else if(m.rare)banner('¡'+m.name+' ha caído!','Enemigo raro derrotado');
+  checkAchievements();
   refreshUI();
 }
 function rollLoot(m){
@@ -948,6 +1106,7 @@ function levelUp(){
   banner('¡NIVEL '+P.level+'!',un.length?'Nueva habilidad: '+un[0]:P.level===4?'Has desbloqueado tu montura (H)':P.level===12?'Tu montura ahora es más veloz':'Tu poder crece');
   ring(P.x,P.y,90,'#ffe08a');burst(P.x,P.y-10,'#ffe08a',30,200);fxBeam(P.x,P.y,'#ffe08a',1.2);sfx('level');
   log('¡Has subido al nivel '+P.level+'!','sys');
+  checkAchievements();
   buildActionBarSafe();
 }
 function buildActionBarSafe(){try{buildActionBar()}catch(e){}}
@@ -960,9 +1119,35 @@ function questAvail(id){
   if(q.pre&&qState(q.pre)!=='done')return false;
   return true;
 }
+function checkVisitQuests(zid){
+  if(!P||!P.quests)return;
+  P.visitedZones=P.visitedZones||{};
+  P.visitedZones[zid]=true;
+  for(const id in P.quests){
+    const s=P.quests[id],q=QUESTS[id];
+    if(s.state!=='active'||!q.obj||!q.obj.visit)continue;
+    if(q.obj.visit===zid||(q.obj.visit==='capital'&&(zid==='capital'||(P.x>=88*TILE&&P.x<=132*TILE&&P.y>=48*TILE&&P.y<=92*TILE)))){
+      if(s.prog<q.obj.n){
+        s.prog=q.obj.n;
+        const msg=q.obj.label+': '+s.prog+'/'+q.obj.n;
+        log(msg,'q');toast(msg);
+        log('Objetivo completado. Vuelve con '+npcName(q.giver)+'.','q');
+        sfx('quest');
+        checkAchievements();
+        refreshUI();
+      }
+    }
+  }
+}
 function questProg(id){
   const q=QUESTS[id],s=P.quests[id];
+  if(!q)return 0;
   if(q.obj.collect)return Math.min(q.obj.n,countItem(q.obj.collect));
+  if(q.obj.visit){
+    if(s&&s.prog>=q.obj.n)return q.obj.n;
+    if(G.zone&&G.zone.id===q.obj.visit)return q.obj.n;
+    if(P.visitedZones&&P.visitedZones[q.obj.visit])return q.obj.n;
+  }
   return Math.min(q.obj.n,s?s.prog||0:0);
 }
 function questReady(id){return qState(id)==='active'&&questProg(id)>=QUESTS[id].obj.n}
@@ -978,7 +1163,9 @@ function completeQuest(id){
   gainXP(q.xp);P.gold+=q.gold;
   log('Misión completada: '+q.title+' (+'+q.gold+' de oro)','q');
   if(q.item){const it=genItem(q.item.lvl,q.item.rar,q.item.slot,P.cls);if(addGear(it)){log('Recompensa: '+itemName(it),'loot');lootFeedAdd(it)}else toast('Mochila llena: sin recompensa de objeto')}
-  banner('Misión completada',q.title);sfx('quest');refreshUI();
+  banner('Misión completada',q.title);sfx('quest');
+  checkAchievements();
+  refreshUI();
 }
 function killQuest(m){
   for(const id in P.quests){
@@ -1002,6 +1189,39 @@ function npcMark(id){
     else if(qState(qid)==='active'&&!mark)mark='active';
   }
   return mark;
+}
+
+/* ---------- Logros y títulos ---------- */
+function checkAchievements(){
+  if(!P)return;
+  P.achievements=P.achievements||{};
+  P.titles=P.titles||['novice'];
+  if(typeof ACHIEVEMENTS==='undefined')return;
+  let anyNew=false;
+  for(const a of ACHIEVEMENTS){
+    if(P.achievements[a.id])continue;
+    if(a.check&&a.check(P)){
+      P.achievements[a.id]=Date.now();
+      anyNew=true;
+      if(a.title&&!P.titles.includes(a.title)){
+        P.titles.push(a.title);
+        toast('¡Nuevo título desbloqueado: «'+(TITLES[a.title]?TITLES[a.title].name:a.title)+'»!');
+      }
+      banner('¡LOGRO DESBLOQUEADO!',a.name+' (+'+a.points+' pts)');
+      log('¡Logro completado: <b>'+a.name+'</b>! '+a.desc,'loot');
+      burst(P.x,P.y-12,'#ffd700',25,200);
+      sfx('level');
+    }
+  }
+  if(anyNew)refreshUI();
+}
+function setTitle(titleId){
+  if(!P)return;
+  P.titles=P.titles||['novice'];
+  if(titleId&&!P.titles.includes(titleId)){toast('No tienes este título desbloqueado');return}
+  P.title=titleId||'';
+  toast(titleId?'Título equipado: «'+(TITLES[titleId]?TITLES[titleId].name:titleId)+'»':'Título retirado');
+  refreshUI();
 }
 
 /* ---------- Compañeros del reino (jugadores simulados) ---------- */
