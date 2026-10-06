@@ -12,10 +12,14 @@ function bindPanels(){
   document.addEventListener('click',e=>{
     const c=e.target.closest('[data-close]');if(c){closePanel(c.getAttribute('data-close'))}
   });
-  $('invGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){useInv(+b.dataset.i);hideTip()}});
-  $('eqGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){unequip(b.dataset.i);hideTip()}});
-  $('btnSort').onclick=sortInv;$('btnJunk').onclick=sellJunk;
-  $('dlgBody').addEventListener('click',e=>{
+  if($('invGrid'))$('invGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){useInv(+b.dataset.i);hideTip()}});
+  const onEqClick=e=>{const b=e.target.closest('[data-i]');if(b){unequip(b.dataset.i);hideTip()}};
+  if($('eqGrid'))$('eqGrid').addEventListener('click',onEqClick);
+  if($('eqLeft'))$('eqLeft').addEventListener('click',onEqClick);
+  if($('eqRight'))$('eqRight').addEventListener('click',onEqClick);
+  if($('btnSort'))$('btnSort').onclick=sortInv;
+  if($('btnJunk'))$('btnJunk').onclick=sellJunk;
+  if($('dlgBody'))$('dlgBody').addEventListener('click',e=>{
     const n=G.dlgNpc;if(!n)return;
     const qid=e.target.closest('[data-qid]'),act=e.target.closest('[data-q]'),sh=e.target.closest('[data-shop]');
     if(sh){openShop(n);return}
@@ -28,23 +32,29 @@ function bindPanels(){
       else if(a==='complete'){const id=dlgView.id;completeQuest(id);dlgView={id:id,done:true};renderDlg()}
     }
   });
-  $('shopStock').addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(b){buyStock(shopStock(G.shopNpc)[+b.dataset.buy])}});
-  $('shopBag').addEventListener('click',e=>{const b=e.target.closest('[data-sell]');if(b){sellInv(+b.dataset.sell);hideTip()}});
-  $('lootBody').addEventListener('click',e=>{
+  if($('shopStock'))$('shopStock').addEventListener('click',e=>{const b=e.target.closest('[data-buy]');if(b){buyStock(shopStock(G.shopNpc)[+b.dataset.buy])}});
+  if($('shopBag'))$('shopBag').addEventListener('click',e=>{const b=e.target.closest('[data-sell]');if(b){sellInv(+b.dataset.sell);hideTip()}});
+  if($('lootBody'))$('lootBody').addEventListener('click',e=>{
     const m=G.lootM;if(!m)return;
     const g=e.target.closest('[data-lg]'),i=e.target.closest('[data-li]');
     if(g)takeLootGold(m);else if(i){takeLootItem(m,+i.dataset.li);hideTip()}
   });
-  $('btnLootAll').onclick=()=>{if(G.lootM)lootAll(G.lootM)};
-  $('mapCv').addEventListener('click',mapClick);
-  $('miniWrap').onclick=openMap;
-  $('btnRevive').onclick=revive;
-  const tg=(id,fn)=>$(id).addEventListener('click',()=>{const v=$(id).getAttribute('aria-pressed')!=='true';$(id).setAttribute('aria-pressed',v?'true':'false');fn(v)});
+  if($('btnLootAll'))$('btnLootAll').onclick=()=>{if(G.lootM)lootAll(G.lootM)};
+  if($('mapCv'))$('mapCv').addEventListener('click',mapClick);
+  if($('miniWrap'))$('miniWrap').onclick=openMap;
+  if($('btnRevive'))$('btnRevive').onclick=revive;
+  const tg=(id,fn)=>{const el=$(id);if(el)el.addEventListener('click',()=>{const v=el.getAttribute('aria-pressed')!=='true';el.setAttribute('aria-pressed',v?'true':'false');fn(v)})};
   tg('tgLoot',v=>{G.autoLoot=v});tg('tgSound',v=>{G.sfxOn=v});tg('tgRun',v=>{G.sprintToggle=v});tg('tgShake',v=>{G.shakeOff=!v});
-  $('btnSave').onclick=()=>save(true);$('btnSwitch').onclick=()=>switchChar();$('btnLogout').onclick=()=>doLogout();
-  $('bInv').onclick=()=>togglePanel('pInv');$('bChar').onclick=()=>togglePanel('pChar');$('bQuest').onclick=()=>togglePanel('pQuest');
-  $('bMap').onclick=openMap;$('bOpts').onclick=()=>togglePanel('pOpts');$('bMount').onclick=toggleMount;
-  $('bChat').onclick=()=>$('chat').classList.toggle('open');
+  if($('btnSave'))$('btnSave').onclick=()=>save(true);
+  if($('btnSwitch'))$('btnSwitch').onclick=()=>switchChar();
+  if($('btnLogout'))$('btnLogout').onclick=()=>doLogout();
+  if($('bInv'))$('bInv').onclick=()=>togglePanel('pInv');
+  if($('bChar'))$('bChar').onclick=()=>togglePanel('pChar');
+  if($('bQuest'))$('bQuest').onclick=()=>togglePanel('pQuest');
+  if($('bMap'))$('bMap').onclick=openMap;
+  if($('bOpts'))$('bOpts').onclick=()=>togglePanel('pOpts');
+  if($('bMount'))$('bMount').onclick=toggleMount;
+  if($('bChat'))$('bChat').onclick=()=>{if($('chat'))$('chat').classList.toggle('open')};
 }
 
 /* ---------- Chat ---------- */

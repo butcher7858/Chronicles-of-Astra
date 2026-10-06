@@ -832,19 +832,19 @@ function renderTradeUI(){
 }
 
 function bindTradeButtons(){
-  $('btnTradeLock').onclick=()=>{
+  if($('btnTradeLock')) $('btnTradeLock').onclick=()=>{
     if(!TRADE_SESSION)return;
     TRADE_SESSION.myGold=Math.min(P.gold,Math.max(0,+($('tradeMyGold').value||0)));
     TRADE_SESSION.myLocked=!TRADE_SESSION.myLocked;
     // Si comerciamos con un bot, el bot responde inteligentemente
     if(TRADE_SESSION.target.bot&&TRADE_SESSION.myLocked){
       TRADE_SESSION.otherGold=Math.min(30,Math.floor(Math.random()*20+5));
-      $('tradeOtherGold').textContent=TRADE_SESSION.otherGold;
+      if($('tradeOtherGold')) $('tradeOtherGold').textContent=TRADE_SESSION.otherGold;
       TRADE_SESSION.otherLocked=true;
     }
     renderTradeUI();
   };
-  $('btnTradeAccept').onclick=()=>{
+  if($('btnTradeAccept')) $('btnTradeAccept').onclick=()=>{
     if(!TRADE_SESSION||!TRADE_SESSION.myLocked||!TRADE_SESSION.otherLocked)return;
     // Transferir oro
     P.gold-=TRADE_SESSION.myGold;
