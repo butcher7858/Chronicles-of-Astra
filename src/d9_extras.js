@@ -1013,10 +1013,77 @@ chatSend=function(txt){
   _chatSend(txt);
 };
 
+/* ---------- 16.5 ARRASTRAR Y SOLTAR EN MOCHILA Y RANURAS RÁPIDAS ---------- */
+let DRAG=null;
+const QKEYS=['q','r','t'];
+let QUICK=[null,null,null];
+const qKey=()=>'astra_quick_'+(P&&P.name||'');
+function loadQuick(){try{QUICK=JSON.parse(localStorage.getItem(qKey()))||[null,null,null]}catch(e){QUICK=[null,null,null]}}
+function saveQuick(){try{localStorage.setItem(qKey(),JSON.stringify(QUICK))}catch(e){}}
+function useQuick(i){
+  const k=QUICK[i];if(!k||!G.started||P.dead)return;
+  if(k.indexOf('pot')===0){usePotion(k.slice(3));return}
+  const idx=P.inv.findIndex(x=>x.key===k);
+  if(idx<0){toast('No te quedan');return}
+  useInv(idx);
+}
+function buildQuick(){
+  let q=$('quickbar');
+  if(!q){
+    q=document.createElement('div');q.id='quickbar';
+    q.style.cssText='display:flex;gap:4px;justify-content:center;margin-top:4px';
+    if($('actionbar'))$('actionbar').after(q);
+  }
+  if(!q)return;
+  q.innerHTML='';
+  QKEYS.forEach((kk,i)=>{
+    const b=document.createElement('button');b.className='slot';b.dataset.q=i;
+    const k=QUICK[i],def=k&&ITEMS[k];
+    b.innerHTML=(def?svg(def.ic,def.col):'')+'<span class="k">'+kk.toUpperCase()+'</span>'+(k?'<span class="cnt">'+countItem(k)+'</span>':'');
+    b.title='Arrastra un objeto de la mochila aquí';
+    b.onclick=()=>useQuick(i);
+    b.ondragover=e=>{e.preventDefault()};
+    b.ondrop=e=>{e.preventDefault();if(DRAG&&DRAG.t==='inv'){const it=P.inv[DRAG.i];if(it&&it.t==='cons'||it&&ITEMS[it.key]){QUICK[i]=it.key;saveQuick();buildQuick()}}DRAG=null};
+    b.oncontextmenu=e=>{e.preventDefault();QUICK[i]=null;saveQuick();buildQuick()};
+    q.appendChild(b);
+  });
+}
+function markDraggable(){
+  document.querySelectorAll('#invGrid [data-i]').forEach(b=>{b.draggable=true});
+  const g=$('invGrid');if(!g)return;
+  [...g.children].forEach((c,i)=>{c.dataset.cell=i});
+}
+const _renderInv=renderInv;
+renderInv=function(){_renderInv();markDraggable();if($('quickbar'))buildQuick()};
+
+function bindDrag(){
+  const g=$('invGrid');
+  if(!g)return;
+  g.addEventListener('dragstart',e=>{const b=e.target.closest('[data-i]');if(!b)return;DRAG={t:'inv',i:+b.dataset.i};hideTip();try{e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move'}catch(_){}});
+  g.addEventListener('dragover',e=>{if(DRAG)e.preventDefault()});
+  g.addEventListener('drop',e=>{
+    e.preventDefault();if(!DRAG||DRAG.t!=='inv')return;
+    const c=e.target.closest('[data-cell]');if(!c){DRAG=null;return}
+    const to=Math.min(+c.dataset.cell,P.inv.length-1),it=P.inv.splice(DRAG.i,1)[0];
+    P.inv.splice(to,0,it);DRAG=null;renderInv();
+  });
+  g.addEventListener('dragend',()=>{DRAG=null});
+}
+
 /* ---------- 17. ACTUALIZACIÓN DEL JUEGO Y COMBATE DE DUELOS ---------- */
+let atT=0;
 const _updateV3=update;
 update=function(dt){
   _updateV3(dt);
+  atT-=dt;
+  if(atT<=0&&G.started&&!P.dead){
+    atT=0.4;
+    if(!P.target||P.target.dead){
+      let best=null,bd=300;
+      for(const m of G.mobs){if(m.dead||m.state!=='chase')continue;const d=dist(m,P);if(d<bd){bd=d;best=m}}
+      if(best)P.target=best;
+    }
+  }
   // Duelo en curso
   if(ACTIVE_DUEL){
     ACTIVE_DUEL.time+=dt;
@@ -1106,13 +1173,17 @@ refreshUI=function(){
   if(!$('pTrade').hidden)renderTradeUI();
 };
 
-const _bindExtras=bindExtras;
-bindExtras=function(){
-  _bindExtras();
-  const body=$('pOpts').querySelector('.pbody'),btn=document.createElement('button');
-  btn.textContent='Configurar Teclas y Combos (K)';btn.style.cssText='margin:8px 0;padding:6px 10px;font-weight:700';
-  btn.onclick=openKeysModal;body.appendChild(btn);
-};
+function bindExtras(){
+  const body=$('pOpts')&&$('pOpts').querySelector('.pbody');
+  if(body){
+    const btn=document.createElement('button');
+    btn.textContent='Configurar Teclas y Combos (K)';
+    btn.style.cssText='margin:8px 0;padding:6px 10px;font-weight:700';
+    btn.onclick=openKeysModal;
+    body.appendChild(btn);
+  }
+  bindDrag();
+}
 
 const _startGameV3=startGame;
 startGame=function(){
