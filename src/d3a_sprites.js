@@ -182,7 +182,11 @@ const TCOL={
   11:['#e8eff5','#e1e9f0','#eff5fa','#dae3eb'],
   12:['#a9d6ee','#a2d0e9','#b2dcf2','#9acae3'],
   13:['#8a6a3e','#826238','#92724a','#7a5c32'],
-  14:['#2e3b24','#2a3620','#33422a','#26321d']
+  14:['#2e3b24','#2a3620','#33422a','#26321d'],
+  15:['#2c1f36','#24192c','#32243e','#1d1424'],
+  16:['#c2410c','#9a3412','#ea580c','#7c2d12'],
+  17:['#1e1b4b','#17143e','#2e1065','#0f172a'],
+  18:['#475569','#334155','#64748b','#1e293b']
 };
 const WCOL=['#5aa0c0','#3f86b0','#2f6f9d','#245a86'],BCOL=['#4a5d34','#3a4a28','#2f3c20','#27331b'];
 const BL={0:1,1:3,7:4,9:3,10:5,11:6,5:7,2:8};
@@ -341,6 +345,27 @@ function bakeTile(g,x,y,px,py){
         g.fillStyle='rgba(225,244,255,0.45)';
         if(m&1)g.fillRect(px,py,TILE,5);if(m&4)g.fillRect(px,py+TILE-5,TILE,5);
         if(m&2)g.fillRect(px+TILE-5,py,5,TILE);if(m&8)g.fillRect(px,py,5,TILE);
+      }break}
+    case T.CORRUPT:{
+      if(r<0.45){
+        g.strokeStyle='rgba(168,85,247,0.45)';g.lineWidth=1.2;g.beginPath();
+        g.moveTo(px+4,py+r*20);g.lineTo(px+16,py+r*20+8);g.lineTo(px+28,py+r*20+2);g.stroke();
+        g.fillStyle='rgba(192,132,252,0.3)';g.fillRect(px+hash2(x,y)*24,py+hash2(y,x)*24,2,2);
+      }break}
+    case T.LAVA:{
+      g.strokeStyle='rgba(255,200,50,0.6)';g.lineWidth=1.5;g.beginPath();
+      g.moveTo(px+r*8,py+16);g.quadraticCurveTo(px+16,py+6+r*12,px+32-r*8,py+16);g.stroke();
+      g.fillStyle='rgba(255,80,0,0.4)';g.beginPath();g.arc(px+16+r*8,py+16,4,0,6.283);g.fill();
+      g.fillStyle='#fff';g.fillRect(px+hash2(x,y)*26,py+hash2(y,x)*26,1.5,1.5);break}
+    case T.ASTRAL:{
+      g.fillStyle='rgba(216,180,254,0.35)';g.beginPath();g.arc(px+16,py+16,8+r*6,0,6.283);g.fill();
+      g.fillStyle='rgba(255,255,255,0.9)';for(let k=0;k<3;k++)g.fillRect(px+hash2(x+k*5,y)*28,py+hash2(x,y+k*5)*28,1.5,1.5);
+      g.strokeStyle='rgba(56,189,248,0.4)';g.lineWidth=1;g.beginPath();g.arc(px+16,py+16,12,0,Math.PI);g.stroke();break}
+    case T.RUINS:{
+      for(let q=0;q<4;q++){
+        const qx=px+(q&1)*16,qy=py+(q>>1)*16;
+        g.strokeStyle='rgba(30,41,59,0.5)';g.lineWidth=1;g.strokeRect(qx+1,qy+1,14,14);
+        if(hash2(x+q,y)>0.6){g.fillStyle='rgba(56,189,248,0.25)';g.fillRect(qx+4,qy+4,8,2)}
       }break}
   }
   const d=deco[i];

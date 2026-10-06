@@ -9,7 +9,7 @@ function log(html,cls){
   const box=$('chatLog'),d=document.createElement('div');d.className='m-'+(cls||'gen');d.innerHTML=html;box.appendChild(d);
   while(box.children.length>80)box.removeChild(box.firstChild);box.scrollTop=box.scrollHeight;
 }
-const PANELS=['pInv','pChar','pQuest','pDlg','pShop','pLoot','pMap','pOpts'];
+const PANELS=['pInv','pChar','pQuest','pDlg','pShop','pLoot','pMap','pOpts','pSpells','pCraft','pTalents','pMounts','pGuild','pTrade'];
 function showPanel(id){
   if(id==='pDlg'||id==='pShop'||id==='pLoot'||id==='pMap'||id==='pQuest')for(const o of ['pDlg','pShop','pLoot','pMap','pQuest','pOpts'])if(o!==id&&!(id==='pShop'&&o==='pDlg'&&false))closePanel(o);
   $(id).hidden=false;refreshUI();
@@ -91,24 +91,56 @@ function initTips(){
 /* ---------- Barra de acción ---------- */
 let AB=[];
 function buildActionBar(){
-  const bar=$('actionbar');bar.innerHTML='';AB=[];
+  const bar=$('actionbar');if(!bar)return;
+  bar.innerHTML='';AB=[];
   const c=CLS[P.cls];
-  c.ab.forEach((ab,i)=>{
-    const b=document.createElement('button');b.className='slot'+(ab.ul>P.level?' lock':'');b.dataset.ul=ab.ul;b.setAttribute('data-tip','ab:'+i);
-    b.innerHTML=svg(ab.ic,ab.col)+'<span class="k">'+(i+1)+'</span><span class="cd"></span><span class="cdt"></span>';
-    b.onclick=()=>tryUse(i);bar.appendChild(b);
-    AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul});
-  });
-  const extra=[['hp','7','potion','#e0554a',()=>usePotion('hp'),'pot:hp'],['mp','8','potion','#4a8fe0',()=>usePotion('mp'),'pot:mp'],['herb','9','herb','#7fe07f',useHerb,'herb:1']];
-  for(const [kind,key,ic,col,fn,tip] of extra){
-    const b=document.createElement('button');b.className='slot';b.setAttribute('data-tip',tip);
-    b.innerHTML=svg(ic,col)+'<span class="k">'+key+'</span><span class="cd"></span><span class="cdt"></span><span class="cnt"></span>';
-    b.onclick=fn;bar.appendChild(b);
-    AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),cnt:b.querySelector('.cnt'),kind:kind});
+  if(!P.actionBar||!P.actionBar.length){
+    P.actionBar=[0,1,2,3,4,5,6,7,8,9,10,11];
+  }
+  const maxSlots=12;
+  const keyLabels=['1','2','3','4','5','6','7','8','9','0','-','='];
+  for(let i=0;i<maxSlots;i++){
+    const abIdx=P.actionBar[i]!==undefined?P.actionBar[i]:i;
+    const ab=c.ab[abIdx];
+    const b=document.createElement('button');
+    b.className='slot'+(!ab||ab.ul>P.level?' lock':'');
+    b.draggable=true;
+    b.dataset.slotIdx=i;
+    const keyBadge=(typeof KEYBINDS!=='undefined'&&KEYBINDS[String(i+1)])?prettyCombo(KEYBINDS[String(i+1)]):keyLabels[i];
+    if(ab){
+      b.dataset.ul=ab.ul;
+      b.setAttribute('data-tip','ab:'+abIdx);
+      b.innerHTML=svg(ab.ic,ab.col)+'<span class="k">'+keyBadge+'</span><span class="cd"></span><span class="cdt"></span>';
+      b.onclick=e=>{e.currentTarget.blur();tryUse(i)};
+      b.ondragstart=e=>{e.dataTransfer.setData('text/plain','slot:'+i)};
+      AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:ab,ul:ab.ul});
+    }else{
+      b.innerHTML='<span class="k">'+keyBadge+'</span><span class="cd"></span><span class="cdt"></span>';
+      b.onclick=e=>{e.currentTarget.blur();tryUse(i)};
+      AB.push({el:b,cd:b.querySelector('.cd'),cdt:b.querySelector('.cdt'),ab:null,ul:99});
+    }
+    b.ondragover=e=>e.preventDefault();
+    b.ondrop=e=>{
+      e.preventDefault();
+      const data=e.dataTransfer.getData('text/plain');
+      if(data&&data.startsWith('spell:')){
+        const fromIdx=+data.split(':')[1];
+        P.actionBar[i]=fromIdx;
+        buildActionBar();
+        toast('Habilidad asignada a la ranura '+(i+1));
+      }else if(data&&data.startsWith('slot:')){
+        const fromSlot=+data.split(':')[1];
+        const tmp=P.actionBar[i];
+        P.actionBar[i]=P.actionBar[fromSlot];
+        P.actionBar[fromSlot]=tmp;
+        buildActionBar();
+      }
+    };
+    bar.appendChild(b);
   }
 }
 function flashSlot(i){const s=AB[i];if(!s)return;s.el.classList.remove('flash');void s.el.offsetWidth;s.el.classList.add('flash')}
-function potCount(p){let n=0;for(const k of [p+'1',p+'2',p+'3',p+'4'])n+=countItem(k);return n}
+function potCount(p){let n=0;for(const k of [p+'1',p+'2',p+'3',p+'4',p+'5'])n+=countItem(k);return n}
 
 /* ---------- HUD por fotograma ---------- */
 const HC={};
@@ -187,7 +219,14 @@ function refreshUI(){
   if(!$('pShop').hidden)renderShop();
   if(!$('pLoot').hidden)renderLoot();
   if(!$('pMap').hidden)renderMapInfo();
-  for(const id of ['bInv','bChar','bQuest','bMap','bOpts'])$(id).classList.toggle('on',!$(({bInv:'pInv',bChar:'pChar',bQuest:'pQuest',bMap:'pMap',bOpts:'pOpts'})[id]).hidden);
+  if(!$('pSpells').hidden)renderSpellsUI();
+  if(!$('pCraft').hidden)renderCraftUI();
+  for(const [btnId,pId] of [
+    ['bInv','pInv'],['bChar','pChar'],['bQuest','pQuest'],['bMap','pMap'],['bOpts','pOpts'],
+    ['bSpells','pSpells'],['bCraft','pCraft'],['bTal','pTalents'],['bMount','pMounts'],['bGuild','pGuild']
+  ]){
+    if($(btnId)&&$(pId))$(btnId).classList.toggle('on',!$(pId).hidden);
+  }
 }
 function renderTracker(){
   let h='';
@@ -217,8 +256,8 @@ function renderCharPaperdoll(){
 }
 function renderChar(){
   if(!$('pChar')||$('pChar').hidden)return;
-  const leftSlots=['head','shoulders','chest','cape','amulet'];
-  const rightSlots=['gloves','legs','boots','weapon','shield','ring'];
+  const leftSlots=['head','necklace','shoulders','chest','cape','amulet','relic'];
+  const rightSlots=['gloves','legs','boots','ring','trinket1','trinket2','weapon','shield'];
   const slotBtn=s=>{
     const it=P.eq[s];
     return it?itemBtn(it,'eq:'+s,s):'<div class="it" title="'+(SLOT_NAME[s]||s)+'">'+svg(SLOT_IC[s]||'shield','#5a4a30')+'</div>';
@@ -241,6 +280,134 @@ function renderChar(){
     ['Oro',P.gold]
   ];
   $('stats').innerHTML=rows.map(r=>'<div class="stat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+}
+function renderSpellsUI(){
+  const list=$('spellList');if(!list)return;
+  const c=CLS[P.cls];if(!c)return;
+  let h='';
+  c.ab.forEach((ab,i)=>{
+    const unlocked=P.level>=ab.ul;
+    const costText=ab.cost?ab.cost+' '+c.resName:'Sin coste';
+    const castText=ab.cast?ab.cast+' s':'Instantáneo';
+    const cdText=ab.cd?ab.cd+' s recarga':'Sin recarga';
+    
+    let assignedSlot=-1;
+    if(P.actionBar){
+      assignedSlot=P.actionBar.indexOf(i);
+    }
+    
+    let selectOpts='<option value="-1">Asignar a barra...</option>';
+    for(let s=0;s<12;s++){
+      selectOpts+='<option value="'+s+'"'+(assignedSlot===s?' selected':'')+'>Ranura '+(s+1)+'</option>';
+    }
+
+    h+='<div class="spell-card'+(unlocked?'':' locked')+'" draggable="'+unlocked+'" data-spell-idx="'+i+'">'+
+      '<div class="spell-ic">'+svg(ab.ic,ab.col)+'</div>'+
+      '<div class="spell-info">'+
+        '<div class="spell-name"><span style="color:'+ab.col+'">'+esc(ab.name)+'</span>'+
+          (unlocked?'<span class="spell-tag ok">Nv. '+ab.ul+'</span>':'<span class="spell-tag lock">Req. Nivel '+ab.ul+'</span>')+
+          (assignedSlot>=0?'<span class="spell-tag slot-badge">Ranura '+(assignedSlot+1)+'</span>':'')+
+        '</div>'+
+        '<div class="spell-meta">'+costText+' · '+castText+' · '+cdText+'</div>'+
+        '<div class="spell-desc">'+esc(abDesc(ab))+'</div>'+
+      '</div>'+
+      (unlocked?
+        '<div class="spell-assign">'+
+          '<select data-assign-spell="'+i+'">'+selectOpts+'</select>'+
+        '</div>':
+        '<div class="spell-assign"><span style="color:var(--muted);font-size:11px">Bloqueada</span></div>'
+      )+
+    '</div>';
+  });
+  list.innerHTML=h;
+
+  list.querySelectorAll('.spell-card[draggable=true]').forEach(card=>{
+    card.ondragstart=e=>{
+      const idx=card.dataset.spellIdx;
+      e.dataTransfer.setData('text/plain','spell:'+idx);
+    };
+  });
+
+  list.querySelectorAll('select[data-assign-spell]').forEach(sel=>{
+    sel.onchange=e=>{
+      const abIdx=+sel.dataset.assignSpell;
+      const targetSlot=+sel.value;
+      if(targetSlot>=0&&targetSlot<12){
+        P.actionBar[targetSlot]=abIdx;
+        buildActionBar();
+        renderSpellsUI();
+        toast('Habilidad asignada a Ranura '+(targetSlot+1));
+      }
+    };
+  });
+}
+let craftCat='all';
+function renderCraftUI(){
+  const list=$('craftList');if(!list)return;
+  const tabs=$('craftTabs');
+  if(tabs){
+    tabs.querySelectorAll('.craft-tab').forEach(b=>{
+      b.classList.toggle('active',b.dataset.cat===craftCat);
+      b.onclick=()=>{craftCat=b.dataset.cat;renderCraftUI()};
+    });
+  }
+  let h='';
+  for(const id in RECIPES){
+    const r=RECIPES[id];
+    if(craftCat!=='all'&&r.cat!==craftCat)continue;
+    const known=hasRecipe(id);
+    const lvlOk=P.level>=r.lvl;
+    const craftable=canCraft(id);
+    
+    const outIc=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].ic:'potion'):(SLOT_IC[r.slot]||'sword');
+    const outCol=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].col:'#f4cf5b'):RAR[r.rar||2].c;
+    const outName=r.out?(ITEMS[r.out.key]?ITEMS[r.out.key].name:r.name):r.name;
+    const outCnt=r.out&&r.out.n>1?' x'+r.out.n:'';
+
+    let matsH='';
+    for(const mKey in r.mat){
+      const need=r.mat[mKey];
+      const have=countItem(mKey);
+      const mDef=ITEMS[mKey]||{name:mKey,ic:'gem',col:'#aaa'};
+      const ok=have>=need;
+      matsH+='<span class="craft-mat-tag '+(ok?'ok':'no')+'">'+
+        svg(mDef.ic,mDef.col)+' '+esc(mDef.name)+': '+have+'/'+need+
+      '</span>';
+    }
+
+    let btnH='';
+    if(!known){
+      btnH='<button class="btn sm sec" disabled title="Aprende la receta comprándola a mercaderes o en cofres">No aprendida</button>';
+    }else if(!lvlOk){
+      btnH='<button class="btn sm sec" disabled>Req. Nivel '+r.lvl+'</button>';
+    }else if(!craftable){
+      btnH='<button class="btn sm sec" disabled>Faltan materiales</button>';
+    }else{
+      btnH='<button class="btn sm" data-craft="'+id+'">Fabricar</button>';
+    }
+
+    h+='<div class="craft-card'+(known?'':' unlearned')+'">'+
+      '<div class="craft-ic">'+svg(outIc,outCol)+'</div>'+
+      '<div class="craft-info">'+
+        '<div class="craft-title">'+
+          '<span style="color:'+outCol+'">'+esc(outName)+outCnt+'</span>'+
+          '<span class="reward" style="font-size:11px">Nv. '+r.lvl+' · '+(r.cat==='alch'?'Alquimia':r.cat==='blacksmith'?'Herrería':'Joyería')+'</span>'+
+          (!known?'<span class="badge-lock" style="color:#ff8a7a;font-size:10px;font-weight:700">BLOQUEADA</span>':'<span style="color:#7fe07f;font-size:10px;font-weight:700">CONOCIDA</span>')+
+        '</div>'+
+        '<div class="reward" style="font-size:12px;margin:2px 0">'+esc(r.desc||'')+'</div>'+
+        '<div class="craft-mats">'+matsH+'</div>'+
+      '</div>'+
+      '<div class="craft-action">'+btnH+'</div>'+
+    '</div>';
+  }
+  list.innerHTML=h||'<p class="reward" style="padding:16px;text-align:center">No hay recetas en esta categoría.</p>';
+
+  list.querySelectorAll('button[data-craft]').forEach(b=>{
+    b.onclick=()=>{
+      craftItem(b.dataset.craft);
+      renderCraftUI();
+    };
+  });
 }
 function rewardText(q){return '<span class="reward">Recompensa: <b>'+q.gold+' oro</b> · '+q.xp+' XP'+(q.item?' · objeto '+RAR[q.item.rar].n.toLowerCase():'')+'</span>'}
 function renderQuests(){

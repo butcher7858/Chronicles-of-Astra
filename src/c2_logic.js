@@ -2,12 +2,12 @@
 /* =====================================================================
    Parte 2: estado, clases, combate, saqueo, movilidad, misiones y bots
    ===================================================================== */
-const MAXLV=20,MAXINV=30,CELL=8,GW=Math.ceil(W/CELL),GH=Math.ceil(H/CELL);
+const MAXLV=60,MAXINV=40,CELL=8,GW=Math.ceil(W/CELL),GH=Math.ceil(H/CELL);
 const G={time:0,worldT:0,mobs:[],npcs:[],bots:[],nodes:[],projs:[],parts:[],floats:[],tels:[],fx:[],started:false,muted:false,zone:null,shopNpc:null,
   dlgNpc:null,dlgQuest:null,lootM:null,botChat:8,sfxOn:true,autoLoot:true,sprintToggle:false,shake:0,zoom:1,explored:new Uint8Array(GW*GH),keys:{},joy:null};
 let P=null;
-const xpNeed=l=>Math.round(50*l*(1+0.22*l));
-const ZLV={meadow:3,forest:6,hills:8,cave:10,swamp:12,desert:15,snow:18,palace:20,town:1,cieno:12,oasis:15,cumbre:18};
+const xpNeed=l=>Math.round(45*l*(1+0.18*l));
+const ZLV={meadow:3,forest:6,hills:10,cave:13,swamp:16,desert:20,snow:25,palace:30,volcano:35,necropolis:38,shadowlands:46,titanpeaks:53,astralvoid:60,town:1,capital:10,bastion:8,cieno:15,oasis:19,cumbre:24,deepcave:18,abyss:28};
 
 /* ---------- Clases y habilidades ---------- */
 const CLS={
@@ -76,6 +76,8 @@ function recalc(){
   const c=CLS[P.cls],L=P.level;
   let atk=c.atk0+L*c.atkl,armor=0,hpb=0,crit=5;
   for(const s of SLOTS){const it=P.eq[s];if(it){atk+=it.atk||0;armor+=it.armor||0;hpb+=it.hp||0;crit+=it.crit||0}}
+  if(P.mounted&&P.mount==='wolf')crit+=8;
+  if(P.mounted&&P.mount==='bear')hpb+=Math.round((c.hp0+L*c.hpl)*0.2);
   P.atk=atk;P.armor=armor;P.crit=crit;
   P.maxhp=Math.round(c.hp0+L*c.hpl+hpb);
   P.maxres=c.res==='mana'?Math.round(c.res0+L*c.resl):100;
@@ -85,7 +87,9 @@ function newGame(cls,name,app){
   P=makePlayer(cls,name);P.app=Object.assign(defaultApp(cls),app||{});
   recalc();
   P.eq.weapon=genItem(1,0,'weapon',cls);
-  P.eq.weapon.name=({war:'Espada de Recluta',mage:'Bastón de Aprendiz',priest:'Maza de Novicio',paladin:'Martillo de Escudero',rogue:'Daga de Recluta',hunter:'Arco de Cazador',necro:'Bastón de Adepto',druid:'Cayado de Brote'})[cls];
+  P.eq.weapon.name=({war:'Espada de Recluta',mage:'Bastón de Aprendiz',priest:'Maza de Novicio',paladin:'Martillo de Escudero',rogue:'Daga de Recluta',hunter:'Arco de Cazador',necro:'Bastón de Adepto',druid:'Cayado de Brote',dk:'Hoja Rúnica de Aprendiz',shaman:'Maza de los Elementos'})[cls]||'Arma de Recluta';
+  P.recipes=P.recipes||{hp1:true,mp1:true};
+  P.actionBar=P.actionBar||[];
   recalc();P.hp=P.maxhp;P.res=CLS[cls].res==='rage'?0:P.maxres;
   addStack('hp1',3);
   if(CLS[cls].res!=='rage')addStack('mp1',2);
@@ -187,7 +191,7 @@ function sortInv(){
 function usePotion(prefix){
   if(!G.started||P.dead)return;
   if((P.cds.pot||0)>0){toast('Aún no puedes usar otra poción');return}
-  for(const k of [prefix+'4',prefix+'3',prefix+'2',prefix+'1']){
+  for(const k of [prefix+'5',prefix+'4',prefix+'3',prefix+'2',prefix+'1']){
     if(countItem(k)>0){
       const d=ITEMS[k];removeItem(k,1);P.cds.pot=30;
       if(d.heal){healP(d.heal)}
@@ -205,13 +209,67 @@ function useHerb(){
   if(countItem('herb')<1)return;
   removeItem('herb',1);P.cds.herb=10;healP(ITEMS.herb.heal);refreshUI();
 }
+function useElixir(key,invIdx){
+  const d=ITEMS[key];if(!d)return;
+  P.inv.splice(invIdx,1);
+  if(d.atkBuff)addBuff({id:'elixir_atk',name:d.name,ic:d.ic,col:d.col,dur:d.dur,atk:d.atkBuff});
+  if(d.armorBuff)addBuff({id:'elixir_armor',name:d.name,ic:d.ic,col:d.col,dur:d.dur,armorM:d.armorBuff});
+  if(d.spdBuff)addBuff({id:'elixir_spd',name:d.name,ic:d.ic,col:d.col,dur:d.dur,spd:d.spdBuff});
+  ring(P.x,P.y,60,d.col);burst(P.x,P.y-10,d.col,16,120);sfx('buff');
+  log('Consumes '+d.name+'.','loot');toast('Efecto aplicado: '+d.name);
+  refreshUI();
+}
+function hasRecipe(id){return !!(P&&P.recipes&&P.recipes[id])}
+function learnRecipe(recId,invIdx){
+  if(hasRecipe(recId)){toast('Ya conoces esta receta');return}
+  P.recipes=P.recipes||{hp1:true,mp1:true};
+  P.recipes[recId]=true;
+  if(invIdx!==undefined)P.inv.splice(invIdx,1);
+  burst(P.x,P.y-10,'#ffd700',20,150);sfx('level');
+  const name=RECIPES[recId]?RECIPES[recId].name:recId;
+  toast('¡Has aprendido la receta: '+name+'!');
+  log('Aprendes a fabricar: '+name,'loot');
+  refreshUI();
+}
+function canCraft(id){
+  const r=RECIPES[id];if(!r||!hasRecipe(id)||P.level<r.lvl)return false;
+  for(const k in r.mat)if(countItem(k)<r.mat[k])return false;
+  return true;
+}
+function craftItem(id){
+  const r=RECIPES[id];if(!r)return;
+  if(!hasRecipe(id)){toast('No conoces esta receta');return}
+  if(P.level<r.lvl){toast('Nivel insuficiente: requiere nivel '+r.lvl);return}
+  for(const k in r.mat){
+    if(countItem(k)<r.mat[k]){toast('Faltan materiales: '+(ITEMS[k]?ITEMS[k].name:k));return}
+  }
+  for(const k in r.mat)removeItem(k,r.mat[k]);
+  if(r.out){
+    addStack(r.out.key,r.out.n||1);
+    lootFeedAdd({t:r.out.t||'cons',key:r.out.key,n:r.out.n||1});
+    log('Has fabricado '+(ITEMS[r.out.key]?ITEMS[r.out.key].name:r.out.key)+' x'+(r.out.n||1),'loot');
+  }else if(r.slot){
+    const it=genItem(r.lvl,r.rar||2,r.slot,P.cls);
+    it.name=r.name;
+    addGear(it);lootFeedAdd(it);
+    log('Has forjado '+itemName(it),'loot');
+  }
+  burst(P.x,P.y-10,'#ffd700',20,160);ring(P.x,P.y,50,'#ffd700');sfx('equip');
+  toast('¡Fabricación completada: '+r.name+'!');
+  refreshUI();
+}
 function useInv(i){
   const it=P.inv[i];if(!it)return;
   if(G.shopNpc){sellInv(i);return}
   if(it.t==='gear'){equip(i);return}
   if(it.t==='cons'){
+    if(it.isRecipe&&it.recId){learnRecipe(it.recId,i);return}
     const d=ITEMS[it.key];
-    if(d.use==='herb')useHerb();else usePotion(d.heal?'hp':'mp');
+    if(d){
+      if(d.atkBuff||d.armorBuff||d.spdBuff){useElixir(it.key,i);return}
+      if(d.use==='herb')useHerb();
+      else usePotion(d.heal?'hp':'mp');
+    }
   }
 }
 function sellValue(it){return it.t==='gear'?Math.max(1,Math.floor(it.price*0.4)):Math.max(1,Math.floor(ITEMS[it.key].price*0.4))*it.n}
@@ -252,6 +310,11 @@ function shopStock(npc){
         const it=genItem(lv,(lv>=10&&s==='weapon')?2:1,s,P.cls);
         out.push({item:it,price:it.price*2});
       }
+    }
+  }
+  if(sh.recipes){
+    for(const rk of sh.recipes){
+      if(ITEMS[rk])out.push({key:rk,price:ITEMS[rk].price});
     }
   }
   npc.stock=out;return out;
@@ -324,7 +387,8 @@ function startGather(n){
   if(P.cast&&P.cast.gather)return;
   const nm=n.type==='chest'?'Abriendo cofre':n.type==='herb'?'Recolectando hierba':'Extrayendo mineral';
   P.cast={ab:{name:nm},t:null,time:0,dur:n.type==='chest'?1.4:1.8,fn:()=>openNode(n),gather:true};
-  P.mounted=false;P.autoAtk=false;P.intent=null;
+  if(!(P.mounted&&P.mountType==='stag'))P.mounted=false;
+  P.autoAtk=false;P.intent=null;
 }
 function openNode(n){
   if(n.open)return;
@@ -335,16 +399,50 @@ function openNode(n){
     const gold=Math.round(lv*ri(4,8));P.gold+=gold;lootFeedAdd({gold:gold});log('Cofre: '+gold+' de oro.','loot');
     const r=Math.random(),rar=r<0.5?0:r<0.84?1:r<0.985?2:3;
     if(Math.random()<0.75){const it=genItem(lv+ri(0,2),rar,null,P.cls);addGear(it);lootFeedAdd(it);log('Cofre: '+itemName(it),'loot')}
-    const tier=lv>=16?'4':lv>=11?'3':lv>=6?'2':'1';
+    const tier=lv>=35?'5':lv>=24?'4':lv>=14?'3':lv>=6?'2':'1';
     if(Math.random()<0.6){addStack('hp'+tier,ri(1,2));lootFeedAdd({t:'cons',key:'hp'+tier,n:1})}
     if(CLS[P.cls].res!=='rage'&&Math.random()<0.4){addStack('mp'+tier,1);lootFeedAdd({t:'cons',key:'mp'+tier,n:1})}
+    if(Math.random()<0.35){
+      const clothTier=lv>=40?'cloth_rune':lv>=15?'cloth_silk':'cloth_linen';
+      addStack(clothTier,ri(1,3));lootFeedAdd({t:'misc',key:clothTier,n:1});
+    }
+    if(Math.random()<0.25){
+      const essTier=lv>=45?'essence_void':lv>=25?'essence_fire':'crystal_gem';
+      addStack(essTier,1);lootFeedAdd({t:'misc',key:essTier,n:1});
+    }
+    if(Math.random()<0.2){
+      const recList=['rec_hp3','rec_hp4','rec_hp5','rec_elixir_atk','rec_elixir_armor','rec_sword_rare','rec_chest_epic','rec_neck_astral','rec_trinket_phoenix'];
+      const unlearned=recList.filter(rk=>!hasRecipe(ITEMS[rk]?.recId));
+      if(unlearned.length){
+        const rk=pick(unlearned);
+        addStack(rk,1);lootFeedAdd({t:'cons',key:rk,n:1});log('¡Has encontrado una receta rara: '+ITEMS[rk].name+'!','loot');
+      }
+    }
     burst(n.x,n.y-14,'#ffe08a',24,200);fxBeam(n.x,n.y,'#ffe08a',0.8);sfx('open');
   }else if(n.type==='herb'){
-    const c=ri(1,2);if(addStack('herb',c)>0){toast('Mochila llena');return}
-    n.open=true;n.t=0;lootFeedAdd({t:'cons',key:'herb',n:c});burst(n.x,n.y-8,'#7fe07f',12,100);sfx('loot');
+    let herbKey='herb_peace';
+    if(lv>=50)herbKey='herb_astral';
+    else if(lv>=36)herbKey='herb_shadow';
+    else if(lv>=24)herbKey='herb_fire';
+    else if(lv>=14)herbKey='herb_frost';
+    else if(lv>=6)herbKey='herb_leaf';
+    let c=ri(1,2);
+    if(P.mounted&&P.mountType==='stag')c=Math.round(c*1.5)+1;
+    if(addStack(herbKey,c)>0){toast('Mochila llena');return}
+    n.open=true;n.t=0;lootFeedAdd({t:'misc',key:herbKey,n:c});burst(n.x,n.y-8,'#7fe07f',12,100);sfx('loot');
+    log('Recolectas '+ITEMS[herbKey].name+' x'+c,'loot');
   }else{
-    const c=ri(1,2);if(addStack('ore',c)>0){toast('Mochila llena');return}
-    n.open=true;n.t=0;lootFeedAdd({t:'misc',key:'ore',n:c});burst(n.x,n.y-8,'#c8d2e8',12,120);sfx('loot');
+    let oreKey='ore_copper';
+    if(lv>=50)oreKey='ore_astral';
+    else if(lv>=36)oreKey='ore_darkiron';
+    else if(lv>=24)oreKey='ore_mithril';
+    else if(lv>=14)oreKey='ore_gold';
+    else if(lv>=6)oreKey='ore_iron';
+    let c=ri(1,2);
+    if(P.mounted&&P.mountType==='stag')c=Math.round(c*1.5)+1;
+    if(addStack(oreKey,c)>0){toast('Mochila llena');return}
+    n.open=true;n.t=0;lootFeedAdd({t:'misc',key:oreKey,n:c});burst(n.x,n.y-8,'#c8d2e8',12,120);sfx('loot');
+    log('Extraes '+ITEMS[oreKey].name+' x'+c,'loot');
   }
   refreshUI();
 }
@@ -394,7 +492,10 @@ function hurtPlayer(dmg,src,opt){
   if(P.dead)return;
   opt=opt||{};
   if(P.iframes>0){float(P.x,P.y-36,'Esquiva','#cfe8ff',15);return}
-  const red=opt.raw?0:P.armor/(P.armor+40+(src.level||P.level)*10);
+  let arm=P.armor;
+  for(const b of P.buffs)if(b.armorM)arm*=(1+b.armorM);
+  if(P.mounted&&P.mount==='horse')arm*=1.25;
+  const red=opt.raw?0:arm/(arm+40+(src.level||P.level)*10);
   let d=Math.max(1,Math.round(dmg*rand(0.9,1.1)*(1-red)));
   let dr=0;for(const b of P.buffs)if(b.dr)dr+=b.dr;if(dr)d=Math.max(1,Math.round(d*(1-Math.min(0.8,dr))));
   for(const b of P.buffs){
@@ -472,7 +573,9 @@ function doBlink(){
 }
 function tryUse(i){
   if(!G.started||!P||P.dead||P.stun>0||(P.cast&&!P.cast.gather&&!P.cast.travel))return;
-  const ab=CLS[P.cls].ab[i];if(!ab)return;
+  let abIdx=i;
+  if(P.actionBar&&P.actionBar[i]!==undefined)abIdx=P.actionBar[i];
+  const ab=CLS[P.cls].ab[abIdx];if(!ab)return;
   if(ab.ul>P.level){toast(ab.name+' se desbloquea en el nivel '+ab.ul);return}
   if((P.cds[ab.id]||0)>0){if(ab.cd>=6)toast(ab.name+' no está listo');return}
   if(!ab.noGcd&&P.gcd>0)return;
@@ -480,6 +583,16 @@ function tryUse(i){
   let t=null;
   if(ab.tgt){
     t=P.target;
+    if(!t||t.dead||!t.hostile){
+      let nearest=null,minD=ab.range||350;
+      for(const m of G.mobs){
+        if(!m.dead&&m.hostile&&!m.def.passive){
+          const d=dist(P,m)-m.size;
+          if(d<minD){minD=d;nearest=m}
+        }
+      }
+      if(nearest){P.target=nearest;t=nearest}
+    }
     if(!t||t.dead||!t.hostile){toast('Necesitas un objetivo enemigo');return}
     const d=dist(P,t)-t.size;
     if(d>ab.range){toast('Objetivo fuera de alcance');return}
@@ -499,7 +612,12 @@ function fire(ab,t){
   P.swingA=0.28;
   ab.fn(t);
 }
-function mountSpeed(){return P.level>=12?330:270}
+function mountSpeed(){
+  let base=P.level>=12?330:270;
+  if(P.mount==='drake')base+=50;
+  if(P.mount==='unicorn')base+=30;
+  return base;
+}
 function toggleMount(){
   if(!G.started||P.dead)return;
   if(P.level<4){toast('La montura se desbloquea en el nivel 4');return}
@@ -584,6 +702,9 @@ function initWorldEntities(){
   G.mobs.push(makeMob('boss',BOSS1.x,BOSS1.y));
   G.mobs.push(makeMob('queen',BOSS2.x,BOSS2.y));
   G.mobs.push(makeMob('dragon_ignis',BOSS_DRAGON.x,BOSS_DRAGON.y));
+  G.mobs.push(makeMob('lich_malakor',BOSS_MALAKOR.x,BOSS_MALAKOR.y));
+  G.mobs.push(makeMob('titan_colossus',BOSS_TITAN.x,BOSS_TITAN.y));
+  G.mobs.push(makeMob('void_horror',BOSS_VOID.x,BOSS_VOID.y));
   for(const n of NPC_DEF)G.npcs.push({id:n.id,name:n.name,title:n.title,x:n.tx*TILE+16,y:n.ty*TILE+16,def:n,npc:true,size:12,dir:n.dir||1,anim:rand(0,6)});
   G.nodes=NODES.map(n=>Object.assign({node:true,open:false,t:0,size:12},n));
   makeBots();
@@ -593,7 +714,7 @@ const NPC_DEF=[
     look:{skin:'#e0b890',hair:'#d9b44a',hairStyle:2,body:'#3a5f9a',trim:'#d4dcec',legs:'#2a3a5a',hat:'#aab4c4',hatType:'helm',weapon:'sword',blade:'#d8dce4',shield:1,cape:'#8a2a2a',pads:'#aab4c4'}},
   {id:'doran',name:'Doran el Herrero',title:'Herrero',tx:48,ty:70,dir:-1,shop:{kinds:['gear'],lv:[2,5,8]},greet:'Acero bueno, precio justo. Mira lo que tengo.',
     look:{skin:'#d6a67a',hair:'#3a2a1a',hairStyle:3,beard:'#3a2a1a',body:'#6b4a2a',trim:'#8a8a8a',legs:'#3a2a1c',weapon:'hammer',apron:1}},
-  {id:'mira',name:'Mira la Alquimista',title:'Alquimista',tx:38,ty:79,dir:1,shop:{kinds:['potions'],pots:['hp1','hp2','hp3','mp1','mp2','mp3']},greet:'Pociones frescas de esta mañana. Una gota y vuelves a la pelea.',
+  {id:'mira',name:'Mira la Alquimista',title:'Alquimista',tx:38,ty:79,dir:1,shop:{kinds:['potions'],pots:['hp1','hp2','hp3','mp1','mp2','mp3'],recipes:['rec_hp3']},greet:'Pociones frescas de esta mañana. Una gota y vuelves a la pelea.',
     look:{skin:'#e6bd98',hair:'#b04a3a',hairStyle:5,body:'#3f7a5c',trim:'#e8d9a0',legs:'#2a4a3a',hat:'#2f5a44',hatType:'hood',weapon:null}},
   {id:'teo',name:'Teo el Guardabosques',title:'Guardabosques',tx:48,ty:78,dir:-1,greet:'El bosque cambia cuando cae la noche. Ve con ojo.',
     look:{skin:'#d9b08c',hair:'#6b4a2a',hairStyle:1,body:'#58682f',trim:'#8a8a3a',legs:'#3a3a22',hat:'#3a4420',hatType:'hood',weapon:'bow',cape:'#3a4420'}},
@@ -601,11 +722,11 @@ const NPC_DEF=[
     look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:2,beard:'#eaeaea',body:'#5a3f8a',trim:'#d9b44a',legs:'#3a2a5a',hat:'#3a2a5a',hatType:'pointy',weapon:'staff',orb:'#c9a6ff'}},
   {id:'aurelius',name:'Comandante Aurelius',title:'Comandante de Astra',tx:107,ty:59,dir:1,greet:'Bienvenido a la Gran Ciudad de Astra. Aquí se forjan las leyendas del imperio.',
     look:{skin:'#e0b890',hair:'#eaeaea',hairStyle:3,beard:'#eaeaea',body:'#243f70',trim:'#ffd700',legs:'#1c2b4d',hat:'#e0d0a0',hatType:'crown',weapon:'sword',blade:'#ffd700',shield:1,cape:'#7a1a1a',pads:'#ffd700'}},
-  {id:'seraphina',name:'Archimaga Seraphina',title:'Gran Maestra Arcana',tx:116,ty:75,dir:-1,shop:{kinds:['potions'],pots:['hp3','hp4','hp5','mp3','mp4','mp5']},greet:'El Telar resuena con un poder antiguo. ¿Deseas elixires de la más alta pureza?',
+  {id:'seraphina',name:'Archimaga Seraphina',title:'Gran Maestra Arcana',tx:116,ty:75,dir:-1,shop:{kinds:['potions'],pots:['hp3','hp4','hp5','mp3','mp4','mp5'],recipes:['rec_hp4','rec_hp5','rec_elixir_atk','rec_elixir_armor']},greet:'El Telar resuena con un poder antiguo. ¿Deseas elixires de la más alta pureza?',
     look:{skin:'#ebd0b5',hair:'#c7a0ff',hairStyle:2,body:'#5c2850',trim:'#ffd700',legs:'#381830',hat:'#5c2850',hatType:'horns',weapon:'staff',orb:'#c7a0ff',cape:'#24183a'}},
   {id:'valerius',name:'Maestro Valerius',title:'Maestro de Hermandades',tx:90,ty:75,dir:1,greet:'Aquí se fundan y gestionan las hermandades de Astra. ¡Únete a otros campeones!',
     look:{skin:'#d6a67a',hair:'#6a4a2a',hairStyle:1,beard:'#6a4a2a',body:'#1e4a30',trim:'#d9b44a',legs:'#183824',hat:'#b8905a',hatType:'beret',weapon:'sword',blade:'#d8dce4',shield:1}},
-  {id:'kaelen',name:'Maestro Kaelen',title:'Armero Imperial',tx:119,ty:56,dir:-1,shop:{kinds:['gear'],lv:[12,16,20]},greet:'Las mejores aleaciones de mithril y obsidiana para los héroes del reino.',
+  {id:'kaelen',name:'Maestro Kaelen',title:'Armero Imperial',tx:119,ty:56,dir:-1,shop:{kinds:['gear'],lv:[12,16,20,30,40],recipes:['rec_sword_rare','rec_chest_epic']},greet:'Las mejores aleaciones de mithril y obsidiana para los héroes del reino.',
     look:{skin:'#cfa075',hair:'#333',hairStyle:3,beard:'#333',body:'#482e22',trim:'#ffd700',legs:'#2c1d16',weapon:'hammer',apron:1}},
   {id:'nyx',name:'Hechicera Nyx',title:'Guardiana del Cieno',tx:33,ty:130,dir:1,greet:'El pantano susurra por las noches. No todo lo que se mueve entre la niebla es amigo.',
     look:{skin:'#c8d8c0',hair:'#7a3a8a',hairStyle:2,body:'#3b5a4a',trim:'#9bff5a',legs:'#243a30',hat:'#2a4a3a',hatType:'pointy',weapon:'staff',orb:'#9bff5a'}},
@@ -613,7 +734,7 @@ const NPC_DEF=[
     look:{skin:'#d6a67a',hair:'#4a3a2a',hairStyle:1,beard:'#4a3a2a',body:'#7a5a2a',trim:'#d9b44a',legs:'#3a2a1a',hat:'#6a4a1a',hatType:'bandana',weapon:null}},
   {id:'zahir',name:'Capitán Zahir',title:'Capitán de caravanas',tx:157,ty:124,dir:1,greet:'El sol en estas dunas no perdona. Bebe, y mantén la espada a mano.',
     look:{skin:'#b98a5a',hair:'#111',hairStyle:3,beard:'#111',body:'#2e6fa0',trim:'#f0d070',legs:'#1c3a58',hat:'#e8dcc0',hatType:'turban',weapon:'sword',blade:'#d8dce4',shield:1,cape:'#c0502e'}},
-  {id:'safiya',name:'Safiya la Mercadora',title:'Mercadora del Oasis',tx:163,ty:124,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[14,16,18]},greet:'Seda, especias y acero. ¿Qué te hace falta, viajero?',
+  {id:'safiya',name:'Safiya la Mercadora',title:'Mercadora del Oasis',tx:163,ty:124,dir:-1,shop:{kinds:['potions','gear'],pots:['hp3','hp4','mp3','mp4'],lv:[14,16,18],recipes:['rec_neck_astral','rec_trinket_phoenix']},greet:'Seda, especias y acero. ¿Qué te hace falta, viajero?',
     look:{skin:'#c9966a',hair:'#2a1c12',hairStyle:5,body:'#7a3a8a',trim:'#f0d070',legs:'#4a2458',hat:'#e8dcc0',hatType:'hood',weapon:null}},
   {id:'bruna',name:'Mariscal Bruna',title:'Mariscal de las Cumbres',tx:153,ty:41,dir:1,greet:'Aquí el invierno no es una estación: es un enemigo. Pelea o vete.',
     look:{skin:'#e0b8a0',hair:'#c8d4e0',hairStyle:5,body:'#4a6a8a',trim:'#e8f2fc',legs:'#2a3f58',hat:'#bfc8d4',hatType:'helm',weapon:'axe',blade:'#cfd8e4',shield:1,cape:'#2f5a9a',pads:'#bfc8d4'}},
@@ -733,6 +854,38 @@ function bossLogic(m,dt){
     if(m.phase<1&&m.hp<m.maxhp*0.66){m.phase=1;summonAdds(m,'fskel',2,20);banner('La Reina Escarcha','Sus guardianes despiertan')}
     if(m.phase<2&&m.hp<m.maxhp*0.33){m.phase=2;summonAdds(m,'fskel',3,20);banner('La Reina Escarcha','El invierno se endurece')}
     if(m.phase<3&&m.hp<m.maxhp*0.15){m.phase=3;banner('¡Furia helada!','La Reina ataca sin descanso')}
+  }else if(m.type==='dragon_ignis'){
+    m.quakeT=(m.quakeT||6)-dt;
+    if(m.quakeT<=0){
+      m.quakeT=rand(5,7);
+      G.tels.push({x:P.x,y:P.y,r:110,t:0,dur:1.6,dmg:m.dmg*1.8,src:m,col:'#ff5522'});
+      float(m.x,m.y-m.size*2.4,'¡Aliento Ígneo!','#ff7733',20);
+    }
+    if(m.phase<1&&m.hp<m.maxhp*0.5){m.phase=1;summonAdds(m,'fire_elemental',3,32);banner('¡Ignis el Dragón Ancestral!','Sus llamas devoran la caldera')}
+  }else if(m.type==='lich_malakor'){
+    m.quakeT=(m.quakeT||5)-dt;
+    if(m.quakeT<=0){
+      m.quakeT=rand(4,6);
+      G.tels.push({x:P.x,y:P.y,r:95,t:0,dur:1.4,dmg:m.dmg*1.7,src:m,col:'#a855f7'});
+      float(m.x,m.y-m.size*2.4,'¡Descarga Umbría!','#c084fc',20);
+    }
+    if(m.phase<1&&m.hp<m.maxhp*0.5){m.phase=1;summonAdds(m,'crypt_fiend',3,36);banner('Malakor el Inmortal','El ejército de la plaga despierta')}
+  }else if(m.type==='titan_colossus'){
+    m.quakeT=(m.quakeT||6)-dt;
+    if(m.quakeT<=0){
+      m.quakeT=rand(5,7);
+      G.tels.push({x:P.x,y:P.y,r:160,t:0,dur:1.8,dmg:m.dmg*2.0,src:m,col:'#38bdf8'});
+      float(m.x,m.y-m.size*2.4,'¡Pisotón Titánico!','#7dd3fc',22);
+    }
+    if(m.phase<1&&m.hp<m.maxhp*0.5){m.phase=1;banner('¡Furia del Titán!','La montaña tiembla a sus pies')}
+  }else if(m.type==='void_horror'){
+    m.quakeT=(m.quakeT||5)-dt;
+    if(m.quakeT<=0){
+      m.quakeT=rand(4,6);
+      G.tels.push({x:P.x,y:P.y,r:110,t:0,dur:1.5,dmg:m.dmg*2.2,src:m,col:'#c084fc'});
+      float(m.x,m.y-m.size*2.4,'¡Colapso Astral!','#e879f9',22);
+    }
+    if(m.phase<1&&m.hp<m.maxhp*0.5){m.phase=1;summonAdds(m,'void_reaver',2,56);banner('¡Horror del Vacío Astral!','Las estrellas se apagan')}
   }
 }
 function killMob(m){

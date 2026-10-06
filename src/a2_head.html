@@ -115,7 +115,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .panel>header button:hover{color:var(--ink)}
 .pbody{padding:12px;overflow-y:auto;scrollbar-width:thin}
 #pInv{right:var(--g);top:50%;transform:translateY(-50%);width:320px}
-#pChar{left:var(--g);top:50%;transform:translateY(-50%);width:296px}
+#pChar{left:var(--g);top:50%;transform:translateY(-50%);width:330px;max-height:92vh}
 #pQuest{left:50%;top:50%;transform:translate(-50%,-50%);width:min(430px,calc(100% - 2*var(--g)))}
 #pDlg{left:50%;top:50%;transform:translate(-50%,-50%);width:min(470px,calc(100% - 2*var(--g)))}
 #pShop{left:50%;top:50%;transform:translate(-50%,-50%);width:min(580px,calc(100% - 2*var(--g)))}
@@ -255,10 +255,10 @@ body.touch #tbtns{display:flex}
 #kOrder{font-size:12px;color:var(--muted);text-align:center;padding:0 6px 6px}
 #kOrder b{display:block;color:var(--gold);font-family:var(--f-display);letter-spacing:.08em;font-size:13px}
 .cform{display:flex;flex-direction:column;gap:10px;min-width:0}
-#kCls{grid-template-columns:repeat(4,1fr);gap:8px}
-#kCls .cls{padding:8px 4px;gap:3px}
-#kCls .cls h3{font-size:12px}
-#kCls .cls .portrait{width:42px;height:42px}#kCls .cls .portrait svg{width:24px;height:24px}
+#kCls{grid-template-columns:repeat(5,1fr);gap:6px}
+#kCls .cls{padding:6px 2px;gap:2px}
+#kCls .cls h3{font-size:11px;letter-spacing:0}
+#kCls .cls .portrait{width:38px;height:38px}#kCls .cls .portrait svg{width:22px;height:22px}
 #kDesc{margin:0;font-size:13px;color:var(--muted);min-height:54px}
 .nmrow{display:flex;gap:8px}.nmrow input{flex:1}
 #kApp{display:flex;flex-direction:column;gap:7px}
@@ -277,7 +277,7 @@ body.touch #tbtns{display:flex}
 .cfbox p{margin:0 0 16px;color:var(--ink)}
 .cfbox .btns{display:flex;gap:10px;justify-content:flex-end}
 #onl{font-size:11px;color:#7fd0ff;text-align:center}
-@media(max-width:720px){#cGrid{grid-template-columns:repeat(2,1fr)}.cbody{grid-template-columns:1fr}.cprev{flex-direction:row;flex-wrap:wrap;justify-content:center}.cprev canvas{width:180px;height:208px}#kCls{grid-template-columns:repeat(4,1fr)}#kCls .cls{flex-direction:column;text-align:center}.arow>label{width:72px}.sbox{padding:16px}}
+@media(max-width:720px){#cGrid{grid-template-columns:repeat(2,1fr)}.cbody{grid-template-columns:1fr}.cprev{flex-direction:row;flex-wrap:wrap;justify-content:center}.cprev canvas{width:180px;height:208px}#kCls{grid-template-columns:repeat(5,1fr)}#kCls .cls{flex-direction:column;text-align:center}.arow>label{width:72px}.sbox{padding:16px}}
 .logo{text-align:center}
 .logo h1{margin:0;font-family:var(--f-display);font-weight:900;font-size:clamp(40px,9vw,76px);letter-spacing:.18em;color:#f1d38a;text-shadow:0 2px 0 #7a5516,0 0 28px rgba(224,169,61,.35);padding-left:.18em}
 .logo p{margin:2px 0 0;color:var(--muted);letter-spacing:.3em;text-transform:uppercase;font-size:12px}
@@ -382,12 +382,52 @@ body.touch #tbtns{display:flex}
 .slot .k{position:absolute;left:2px;top:0;font-size:9px;font-weight:700;color:var(--muted);white-space:nowrap;letter-spacing:-0.5px}
 
 /* Paperdoll en Panel de Personaje */
-.paperdoll-container{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:6px;padding:8px}
-.eq-col{display:flex;flex-direction:column;gap:5px;width:44px}
-.eq-col .it{width:44px;height:44px}
+.paperdoll-container{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;background:rgba(0,0,0,0.35);border:1px solid var(--line);border-radius:6px;padding:6px 6px}
+.eq-col{display:flex;flex-direction:column;gap:4px;width:38px}
+.eq-col .it{width:38px;height:38px}
 .doll-center{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1}
-#pCharCv{display:block;width:140px;height:180px;border-radius:4px}
+#pCharCv{display:block;width:130px;height:180px;border-radius:4px}
 .rot-btn{margin-top:4px;padding:2px 8px;font-size:11px}
+
+/* Libro de Habilidades */
+#pSpells{left:50%;top:50%;transform:translate(-50%,-50%);width:min(600px,calc(100% - 2*var(--g)));max-height:86vh}
+.spell-list{display:flex;flex-direction:column;gap:6px}
+.spell-card{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:grab;transition:all .15s}
+.spell-card:hover{border-color:var(--gold);background:#2c2014}
+.spell-card.locked{opacity:0.5;filter:grayscale(0.7);cursor:not-allowed}
+.spell-ic{width:40px;height:40px;background:var(--slot);border:1px solid #5a452a;border-radius:5px;display:grid;place-items:center;flex:none}
+.spell-ic svg{width:26px;height:26px}
+.spell-info{flex:1;min-width:0}
+.spell-name{font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px}
+.spell-tag{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px}
+.spell-tag.ok{background:#1f4a25;color:#7fe07f}
+.spell-tag.lock{background:#4a201f;color:#ff8a7a}
+.spell-tag.slot-badge{background:#3a2d1a;color:var(--gold);border:1px solid var(--gold)}
+.spell-meta{font-size:11px;color:var(--muted);margin:2px 0}
+.spell-desc{font-size:12px;color:var(--ink);line-height:1.25}
+.spell-assign{display:flex;align-items:center;gap:6px;flex:none}
+.spell-assign select{background:#181109;border:1px solid var(--line);color:var(--gold);padding:4px 6px;border-radius:4px;font-size:11px;font-family:inherit}
+
+/* Mesa de Fabricación */
+#pCraft{left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,calc(100% - 2*var(--g)));max-height:88vh}
+.craft-tabs{display:flex;gap:6px;margin-bottom:10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.craft-tab{background:transparent;border:1px solid var(--line);color:var(--muted);padding:5px 12px;border-radius:4px;font-weight:700;font-size:12px;cursor:pointer}
+.craft-tab:hover{border-color:var(--gold);color:var(--gold)}
+.craft-tab.active{background:#3a2c18;color:#f1d38a;border-color:var(--gold)}
+.craft-list{display:flex;flex-direction:column;gap:8px}
+.craft-card{display:flex;align-items:center;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 12px;transition:border-color .15s}
+.craft-card:hover{border-color:var(--gold)}
+.craft-card.unlearned{opacity:0.6}
+.craft-ic{width:42px;height:42px;background:var(--slot);border:1px solid #5a452a;border-radius:5px;display:grid;place-items:center;flex:none}
+.craft-ic svg{width:26px;height:26px}
+.craft-info{flex:1;min-width:0}
+.craft-title{font-weight:700;font-size:13px;display:flex;align-items:center;gap:8px}
+.craft-mats{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.craft-mat-tag{display:inline-flex;align-items:center;gap:4px;background:#140e08;border:1px solid #3a2d1a;padding:2px 6px;border-radius:3px;font-size:11px}
+.craft-mat-tag svg{width:14px;height:14px}
+.craft-mat-tag.ok{color:#7fe07f;border-color:#2e5a2e}
+.craft-mat-tag.no{color:#ff8a7a;border-color:#5a2e2e}
+.craft-action{flex:none}
 
 /* Estilo mejorado de objetos y rarezas */
 .it.r0{border-color:#4a3f32}
@@ -459,13 +499,15 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
     <div id="menu">
       <div id="goldTxt">0 oro</div>
       <div class="row">
-        <button class="mb" id="bChat">Chat</button>
+        <button class="mb" id="bSpells">Libro<kbd>P</kbd></button>
+        <button class="mb" id="bCraft">Fabricar<kbd>K</kbd></button>
         <button class="mb" id="bTal">Talentos<kbd>N</kbd></button>
         <button class="mb" id="bGuild">Hermandad<kbd>G</kbd></button>
         <button class="mb" id="bMount">Montura<kbd>H</kbd></button>
         <button class="mb" id="bOpts">Opciones<kbd>O</kbd></button>
       </div>
       <div class="row">
+        <button class="mb" id="bChat">Chat</button>
         <button class="mb" id="bMap">Mapa<kbd>M</kbd></button>
         <button class="mb" id="bChar">Personaje<kbd>C</kbd></button>
         <button class="mb" id="bInv">Mochila<kbd>B</kbd></button>
@@ -551,6 +593,25 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
     <div class="panel" id="pGuild" hidden>
       <header><span>HERMANDAD DE ASTRA</span><button data-close="pGuild" aria-label="Cerrar">×</button></header>
       <div class="pbody" id="guildBody"></div>
+    </div>
+    <div class="panel" id="pSpells" hidden>
+      <header><span>LIBRO DE HABILIDADES</span><button data-close="pSpells" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <p class="sub" style="margin-bottom:8px">Arrastra una habilidad a tu barra de acción o usa el selector</p>
+        <div id="spellList" class="spell-list"></div>
+      </div>
+    </div>
+    <div class="panel" id="pCraft" hidden>
+      <header><span>MESA DE FABRICACIÓN</span><button data-close="pCraft" aria-label="Cerrar">×</button></header>
+      <div class="pbody">
+        <div class="craft-tabs" id="craftTabs">
+          <button class="craft-tab active" data-cat="all">Todas</button>
+          <button class="craft-tab" data-cat="alch">Alquimia</button>
+          <button class="craft-tab" data-cat="blacksmith">Herrería</button>
+          <button class="craft-tab" data-cat="jewel">Joyería</button>
+        </div>
+        <div id="craftList" class="craft-list"></div>
+      </div>
     </div>
     <div class="panel" id="pQuest" hidden>
       <header><span>DIARIO DE MISIONES</span><button data-close="pQuest" aria-label="Cerrar">×</button></header>

@@ -64,20 +64,32 @@ function svg(name,color,sw){return '<svg viewBox="0 0 24 24" fill="none" stroke=
 
 /* ---------- Objetos ---------- */
 const RAR=[{n:'Común',c:'#d8d2c0'},{n:'Poco común',c:'#4fd04f'},{n:'Raro',c:'#4aa0ff'},{n:'Épico',c:'#b868ff'},{n:'Legendario',c:'#ffd700'}];
-const SLOTS=['weapon','shield','head','shoulders','chest','cape','gloves','legs','boots','ring','amulet'];
-const SLOT_NAME={weapon:'Arma',shield:'Escudo',head:'Casco',shoulders:'Hombreras',chest:'Pechera',cape:'Capa',gloves:'Guantes',legs:'Grebas',boots:'Botas',ring:'Anillo',amulet:'Amuleto'};
-const SLOT_IC={weapon:'sword',shield:'shield',head:'helm',shoulders:'shoulder',chest:'chest',cape:'wing',gloves:'glove',legs:'legs',boots:'boots',ring:'crown',amulet:'star'};
+const SLOTS=['head','necklace','shoulders','chest','cape','amulet','relic','gloves','legs','boots','ring','trinket1','trinket2','weapon','shield'];
+const SLOT_NAME={
+  head:'Casco',necklace:'Collar',shoulders:'Hombreras',chest:'Pechera',cape:'Capa',amulet:'Amuleto',relic:'Reliquia',
+  gloves:'Guantes',legs:'Grebas',boots:'Botas',ring:'Anillo',trinket1:'Abalorio I',trinket2:'Abalorio II',
+  weapon:'Arma',shield:'Escudo / Mano Izquierda'
+};
+const SLOT_IC={
+  head:'helm',necklace:'crown',shoulders:'shoulder',chest:'chest',cape:'wing',amulet:'star',relic:'skull',
+  gloves:'glove',legs:'legs',boots:'boots',ring:'crown',trinket1:'star',trinket2:'bolt',
+  weapon:'sword',shield:'shield'
+};
 const BASES={
   head:['Yelmo','Capucha','Casco','Celada','Corona','Diadema'],
+  necklace:['Gargantilla','Collar de gemas','Colgante de oro','Cadena grabada','Collar rúnico','Torque astral'],
   shoulders:['Hombreras','Espaldares','Mantelete','Pauldrons','Guardahombros'],
   chest:['Coraza','Túnica','Cota de malla','Peto','Manto de placas'],
   cape:['Capa de seda','Manto del viento','Capa de terciopelo','Capa de guerra'],
+  amulet:['Amuleto del Alba','Colgante astral','Medallón solar','Talismán protector','Ojo del Vacío'],
+  relic:['Reliquia sagrada','Tomo de la Plaga','Efigie ancestral','Cáliz de poder','Cráneo runado','Fragmento astral'],
   gloves:['Guantes','Manoplas','Mitones','Guanteletes','Brazales'],
   legs:['Grebas','Pantalones','Faldón','Quijotes','Calzas'],
   boots:['Botas','Grebas','Zapatos','Sabatons','Botines'],
-  shield:['Escudo cometa','Rodela','Baluarte','Broquel','Escudo de la orden'],
-  ring:['Sortija sellada','Anillo de zafiro','Banda de bronce','Anillo rúnico'],
-  amulet:['Amuleto del Alba','Colgante astral','Medallón solar','Talismán'],
+  ring:['Sortija sellada','Anillo de zafiro','Banda de bronce','Anillo rúnico','Sello imperial','Anillo astral'],
+  trinket1:['Abalorio de presteza','Talismán de batalla','Medallón de sangre','Piedra filosofal','Emblema de triunfo'],
+  trinket2:['Abalorio de presteza','Talismán de batalla','Medallón de sangre','Piedra filosofal','Emblema de triunfo'],
+  shield:['Escudo cometa','Rodela','Baluarte','Broquel','Escudo de la orden','Escudo de placas'],
   weapon:{
     war:['Espada','Hacha','Maza','Mandoble'],
     mage:['Bastón','Varita','Cetro'],
@@ -86,26 +98,58 @@ const BASES={
     rogue:['Daga','Puñal','Estilete'],
     hunter:['Arco','Arco largo','Arco de caza'],
     necro:['Bastón negro','Cetro óseo','Vara'],
-    druid:['Bastón de roble','Vara viva','Cayado']
+    druid:['Bastón de roble','Vara viva','Cayado'],
+    dk:['Hoja Rúnica','Espada de la Muerte','Guadaña Umbría','Mandoble de Hielo'],
+    shaman:['Maza Elemental','Hacha de Tormenta','Bastón Telúrico','Cetro de Rayos']
   }
 };
 const SUFFIX=[
   ['de Recluta','de Entrenamiento','de Viajero','de Aldeano'],
   ['de Acero','del Vigía','de la Guardia','del Cazador'],
   ['de la Aurora','de Tormenta','del Roble Antiguo','de Cenizas'],
-  ['del Rey Caído','de la Eternidad','del Alba Eterna'],
-  ['de los Titanes','del Dragón Ancestral','del Cosmos']
+  ['del Rey Caído','de la Eternidad','del Alba Eterna','del Vencedor'],
+  ['de los Titanes','del Dragón Ancestral','del Cosmos','del Rey Exánime','de la Falla Astral']
 ];
 const ITEMS={
   hp1:{t:'cons',name:'Poción de vida menor',ic:'potion',col:'#e0554a',heal:70,price:6,desc:'Restaura 70 de vida.'},
   hp2:{t:'cons',name:'Poción de vida',ic:'potion',col:'#e0554a',heal:180,price:22,desc:'Restaura 180 de vida.'},
   hp3:{t:'cons',name:'Poción de vida mayor',ic:'potion',col:'#e0554a',heal:380,price:60,desc:'Restaura 380 de vida.'},
   hp4:{t:'cons',name:'Poción de vida superior',ic:'potion',col:'#e0554a',heal:720,price:140,desc:'Restaura 720 de vida.'},
-  mp1:{t:'cons',name:'Poción de maná menor',ic:'potion',col:'#4a8fe0',mana:60,price:6,desc:'Restaura 60 de maná o 30 de ira.'},
-  mp2:{t:'cons',name:'Poción de maná',ic:'potion',col:'#4a8fe0',mana:140,price:22,desc:'Restaura 140 de maná o 50 de ira.'},
-  mp3:{t:'cons',name:'Poción de maná mayor',ic:'potion',col:'#4a8fe0',mana:280,price:60,desc:'Restaura 280 de maná o 80 de ira.'},
-  mp4:{t:'cons',name:'Poción de maná superior',ic:'potion',col:'#4a8fe0',mana:480,price:140,desc:'Restaura 480 de maná o 100 de ira.'},
+  hp5:{t:'cons',name:'Elixir de Vida Mítica',ic:'potion',col:'#ff3344',heal:1400,price:280,desc:'Restaura 1400 de vida.'},
+  mp1:{t:'cons',name:'Poción de maná menor',ic:'potion',col:'#4a8fe0',mana:60,price:6,desc:'Restaura 60 de maná o 30 de ira/poder.'},
+  mp2:{t:'cons',name:'Poción de maná',ic:'potion',col:'#4a8fe0',mana:140,price:22,desc:'Restaura 140 de maná o 50 de ira/poder.'},
+  mp3:{t:'cons',name:'Poción de maná mayor',ic:'potion',col:'#4a8fe0',mana:280,price:60,desc:'Restaura 280 de maná o 80 de ira/poder.'},
+  mp4:{t:'cons',name:'Poción de maná superior',ic:'potion',col:'#4a8fe0',mana:480,price:140,desc:'Restaura 480 de maná o 100 de ira/poder.'},
+  mp5:{t:'cons',name:'Elixir Arcano Supremo',ic:'potion',col:'#6633ff',mana:900,price:280,desc:'Restaura 900 de maná o 100 de ira/poder.'},
+  elixir_atk:{t:'cons',name:'Elixir de Furia Titánica',ic:'fire',col:'#ff5522',price:160,atkBuff:0.3,dur:180,desc:'Aumenta el daño de ataque un 30% durante 3 minutos.'},
+  elixir_armor:{t:'cons',name:'Elixir de Piel de Hierro',ic:'barrier',col:'#7fa0c0',price:150,armorBuff:0.4,dur:180,desc:'Aumenta la armadura un 40% durante 3 minutos.'},
+  elixir_spd:{t:'cons',name:'Poción de Celeridad',ic:'run',col:'#ffe040',price:120,spdBuff:0.35,dur:120,desc:'Aumenta la velocidad de movimiento un 35% durante 2 minutos.'},
   herb:{t:'cons',use:'herb',name:'Hierba curativa',ic:'herb',col:'#6fcf6f',heal:150,price:8,desc:'Restaura 150 de vida. Recarga propia de 10 s.'},
+  // Hierbas recolectables
+  herb_peace:{t:'misc',name:'Flor de Paz',ic:'herb',col:'#a0f0a0',price:5,desc:'Hierba medicinal común de los Prados.'},
+  herb_leaf:{t:'misc',name:'Hoja Plateada',ic:'herb',col:'#c0f0d0',price:12,desc:'Hierba aromática de bosques y colinas.'},
+  herb_frost:{t:'misc',name:'Loto de Escarcha',ic:'herb',col:'#80d8ff',price:24,desc:'Flor helada que resiste temperaturas extremas.'},
+  herb_fire:{t:'misc',name:'Flor Ígnea',ic:'fire',col:'#ff7030',price:38,desc:'Planta ardiente de las tierras volcánicas.'},
+  herb_shadow:{t:'misc',name:'Sombra Nocturna',ic:'moon',col:'#a855f7',price:48,desc:'Rara flor que absorbe la luz en tierras profanas.'},
+  herb_astral:{t:'misc',name:'Loto Astral Cósmico',ic:'star',col:'#d0f4ff',price:75,desc:'Hierba legendaria bendecida por las estrellas.'},
+  // Minerales recolectables
+  ore:{t:'misc',name:'Mineral de hierro',ic:'ore',col:'#9aa6b8',price:14,desc:'Mineral estándar para forjar armas y armaduras.'},
+  ore_copper:{t:'misc',name:'Mena de cobre',ic:'ore',col:'#c87d55',price:6,desc:'Mineral maleable para principiantes.'},
+  ore_iron:{t:'misc',name:'Mineral de hierro puro',ic:'ore',col:'#9aa6b8',price:16,desc:'Metal sólido para armas y placas de nivel medio.'},
+  ore_gold:{t:'misc',name:'Mena de oro',ic:'ore',col:'#f4cf5b',price:32,desc:'Precioso metal conductor para joyería y relicarios.'},
+  ore_mithril:{t:'misc',name:'Mineral de mitril',ic:'ore',col:'#60a5fa',price:46,desc:'Metal élfico ultraligero y muy resistente.'},
+  ore_darkiron:{t:'misc',name:'Hierro oscuro profano',ic:'ore',col:'#475569',price:60,desc:'Metal pesado templado en fuegos abisales.'},
+  ore_astral:{t:'misc',name:'Mineral astral estelar',ic:'ore',col:'#38bdf8',price:85,desc:'Mineral cósmico indestructible con energía estelar.'},
+  // Materiales de criaturas y sastrería
+  leather_light:{t:'misc',name:'Cuero ligero',ic:'pelt',col:'#b08050',price:8,desc:'Piel curtida para refuerzos de armadura.'},
+  leather_thick:{t:'misc',name:'Cuero grueso reforzado',ic:'pelt',col:'#805030',price:22,desc:'Piel dura de bestias de alto nivel.'},
+  cloth_linen:{t:'misc',name:'Paño de lino',ic:'silk',col:'#e8e0d0',price:6,desc:'Tela tejida para vendajes y túnicas.'},
+  cloth_silk:{t:'misc',name:'Paño de seda de araña',ic:'silk',col:'#dfe6f0',price:18,desc:'Seda mágica suave y resistente.'},
+  cloth_rune:{t:'misc',name:'Paño rúnico encantado',ic:'silk',col:'#c084fc',price:40,desc:'Tela imbuida de runas de poder arcano.'},
+  essence_fire:{t:'misc',name:'Esencia ígnea pura',ic:'fire',col:'#f97316',price:35,desc:'Energía de fuego elemental concentrada.'},
+  essence_frost:{t:'misc',name:'Esencia de escarcha',ic:'snow',col:'#38bdf8',price:35,desc:'Frío elemental puro cristalizado.'},
+  essence_void:{t:'misc',name:'Esencia del Vacío',ic:'moon',col:'#7c3aed',price:55,desc:'Fragmento de oscuridad primordial cósmica.'},
+  // Botín y misiones clásicos
   tusk:{t:'misc',name:'Colmillo de jabalí',ic:'tusk',col:'#e8dcc0',price:2,quest:true,desc:'Objeto de misión.'},
   sting:{t:'misc',name:'Aguijón de escorpión',ic:'tusk',col:'#c9884a',price:5,quest:true,desc:'Objeto de misión.'},
   pelt:{t:'misc',name:'Piel de lobo',ic:'pelt',col:'#9aa0a8',price:3,desc:'Basura. Se puede vender.'},
@@ -117,30 +161,80 @@ const ITEMS={
   wrap:{t:'misc',name:'Vendaje antiguo',ic:'silk',col:'#d8c9a0',price:12,desc:'Basura. Se puede vender.'},
   fur:{t:'misc',name:'Piel nívea',ic:'pelt',col:'#e6eef7',price:16,desc:'Basura. Se puede vender.'},
   frost:{t:'misc',name:'Corazón helado',ic:'shard',col:'#8fd6ff',price:24,desc:'Basura. Se puede vender.'},
-  ore:{t:'misc',name:'Mineral de hierro',ic:'ore',col:'#9aa6b8',price:14,desc:'Se puede vender.'},
   dragon_scale:{t:'misc',name:'Escama de dragón',ic:'shield',col:'#ff5533',price:60,desc:'Material legendario de dragón.'},
   magma_core:{t:'misc',name:'Núcleo de magma',ic:'fire',col:'#ff7733',price:45,desc:'Piedra viva con calor volcánico.'},
   crystal_gem:{t:'misc',name:'Gema de cristal',ic:'shard',col:'#a855f7',price:35,desc:'Cristal resonante de las cavernas.'},
   titan_ore:{t:'misc',name:'Mineral de titanio',ic:'ore',col:'#38bdf8',price:28,desc:'Metal pesado de las altas cumbres.'},
-  shadow_essence:{t:'misc',name:'Esencia de sombra',ic:'moon',col:'#7c3aed',price:30,desc:'Restos de magia oscura ancestral.'}
+  shadow_essence:{t:'misc',name:'Esencia de sombra',ic:'moon',col:'#7c3aed',price:30,desc:'Restos de magia oscura ancestral.'},
+  // Recetas para aprender
+  rec_hp3:{t:'cons',isRecipe:true,recId:'hp3',name:'Receta: Poción de vida mayor',ic:'map',col:'#e0554a',price:120,desc:'Enseña a elaborar Poción de vida mayor.'},
+  rec_hp4:{t:'cons',isRecipe:true,recId:'hp4',name:'Receta: Poción de vida superior',ic:'map',col:'#e0554a',price:240,desc:'Enseña a elaborar Poción de vida superior.'},
+  rec_hp5:{t:'cons',isRecipe:true,recId:'hp5',name:'Receta: Elixir de Vida Mítica',ic:'map',col:'#ff3344',price:450,desc:'Enseña a elaborar Elixir de Vida Mítica.'},
+  rec_elixir_atk:{t:'cons',isRecipe:true,recId:'elixir_atk',name:'Receta: Elixir de Furia Titánica',ic:'map',col:'#ff5522',price:300,desc:'Enseña a elaborar Elixir de Furia Titánica.'},
+  rec_elixir_armor:{t:'cons',isRecipe:true,recId:'elixir_armor',name:'Receta: Elixir de Piel de Hierro',ic:'map',col:'#7fa0c0',price:260,desc:'Enseña a elaborar Elixir de Piel de Hierro.'},
+  rec_sword_rare:{t:'cons',isRecipe:true,recId:'gear_axe_mithril',name:'Receta: Hacha de Mitril Rúnico',ic:'map',col:'#4aa0ff',price:350,desc:'Enseña a forjar Hacha de Mitril Rúnico.'},
+  rec_chest_epic:{t:'cons',isRecipe:true,recId:'gear_chest_titan',name:'Receta: Coraza de los Titanes',ic:'map',col:'#b868ff',price:750,desc:'Enseña a forjar Coraza de los Titanes.'},
+  rec_neck_astral:{t:'cons',isRecipe:true,recId:'gear_neck_astral',name:'Receta: Collar Astral Estelar',ic:'map',col:'#b868ff',price:850,desc:'Enseña a engarzar Collar Astral Estelar.'},
+  rec_trinket_phoenix:{t:'cons',isRecipe:true,recId:'gear_trinket_phoenix',name:'Receta: Abalorio del Fénix Renacido',ic:'map',col:'#b868ff',price:900,desc:'Enseña a crear Abalorio del Fénix Renacido.'}
 };
+
+/* ---------- Catálogo de Fabricación (Recetas) ---------- */
+const RECIPES={
+  hp1:{id:'hp1',name:'Poción de vida menor',cat:'alch',lvl:1,mat:{herb_peace:2},out:{t:'cons',key:'hp1',n:2},price:10,desc:'Crea 2 pociones de vida menor.'},
+  hp2:{id:'hp2',name:'Poción de vida',cat:'alch',lvl:6,mat:{herb_leaf:2},out:{t:'cons',key:'hp2',n:2},price:30,desc:'Crea 2 pociones de vida.'},
+  hp3:{id:'hp3',name:'Poción de vida mayor',cat:'alch',lvl:14,mat:{herb_frost:2,herb_leaf:1},out:{t:'cons',key:'hp3',n:2},price:80,desc:'Crea 2 pociones de vida mayor.'},
+  hp4:{id:'hp4',name:'Poción de vida superior',cat:'alch',lvl:25,mat:{herb_fire:2,herb_frost:1},out:{t:'cons',key:'hp4',n:2},price:160,desc:'Crea 2 pociones de vida superior.'},
+  hp5:{id:'hp5',name:'Elixir de Vida Mítica',cat:'alch',lvl:40,mat:{herb_astral:2,herb_shadow:2},out:{t:'cons',key:'hp5',n:2},price:300,desc:'Crea 2 elixires de vida mítica (+1400 vida).'},
+  mp1:{id:'mp1',name:'Poción de maná menor',cat:'alch',lvl:1,mat:{herb_peace:1,cloth_linen:1},out:{t:'cons',key:'mp1',n:2},price:10,desc:'Crea 2 pociones de maná menor.'},
+  mp2:{id:'mp2',name:'Poción de maná',cat:'alch',lvl:6,mat:{herb_leaf:1,cloth_silk:1},out:{t:'cons',key:'mp2',n:2},price:30,desc:'Crea 2 pociones de maná.'},
+  mp3:{id:'mp3',name:'Poción de maná mayor',cat:'alch',lvl:14,mat:{herb_frost:1,crystal_gem:1},out:{t:'cons',key:'mp3',n:2},price:80,desc:'Crea 2 pociones de maná mayor.'},
+  mp4:{id:'mp4',name:'Poción de maná superior',cat:'alch',lvl:25,mat:{herb_shadow:2,essence_void:1},out:{t:'cons',key:'mp4',n:2},price:160,desc:'Crea 2 pociones de maná superior.'},
+  mp5:{id:'mp5',name:'Elixir Arcano Supremo',cat:'alch',lvl:40,mat:{herb_astral:2,essence_void:2},out:{t:'cons',key:'mp5',n:2},price:300,desc:'Crea 2 elixires arcanos supremos (+900 maná/recurso).'},
+  elixir_atk:{id:'elixir_atk',name:'Elixir de Furia Titánica',cat:'alch',lvl:28,mat:{herb_fire:3,ore_mithril:2},out:{t:'cons',key:'elixir_atk',n:1},price:200,desc:'Otorga +30% de daño de ataque por 3 min.'},
+  elixir_armor:{id:'elixir_armor',name:'Elixir de Piel de Hierro',cat:'alch',lvl:20,mat:{herb_frost:2,ore_iron:3},out:{t:'cons',key:'elixir_armor',n:1},price:150,desc:'Otorga +40% de armadura por 3 min.'},
+  elixir_spd:{id:'elixir_spd',name:'Poción de Celeridad',cat:'alch',lvl:15,mat:{herb_leaf:2,essence_fire:1},out:{t:'cons',key:'elixir_spd',n:1},price:120,desc:'Otorga +35% de velocidad por 2 min.'},
+  // Herrería
+  gear_sword_iron:{id:'gear_sword_iron',name:'Espada de Hierro Templado',cat:'blacksmith',lvl:8,mat:{ore_iron:5,leather_light:2},slot:'weapon',rar:1,price:50,desc:'Arma cuerpo a cuerpo forjada en hierro.'},
+  gear_axe_mithril:{id:'gear_axe_mithril',name:'Hacha de Mitril Rúnico',cat:'blacksmith',lvl:28,mat:{ore_mithril:6,essence_fire:2},slot:'weapon',rar:2,price:250,desc:'Arma de mitril azul con filo abrasador.'},
+  gear_blade_astral:{id:'gear_blade_astral',name:'Hoja Astral del Infinito',cat:'blacksmith',lvl:52,mat:{ore_astral:8,essence_void:4},slot:'weapon',rar:3,price:750,desc:'Espada legendaria forjada con metal de estrellas.'},
+  gear_chest_plate:{id:'gear_chest_plate',name:'Peto de Acero Reforzado',cat:'blacksmith',lvl:15,mat:{ore_iron:6,leather_thick:3},slot:'chest',rar:1,price:90,desc:'Pechera de alta defensa física.'},
+  gear_chest_titan:{id:'gear_chest_titan',name:'Coraza de los Titanes',cat:'blacksmith',lvl:46,mat:{ore_darkiron:8,titan_ore:4},slot:'chest',rar:3,price:600,desc:'Armadura épica forjada en los hornos de los Titanes.'},
+  gear_shield_aegis:{id:'gear_shield_aegis',name:'Baluarte de la Aurora',cat:'blacksmith',lvl:35,mat:{ore_mithril:5,crystal_gem:3},slot:'shield',rar:2,price:350,desc:'Escudo resplandeciente bendecido por la luz.'},
+  // Joyería y Reliquias
+  gear_neck_ruby:{id:'gear_neck_ruby',name:'Gargantilla de Rubí Arcano',cat:'jewel',lvl:18,mat:{ore_gold:4,essence_fire:2},slot:'necklace',rar:2,price:180,desc:'Collar con rubí que otorga poder ofensivo.'},
+  gear_neck_astral:{id:'gear_neck_astral',name:'Collar Astral Estelar',cat:'jewel',lvl:54,mat:{ore_astral:6,herb_astral:4},slot:'necklace',rar:3,price:680,desc:'Collar épico cargado de fuerza estelar.'},
+  gear_ring_shadow:{id:'gear_ring_shadow',name:'Sortija del Ocaso',cat:'jewel',lvl:32,mat:{ore_mithril:4,shadow_essence:3},slot:'ring',rar:2,price:280,desc:'Anillo oscuro que potencia el golpe crítico.'},
+  gear_ring_cosmic:{id:'gear_ring_cosmic',name:'Anillo Cósmico de Astra',cat:'jewel',lvl:58,mat:{ore_astral:8,crystal_gem:6},slot:'ring',rar:4,price:1100,desc:'Anillo legendario forjado en la Falla Astral.'},
+  gear_amulet_sun:{id:'gear_amulet_sun',name:'Amuleto Solar Sagrado',cat:'jewel',lvl:22,mat:{ore_gold:5,herb_leaf:3},slot:'amulet',rar:2,price:220,desc:'Amuleto bendecido que protege y da vida.'},
+  gear_amulet_void:{id:'gear_amulet_void',name:'Amuleto del Vacío Primordial',cat:'jewel',lvl:48,mat:{ore_darkiron:6,essence_void:4},slot:'amulet',rar:3,price:550,desc:'Amuleto que absorbe daño y aumenta crítico.'},
+  gear_relic_light:{id:'gear_relic_light',name:'Reliquia de la Primera Luz',cat:'jewel',lvl:26,mat:{ore_gold:4,crystal_gem:3},slot:'relic',rar:2,price:260,desc:'Reliquia sagrada que incrementa poder y vida.'},
+  gear_relic_death:{id:'gear_relic_death',name:'Reliquia de las Criptas',cat:'jewel',lvl:44,mat:{ore_darkiron:6,shard:10},slot:'relic',rar:3,price:520,desc:'Reliquia de hueso y hierro oscuro con poder nigromántico.'},
+  gear_trinket_haste:{id:'gear_trinket_haste',name:'Abalorio de Celeridad Épica',cat:'jewel',lvl:34,mat:{ore_mithril:5,herb_frost:4},slot:'trinket1',rar:2,price:340,desc:'Abalorio que aumenta la velocidad y el crítico.'},
+  gear_trinket_phoenix:{id:'gear_trinket_phoenix',name:'Abalorio del Fénix Renacido',cat:'jewel',lvl:55,mat:{magma_core:5,dragon_scale:4},slot:'trinket2',rar:3,price:850,desc:'Abalorio legendario con el fuego del Fénix.'}
+};
+
 function genItem(ilvl,rar,slot,cls){
   slot=slot||pick(SLOTS);
   const base=slot==='weapon'?pick(BASES.weapon[cls]||BASES.weapon.war):pick(BASES[slot]||BASES.chest);
-  const bud=ilvl*(1+rar*0.45)+2;
+  const bud=ilvl*(1+rar*0.48)+2;
   const it={t:'gear',id:uid(),name:base+' '+pick(SUFFIX[rar]||SUFFIX[0]),slot:slot,rar:rar,lvl:Math.max(1,ilvl),atk:0,armor:0,hp:0,crit:0};
-  if(slot==='weapon'){it.atk=Math.round(bud*1.15+2)}
-  else if(slot==='shield'){it.armor=Math.round(bud*2.8+2);it.hp=Math.round(bud*rar*1.8)}
-  else if(slot==='ring'||slot==='amulet'||slot==='cape'||slot==='gloves'){
-    it.atk=Math.round(bud*(0.25+rar*0.12));
+  if(slot==='weapon'){it.atk=Math.round(bud*1.2+3)}
+  else if(slot==='shield'){it.armor=Math.round(bud*2.9+3);it.hp=Math.round(bud*rar*2.0)}
+  else if(slot==='necklace'||slot==='amulet'||slot==='ring'||slot==='relic'||slot==='trinket1'||slot==='trinket2'){
+    it.atk=Math.round(bud*(0.35+rar*0.15));
+    it.hp=Math.round(bud*(0.8+rar*1.2));
+    if(slot==='relic'||slot==='amulet')it.armor=Math.round(bud*0.6);
+    if(rar>=1)it.crit=+(rar*1.1+Math.random()*0.8).toFixed(1);
+  }else if(slot==='gloves'||slot==='cape'){
+    it.atk=Math.round(bud*(0.22+rar*0.12));
     it.hp=Math.round(bud*rar*1.4);
-    if(slot==='gloves'||slot==='cape')it.armor=Math.round(bud*0.9);
+    it.armor=Math.round(bud*1.0);
   }else{
-    it.armor=Math.round(bud*(slot==='chest'?2.6:slot==='head'||slot==='legs'?2.1:1.6)+1);
-    it.hp=Math.round(bud*rar*1.6);
+    it.armor=Math.round(bud*(slot==='chest'?2.7:slot==='head'||slot==='legs'?2.2:1.7)+1);
+    it.hp=Math.round(bud*rar*1.8);
     if(rar>=1)it.atk=Math.round(bud*0.18*rar);
   }
-  if(rar>=2)it.crit=+(rar*0.8+Math.random()).toFixed(1);
+  if(rar>=2&&!it.crit)it.crit=+(rar*0.9+Math.random()).toFixed(1);
   it.price=Math.round((it.atk*3+it.armor*1.5+it.hp*0.8+it.crit*10)*0.8+4);
   return it;
 }
@@ -151,15 +245,19 @@ function namedGear(ilvl,rar,slot,cls,name,boost){
 }
 function bossLoot(kind,cls){
   if(kind==='boss'){
-    const wn={war:'Hoja Parte-Rocas',mage:'Bastón de la Brasa Eterna',priest:'Cetro del Amanecer',paladin:'Martillo de la Llama Primera',rogue:'Colmillo de Sombra',hunter:'Arco del Cazador de Estrellas',necro:'Vara de Huesos Cantores',druid:'Cayado de la Raíz Antigua'}[cls]||'Reliquia de Gorrak';
+    const wn={war:'Hoja Parte-Rocas',mage:'Bastón de la Brasa Eterna',priest:'Cetro del Amanecer',paladin:'Martillo de la Llama Primera',rogue:'Colmillo de Sombra',hunter:'Arco del Cazador de Estrellas',necro:'Vara de Huesos Cantores',druid:'Cayado de la Raíz Antigua',dk:'Hoja Rúnica de Gorrak',shaman:'Maza de la Roca Telúrica'}[cls]||'Reliquia de Gorrak';
     return [namedGear(11,3,'weapon',cls,wn,1.1),namedGear(11,3,'chest',cls,'Coraza de Gorrak',1.1)];
   }
   if(kind==='ignis'){
-    const wn={war:'Espada Volcánica de Ignis',mage:'Báculo de la Llama Primigenia',priest:'Cetro del Fénix Sagrado',paladin:'Martillo Devastador Solar',rogue:'Daga de Obsidiana Ígnea',hunter:'Arco de Fuego Dragónico',necro:'Vara del Apocalipsis Ardiente',druid:'Cayado de Magma Vivo'}[cls]||'Reliquia de Ignis';
-    return [namedGear(21,4,'weapon',cls,wn,1.25),namedGear(21,4,'chest',cls,'Armadura de Placas de Dragón',1.2),namedGear(21,4,'cape',cls,'Manto Llameante de Ignis',1.2)];
+    const wn={war:'Espada Volcánica de Ignis',mage:'Báculo de la Llama Primigenia',priest:'Cetro del Fénix Sagrado',paladin:'Martillo Devastador Solar',rogue:'Daga de Obsidiana Ígnea',hunter:'Arco de Fuego Dragónico',necro:'Vara del Apocalipsis Ardiente',druid:'Cayado de Magma Vivo',dk:'Mandoble Devastador de Ignis',shaman:'Hacha de Tormenta Ígnea'}[cls]||'Reliquia de Ignis';
+    return [namedGear(25,4,'weapon',cls,wn,1.25),namedGear(25,4,'chest',cls,'Armadura de Placas de Dragón',1.2),namedGear(25,4,'relic',cls,'Reliquia del Fénix de Ignis',1.2)];
   }
-  const wn={war:'Filo de la Tormenta Blanca',mage:'Cetro de la Reina Escarcha',priest:'Vara del Invierno Eterno',paladin:'Martillo del Amanecer Gélido',rogue:'Daga del Último Aliento',hunter:'Arco del Viento Blanco',necro:'Cetro del Silencio',druid:'Cayado del Deshielo'}[cls]||'Reliquia de Escarcha';
-  return [namedGear(21,3,'weapon',cls,wn,1.12),namedGear(21,3,'head',cls,'Corona de Escarcha',1.1),namedGear(21,3,'boots',cls,'Botas del Viento Glacial',1.1)];
+  if(kind==='malakor'){
+    const wn={war:'Filo del Cataclismo Eterno',mage:'Báculo de la Mente Cósmica',priest:'Cetro de la Resurrección Pura',paladin:'Martillo de los Titanes Sagrados',rogue:'Daga del Segador Silencioso',hunter:'Arco Estelar del Vacío',necro:'Vara del Juicio de Almas',druid:'Cayado de las Estrellas Vivas',dk:'Agonía de Escarcha Rúnica',shaman:'Maza de las Cuatro Tempestades'}[cls]||'Reliquia de Malakor';
+    return [namedGear(60,4,'weapon',cls,wn,1.35),namedGear(60,4,'chest',cls,'Armadura Mítica de Astra',1.3),namedGear(60,4,'relic',cls,'Reliquia Suprema del Rey Exánime',1.3),namedGear(60,4,'trinket1',cls,'Abalorio del Dominio Cósmico',1.3)];
+  }
+  const wn={war:'Filo de la Tormenta Blanca',mage:'Cetro de la Reina Escarcha',priest:'Vara del Invierno Eterno',paladin:'Martillo del Amanecer Gélido',rogue:'Daga del Último Aliento',hunter:'Arco del Viento Blanco',necro:'Cetro del Silencio',druid:'Cayado del Deshielo',dk:'Espada de Hielo Quebrado',shaman:'Martillo de Escarcha Marina'}[cls]||'Reliquia de Escarcha';
+  return [namedGear(30,3,'weapon',cls,wn,1.15),namedGear(30,3,'head',cls,'Corona de Escarcha',1.1),namedGear(30,3,'boots',cls,'Botas del Viento Glacial',1.1)];
 }
 
 /* ---------- Enemigos ---------- */
@@ -191,18 +289,29 @@ const MOBS={
   golem:{name:'Gólem de Escarcha',lv:[18,20],speed:62,aggro:140,size:24,hpM:2.6,dmgM:1.8,atkCd:2.8,kind:'golem',look:{body:'#8fc4e0',dark:'#4f86ac',eye:'#c8f4ff'},junk:'frost'},
   yetik:{name:'Brutus, Rey de las Nieves',lv:[19,19],speed:88,aggro:210,size:28,hpM:4,dmgM:1.9,atkCd:2.1,kind:'human',scale:2.2,look:{body:'#cde0f0',trim:'#8fb0d0',legs:'#b0c8dc',weapon:'club',skin:'#b0d0e8',hair:'#ffffff',hairStyle:2,eye:'#ff5a3a',fur:1},elite:true,rare:true,junk:'fur'},
   fskel:{name:'Guardián Helado',lv:[19,20],speed:88,aggro:180,size:14,hpM:1.3,dmgM:1.4,atkCd:2,kind:'human',look:{body:'#9ac8e8',trim:'#d8f2ff',legs:'#7fb0d0',weapon:'sword',blade:'#bfe8ff',skin:'#d8f2ff',hair:null,hairStyle:3,eye:'#3ae0ff',skel:1},junk:'frost'},
-  queen:{name:'Reina Escarcha',lv:[20,20],speed:80,aggro:240,size:28,hpM:14,dmgM:2.4,atkCd:2.2,kind:'human',scale:2.3,ranged:false,look:{body:'#5a8fc8',trim:'#d8f2ff',legs:'#3a5f98',weapon:'staff',orb:'#9fe8ff',skin:'#cfe8f8',hair:'#f4fbff',hairStyle:2,hat:'#bfe8ff',hatType:'crown',eye:'#3ae0ff',cape:'#2f5a9a',pads:'#bfe8ff'},elite:true,boss:true},
+  queen:{name:'Reina Escarcha',lv:[25,25],speed:80,aggro:240,size:28,hpM:14,dmgM:2.4,atkCd:2.2,kind:'human',scale:2.3,ranged:false,look:{body:'#5a8fc8',trim:'#d8f2ff',legs:'#3a5f98',weapon:'staff',orb:'#9fe8ff',skin:'#cfe8f8',hair:'#f4fbff',hairStyle:2,hat:'#bfe8ff',hatType:'crown',eye:'#3ae0ff',cape:'#2f5a9a',pads:'#bfe8ff'},elite:true,boss:true},
   abyss_stalker:{name:'Acechador Abisal',lv:[12,14],speed:92,aggro:180,size:14,hpM:1.3,dmgM:1.2,atkCd:1.8,kind:'arach',look:{body:'#241830',dark:'#120a18',eye:'#a030ff'},junk:'shard'},
   abyss_gargoyle:{name:'Gárgola Pétrea',lv:[13,15],speed:85,aggro:190,size:17,hpM:1.6,dmgM:1.4,atkCd:2.0,kind:'quad',look:{body:'#55505c',dark:'#322e38',eye:'#ff5040'},junk:'ore'},
-  abyss_boss:{name:'Malok, Tirano del Abismo',lv:[15,15],speed:82,aggro:240,size:32,hpM:13,dmgM:2.3,atkCd:2.1,kind:'human',scale:2.5,look:{body:'#1f152b',trim:'#a040ff',legs:'#120c1c',weapon:'sword',blade:'#c080ff',skin:'#705088',hat:'#2a183d',hatType:'horns',eye:'#c030ff',pads:'#603099',cape:'#3a1050'},elite:true,boss:true},
+  abyss_boss:{name:'Malok, Tirano del Abismo',lv:[22,22],speed:82,aggro:240,size:32,hpM:13,dmgM:2.3,atkCd:2.1,kind:'human',scale:2.5,look:{body:'#1f152b',trim:'#a040ff',legs:'#120c1c',weapon:'sword',blade:'#c080ff',skin:'#705088',hat:'#2a183d',hatType:'horns',eye:'#c030ff',pads:'#603099',cape:'#3a1050'},elite:true,boss:true},
   mountain_drake:{name:'Draco de las Cumbres',lv:[16,18],speed:102,aggro:210,size:22,hpM:2.2,dmgM:1.6,atkCd:1.9,kind:'quad',look:{body:'#304a60',dark:'#1a2d3c',eye:'#ffaa20',ears:1},elite:true,junk:'shard'},
   crystal_spider:{name:'Araña de Cristal',lv:[12,14],speed:86,aggro:160,size:13,hpM:1.2,dmgM:1.2,atkCd:1.8,kind:'arach',look:{body:'#5b328a',dark:'#371d58',eye:'#c084fc'},drops:{crystal_gem:0.6}},
   shadow_stalker:{name:'Acechador Sombrío',lv:[14,16],speed:94,aggro:190,size:15,hpM:1.4,dmgM:1.3,atkCd:1.8,kind:'arach',look:{body:'#1e1b4b',dark:'#0f172a',eye:'#a855f7'},drops:{shadow_essence:0.55}},
-  wyvern:{name:'Wyvern de los Picos',lv:[16,18],speed:106,aggro:220,size:24,hpM:2.5,dmgM:1.7,atkCd:1.8,kind:'quad',look:{body:'#334155',dark:'#1e293b',eye:'#38bdf8',ears:1},drops:{titan_ore:0.5}},
-  magma_golem:{name:'Gólem de Magma',lv:[18,20],speed:68,aggro:160,size:26,hpM:3.0,dmgM:1.9,atkCd:2.4,kind:'golem',look:{body:'#7c2d12',dark:'#431407',eye:'#f97316'},drops:{magma_core:0.6}},
-  fire_elemental:{name:'Elemental Ígneo',lv:[18,20],speed:92,aggro:200,size:18,hpM:1.8,dmgM:1.8,atkCd:1.7,kind:'human',scale:1.4,look:{body:'#ea580c',trim:'#fbbf24',legs:'#9a3412',weapon:'staff',orb:'#f97316',skin:'#fdba74',eye:'#facc15'},drops:{magma_core:0.5}},
+  wyvern:{name:'Wyvern de los Picos',lv:[20,24],speed:106,aggro:220,size:24,hpM:2.5,dmgM:1.7,atkCd:1.8,kind:'quad',look:{body:'#334155',dark:'#1e293b',eye:'#38bdf8',ears:1},drops:{titan_ore:0.5}},
+  magma_golem:{name:'Gólem de Magma',lv:[28,32],speed:68,aggro:160,size:26,hpM:3.0,dmgM:1.9,atkCd:2.4,kind:'golem',look:{body:'#7c2d12',dark:'#431407',eye:'#f97316'},drops:{magma_core:0.6}},
+  fire_elemental:{name:'Elemental Ígneo',lv:[28,32],speed:92,aggro:200,size:18,hpM:1.8,dmgM:1.8,atkCd:1.7,kind:'human',scale:1.4,look:{body:'#ea580c',trim:'#fbbf24',legs:'#9a3412',weapon:'staff',orb:'#f97316',skin:'#fdba74',eye:'#facc15'},drops:{magma_core:0.5}},
   bandit_warlord:{name:'Lord Malakor el Tirano',lv:[15,15],speed:90,aggro:230,size:26,hpM:12,dmgM:2.2,atkCd:2.0,kind:'human',scale:2.2,look:{body:'#1c1917',trim:'#eab308',legs:'#292524',hat:'#44403c',hatType:'helm',weapon:'axe',blade:'#f59e0b',skin:'#a8a29e',pads:'#eab308',cape:'#7f1d1d'},elite:true,boss:true},
-  dragon_ignis:{name:'Ignis, Dragón Ancestral',lv:[20,20],speed:88,aggro:260,size:36,hpM:20,dmgM:2.8,atkCd:2.0,kind:'quad',scale:3.2,look:{body:'#991b1b',dark:'#450a0a',eye:'#fef08a',snout:1,ears:1},elite:true,boss:true,drops:{dragon_scale:1.0}}
+  dragon_ignis:{name:'Ignis, Dragón Ancestral',lv:[35,35],speed:88,aggro:260,size:36,hpM:20,dmgM:2.8,atkCd:2.0,kind:'quad',scale:3.2,look:{body:'#991b1b',dark:'#450a0a',eye:'#fef08a',snout:1,ears:1},elite:true,boss:true,drops:{dragon_scale:1.0}},
+  // Enemigos de Alto Nivel (Niveles 22 a 60)
+  ghoul:{name:'Gul Devorador',lv:[22,25],speed:95,aggro:180,size:13,hpM:1.3,dmgM:1.4,atkCd:1.7,kind:'human',look:{body:'#3a4030',trim:'#607040',legs:'#202418',weapon:'dagger',skin:'#708060',eye:'#a3e635'},junk:'shard'},
+  crypt_fiend:{name:'Criptorrácnido Profanador',lv:[26,30],speed:88,aggro:190,size:18,hpM:1.6,dmgM:1.5,atkCd:1.8,kind:'arach',look:{body:'#1c1917',dark:'#0c0a09',eye:'#00f0ff'},drops:{shadow_essence:0.6}},
+  death_knight_foe:{name:'Caballero Maldito de la Plaga',lv:[31,35],speed:92,aggro:210,size:15,hpM:1.9,dmgM:1.7,atkCd:1.8,kind:'human',look:{body:'#0f172a',trim:'#38bdf8',legs:'#020617',weapon:'sword',blade:'#00f0ff',hat:'#0f172a',hatType:'helm',skin:'#94a3b8',eye:'#38bdf8',pads:'#1e293b',cape:'#0284c7'},drops:{cloth_rune:0.6}},
+  shadow_wraith:{name:'Espectro del Ocaso',lv:[36,40],speed:100,aggro:200,size:14,hpM:1.7,dmgM:1.8,atkCd:1.6,kind:'human',look:{body:'#1e1b4b',trim:'#a855f7',legs:'#0f172a',weapon:'staff',orb:'#c084fc',skin:'#6b21a8',eye:'#e879f9'},drops:{essence_void:0.6}},
+  obsidian_destroyer:{name:'Destructor de Obsidiana',lv:[41,45],speed:80,aggro:220,size:28,hpM:2.8,dmgM:2.2,atkCd:2.0,kind:'golem',look:{body:'#18181b',dark:'#09090b',eye:'#a855f7'},drops:{titan_ore:0.7}},
+  storm_elemental:{name:'Señor de las Tormentas',lv:[46,50],speed:98,aggro:230,size:22,hpM:2.5,dmgM:2.4,atkCd:1.7,kind:'human',scale:1.8,look:{body:'#0284c7',trim:'#e0f2fe',legs:'#0369a1',weapon:'staff',orb:'#38bdf8',skin:'#7dd3fc',eye:'#f0fdf4'},drops:{essence_fire:0.6,essence_frost:0.6}},
+  void_reaver:{name:'Atracador del Vacío',lv:[51,55],speed:96,aggro:240,size:26,hpM:3.2,dmgM:2.6,atkCd:1.8,kind:'human',scale:2.0,look:{body:'#3b0764',trim:'#d8b4fe',legs:'#1e1b4b',weapon:'sword',blade:'#a855f7',skin:'#581c87',eye:'#c084fc',pads:'#7e22ce'},drops:{essence_void:0.8}},
+  titan_colossus:{name:'Coloso Forjado de los Titanes',lv:[55,55],speed:75,aggro:260,size:34,hpM:22,dmgM:3.2,atkCd:2.1,kind:'golem',scale:3.0,look:{body:'#334155',dark:'#0f172a',eye:'#f59e0b'},elite:true,boss:true,drops:{titan_ore:1.0}},
+  void_horror:{name:'Terror del Vacío Infinito',lv:[58,58],speed:90,aggro:270,size:36,hpM:25,dmgM:3.5,atkCd:1.9,kind:'arach',scale:3.2,look:{body:'#180e29',dark:'#090412',eye:'#ec4899'},elite:true,boss:true,drops:{essence_void:1.0}},
+  lich_malakor:{name:'Rey Exánime Malakor',lv:[60,60],speed:85,aggro:280,size:32,hpM:35,dmgM:4.0,atkCd:1.8,kind:'human',scale:2.8,look:{body:'#020617',trim:'#38bdf8',legs:'#0f172a',weapon:'sword',blade:'#00f0ff',hat:'#020617',hatType:'crown',skin:'#cbd5e1',eye:'#00f0ff',pads:'#1e293b',cape:'#0369a1'},elite:true,boss:true,drops:{dragon_scale:1.0}}
 };
 
 /* ---------- Misiones ---------- */
@@ -278,11 +387,43 @@ const QUESTS={
   q18:{title:'El Despertar de Ignis',giver:'vane',lvl:20,pre:'q17',
     text:'En la Caldera de Ignis, al sureste, el Dragón Ancestral ha despertado y amenaza con consumir Astra en fuego. Reúne todo tu poder y abate a Ignis.',
     done:'¡LO HAS LOGRADO! ¡El Dragón Ancestral ha caído y Astra entra en una era de paz y gloria legendaria!',
-    obj:{kill:['dragon_ignis'],n:1,label:'Ignis, Dragón Ancestral abatido'},xp:12000,gold:1500,item:{slot:'weapon',rar:4,lvl:20}}
+    obj:{kill:['dragon_ignis'],n:1,label:'Ignis, Dragón Ancestral abatido'},xp:12000,gold:1500,item:{slot:'weapon',rar:4,lvl:20}},
+  q19:{title:'La Amenaza de la Necrópolis',giver:'vane',lvl:22,pre:'q18',
+    text:'Una densa niebla profana emana de la Necrópolis Maldita al norte. Se dice que los gules devoradores atacan los puestos de avanzada. Abate a ocho gules.',
+    done:'Bien hecho. Has frenado el avance de la carroña. Toma esta recompensa para tus viajes.',
+    obj:{kill:['ghoul'],n:8,label:'Gules devoradores abatidos'},xp:14000,gold:600,item:{slot:'necklace',rar:2,lvl:23}},
+  q20:{title:'Plaga en las Criptas',giver:'elara',lvl:26,pre:'q19',
+    text:'Los criptorrácnidos han invadido los mausoleos de la Necrópolis tejiendo redes de ponzoña oscura. Elimina a seis de estas aberraciones.',
+    done:'Las criptas descansan en paz temporalmente. Te entrego esta reliquia sagrada de protección.',
+    obj:{kill:['crypt_fiend'],n:6,label:'Criptorrácnidos abatidos'},xp:18000,gold:800,item:{slot:'relic',rar:2,lvl:27}},
+  q21:{title:'Caballeros de la Muerte',giver:'vane',lvl:31,pre:'q20',
+    text:'Antiguos paladines caídos cabalgan como Caballeros Malditos al servicio de la Plaga. Detén a cinco de ellos antes de que marchen sobre la capital.',
+    done:'Has liberado sus almas atormentadas. Toma esta sortija forjada para campeones.',
+    obj:{kill:['death_knight_foe'],n:5,label:'Caballeros Malditos derrotados'},xp:24000,gold:1100,item:{slot:'ring',rar:3,lvl:32}},
+  q22:{title:'Sombras del Ocaso',giver:'lyra',lvl:36,pre:'q21',
+    text:'En las Tierras del Ocaso, espectros etéreos devoran la energía vital de los viajeros. Purifica a ocho espectros sombríos.',
+    done:'El éter vuelve a calmarse. Acepta este abalorio de gran celeridad.',
+    obj:{kill:['shadow_wraith'],n:8,label:'Espectros sombríos purificados'},xp:32000,gold:1400,item:{slot:'trinket1',rar:3,lvl:37}},
+  q23:{title:'Ira de las Tormentas',giver:'vane',lvl:45,pre:'q22',
+    text:'En las altas cumbres, los Señores de las Tormentas desatan relámpagos devastadores que parten la roca. Derriba a seis de ellos.',
+    done:'Los vientos se rinden ante tu poder. Toma este amuleto forjado con energía de rayo.',
+    obj:{kill:['storm_elemental'],n:6,label:'Señores de la Tormenta abatidos'},xp:45000,gold:2000,item:{slot:'amulet',rar:3,lvl:46}},
+  q24:{title:'El Coloso Forjado',giver:'vane',lvl:52,pre:'q23',
+    text:'En los Picos de los Titanes, un coloso mecánico forjado por los dioses primigenios ha despertado descontrolado. Destrúyelo.',
+    done:'¡Hazaña titánica! Pocos héroes en la historia han derrotado a tal constructo. Viste esta coraza épica.',
+    obj:{kill:['titan_colossus'],n:1,label:'Coloso Forjado de los Titanes destruido'},xp:60000,gold:3000,item:{slot:'chest',rar:4,lvl:53}},
+  q25:{title:'Terror del Vacío Infinito',giver:'lyra',lvl:56,pre:'q24',
+    text:'La Falla Astral se está desgarrando y una entidad cósmica de tentáculos estelares intenta devorar nuestra realidad. Desciende a la falla y abátela.',
+    done:'Has salvado a Astra del colapso cósmico. Tu nombre será inmortal entre las estrellas.',
+    obj:{kill:['void_horror'],n:1,label:'Terror del Vacío Infinito derrotado'},xp:80000,gold:4000,item:{slot:'trinket2',rar:4,lvl:57}},
+  q26:{title:'El Juicio de Malakor',giver:'vane',lvl:60,pre:'q25',
+    text:'Malakor, Rey Exánime de la Plaga Helada, aguarda en el corazón de la Necrópolis para someter a toda Astra. Reúne tu máximo poder y pon fin a su reinado para siempre.',
+    done:'¡¡VICTORIA ABSOLUTA!! ¡El Rey Exánime ha sido derrotado y eres coronado Campeón Supremo de Chronicles of Astra!',
+    obj:{kill:['lich_malakor'],n:1,label:'Rey Exánime Malakor destruido'},xp:150000,gold:8000,item:{slot:'weapon',rar:4,lvl:60}}
 };
 
 /* ---------- Mundo ---------- */
-const T={GRASS:0,FOREST:1,PATH:2,COBBLE:3,WATER:4,SAND:5,CAVE:6,HILL:7,WALL:8,SWAMP:9,DUNE:10,SNOW:11,ICE:12,BRIDGE:13,BOG:14};
+const T={GRASS:0,FOREST:1,PATH:2,COBBLE:3,WATER:4,SAND:5,CAVE:6,HILL:7,WALL:8,SWAMP:9,DUNE:10,SNOW:11,ICE:12,BRIDGE:13,BOG:14,CORRUPT:15,LAVA:16,ASTRAL:17,RUINS:18};
 const D={OAK:1,PINE:2,ROCK:3,DEAD:4,CACTUS:5,SNOWPINE:6,CRYSTAL:7,BOULDER:8,PALM:9,FLOWER:20,TUFT:21,STONES:22,MUSH:23,REEDS:24,BONES:25,SNOWMOUND:26,LILY:27,SWAMPGRASS:28,SHRUB:29,FERN:30};
 const Z=[
   {id:'meadow',name:'Prados de Alba',lv:'Niveles 1 – 4',tile:T.GRASS},
@@ -294,15 +435,19 @@ const Z=[
   {id:'snow',name:'Cumbres Heladas',lv:'Niveles 16 – 20',tile:T.SNOW},
   {id:'town',name:'Villa Alba',lv:'Zona segura',safe:true},
   {id:'capital',name:'Gran Ciudad de Astra',lv:'Capital Imperial · Zona segura',safe:true},
-  {id:'peaks',name:'Cordillera de los Titanes',lv:'Niveles 15 – 18',tile:T.HILL},
+  {id:'peaks',name:'Cordillera de los Titanes',lv:'Niveles 15 – 22',tile:T.HILL},
   {id:'deepcave',name:'Gruta de Cristal Profundo',lv:'Niveles 12 – 16'},
-  {id:'volcano',name:'Caldera de Ignis',lv:'Niveles 19 – 20',tile:T.DUNE},
+  {id:'volcano',name:'Caldera de Ignis',lv:'Niveles 25 – 35',tile:T.DUNE},
   {id:'bastion',name:'Bastión de Piedra',lv:'Zona segura',safe:true},
   {id:'cieno',name:'Aldea Cieno',lv:'Zona segura',safe:true},
   {id:'oasis',name:'Oasis Sol',lv:'Zona segura',safe:true},
   {id:'cumbre',name:'Campamento Cumbre',lv:'Zona segura',safe:true},
   {id:'abyss',name:'Cavernas del Abismo',lv:'Niveles 12 – 15'},
-  {id:'palace',name:'Palacio de Escarcha',lv:'Niveles 19 – 20'}
+  {id:'palace',name:'Palacio de Escarcha',lv:'Niveles 22 – 30'},
+  {id:'necropolis',name:'Necrópolis Maldita',lv:'Niveles 25 – 38',tile:T.CORRUPT},
+  {id:'shadowlands',name:'Tierras del Ocaso',lv:'Niveles 35 – 48',tile:T.FOREST},
+  {id:'titanpeaks',name:'Picos de los Titanes',lv:'Niveles 48 – 55',tile:T.HILL},
+  {id:'astralvoid',name:'Falla Astral del Vacío',lv:'Niveles 55 – 60',tile:T.ASTRAL}
 ];
 const ZI={};Z.forEach((z,i)=>{ZI[z.id]=i});
 const AREAS={
@@ -316,7 +461,11 @@ const AREAS={
   deepcave:{x:18,y:8,w:24,h:22},
   abyss:{x:54,y:8,w:22,h:20},
   palace:{x:172,y:4,w:24,h:22},
-  volcano:{x:166,y:82,w:26,h:24}
+  volcano:{x:166,y:82,w:26,h:24},
+  necropolis:{x:60,y:2,w:26,h:20},
+  shadowlands:{x:120,y:122,w:28,h:22},
+  titanpeaks:{x:168,y:30,w:26,h:20},
+  astralvoid:{x:14,y:26,w:24,h:20}
 };
 const WAYPOINTS=[
   {id:'town',name:'Villa Alba',tx:40,ty:76,gx:40,gy:78},
@@ -324,9 +473,15 @@ const WAYPOINTS=[
   {id:'bastion',name:'Bastión de Piedra',tx:88,ty:26,gx:88,gy:28},
   {id:'cieno',name:'Aldea Cieno',tx:36,ty:131,gx:36,gy:133},
   {id:'oasis',name:'Oasis Sol',tx:160,ty:123,gx:160,gy:125},
-  {id:'cumbre',name:'Campamento Cumbre',tx:156,ty:40,gx:156,gy:42}
+  {id:'cumbre',name:'Campamento Cumbre',tx:156,ty:40,gx:156,gy:42},
+  {id:'volcano',name:'Caldera de Ignis',tx:179,ty:94,gx:179,gy:96},
+  {id:'necropolis',name:'Necrópolis Maldita',tx:72,ty:12,gx:72,gy:14},
+  {id:'palace',name:'Palacio de Escarcha',tx:184,ty:14,gx:184,gy:16},
+  {id:'titanpeaks',name:'Picos de los Titanes',tx:180,ty:40,gx:180,gy:42},
+  {id:'astralvoid',name:'Falla Astral del Vacío',tx:26,ty:36,gx:26,gy:38}
 ];
 const BOSS1={x:122*TILE+16,y:15*TILE+16},BOSS2={x:190*TILE+16,y:15*TILE+16},BOSS3={x:65*TILE+16,y:18*TILE+16},BOSS_DRAGON={x:179*TILE+16,y:94*TILE+16};
+const BOSS_MALAKOR={x:73*TILE+16,y:13*TILE+16},BOSS_TITAN={x:181*TILE+16,y:41*TILE+16},BOSS_VOID={x:26*TILE+16,y:37*TILE+16};
 const SPAWN_P={x:43*TILE+16,y:77*TILE+16};
 const tiles=new Uint8Array(W*H),block=new Uint8Array(W*H),deco=new Uint8Array(W*H),shade=new Uint8Array(W*H),zmap=new Uint8Array(W*H);
 const shore=new Uint8Array(W*H),wdepth=new Uint8Array(W*H),pathNear=new Uint8Array(W*H),keep=new Uint8Array(W*H);
@@ -427,11 +582,11 @@ function genWorld(){
     const i=idx(x,y),z=biomeBase(x,y);
     zmap[i]=z;tiles[i]=Z[z].tile;shade[i]=Math.floor(hash2(x,y)*4);
   }
-  for(const id of ['town','capital','cieno','oasis','cumbre','bastion']){
+  for(const id of ['town','capital','cieno','oasis','cumbre','bastion','necropolis','shadowlands','titanpeaks','astralvoid']){
     const r=AREAS[id];
     for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++){
       const i=idx(x,y);zmap[i]=ZI[id];
-      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:T.SNOW;
+      tiles[i]=(id==='town'||id==='capital'||id==='bastion')?T.GRASS:id==='cieno'?T.SWAMP:id==='oasis'?T.DUNE:id==='cumbre'?T.SNOW:id==='necropolis'||id==='shadowlands'?T.CORRUPT:id==='astralvoid'?T.ASTRAL:T.HILL;
     }
   }
   lake(62,104,12,6.5,T.WATER,T.SAND);lake(116,78,6,4.5,T.WATER,T.SAND);lake(20,24,5,3.5,T.WATER,T.SAND);
@@ -448,6 +603,15 @@ function genWorld(){
   dungeon(AREAS.abyss,T.CAVE,ZI.abyss,18);
   dungeon(AREAS.deepcave,T.CAVE,ZI.deepcave,18);
   dungeon(AREAS.volcano,T.DUNE,ZI.volcano,94);
+  dungeon(AREAS.necropolis,T.CORRUPT,ZI.necropolis,12);
+  dungeon(AREAS.shadowlands,T.CORRUPT,ZI.shadowlands,132);
+  dungeon(AREAS.titanpeaks,T.HILL,ZI.titanpeaks,40);
+  dungeon(AREAS.astralvoid,T.ASTRAL,ZI.astralvoid,36);
+  addProp('obelisk',72,12,true,{wp:'necropolis'});
+  addProp('obelisk',184,14,true,{wp:'palace'});
+  addProp('obelisk',180,40,true,{wp:'titanpeaks'});
+  addProp('obelisk',26,36,true,{wp:'astralvoid'});
+  addProp('obelisk',179,94,true,{wp:'volcano'});
   carve([[43,74],[60,74],[76,73],[90,71],[100,70],[112,70],[126,67],[138,62]],1.7);
   carve([[100,70],[102,86],[112,98],[128,106],[144,116],[152,124],[160,126]],1.4);
   carve([[112,70],[112,52],[110,36],[106,24],[103,15],[107,15]],1.4);
@@ -613,7 +777,7 @@ function genWorld(){
     acc[z].x+=x;acc[z].y+=y;acc[z].n++;
   }
   for(const k in acc)ZCENTER[k]={x:acc[k].x/acc[k].n,y:acc[k].y/acc[k].n};
-  const goodTile=t=>t===T.GRASS||t===T.FOREST||t===T.HILL||t===T.SWAMP||t===T.DUNE||t===T.SNOW||t===T.CAVE||t===T.ICE;
+  const goodTile=t=>t===T.GRASS||t===T.FOREST||t===T.HILL||t===T.SWAMP||t===T.DUNE||t===T.SNOW||t===T.CAVE||t===T.ICE||t===T.CORRUPT||t===T.ASTRAL;
   function nodeSpot(zid){
     for(let k=0;k<400;k++){
       const x=ri(4,W-5),y=ri(4,H-5),i=idx(x,y);
@@ -632,7 +796,11 @@ function genWorld(){
     ['meadow','chest',3],['meadow','herb',6],['forest','chest',3],['forest','herb',5],['hills','chest',3],['hills','ore',6],
     ['cave','chest',2],['cave','ore',4],['deepcave','chest',3],['deepcave','ore',6],
     ['swamp','chest',3],['swamp','herb',5],['desert','chest',3],['desert','ore',5],['snow','chest',3],['snow','ore',5],
-    ['palace','chest',2],['capital','chest',4],['peaks','chest',3],['peaks','ore',6],['volcano','chest',3],['volcano','ore',6]
+    ['palace','chest',2],['capital','chest',4],['peaks','chest',3],['peaks','ore',6],['volcano','chest',3],['volcano','ore',6],
+    ['necropolis','chest',3],['necropolis','herb',5],['necropolis','ore',4],
+    ['shadowlands','chest',3],['shadowlands','herb',5],['shadowlands','ore',4],
+    ['titanpeaks','chest',3],['titanpeaks','ore',6],
+    ['astralvoid','chest',3],['astralvoid','herb',5],['astralvoid','ore',5]
   ];
   for(const p of plan)for(let k=0;k<p[2];k++){const s=nodeSpot(p[0]);if(s)NODES.push({id:uid(),type:p[1],z:p[0],x:s.x,y:s.y})}
 }

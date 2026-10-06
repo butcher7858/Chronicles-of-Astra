@@ -173,142 +173,236 @@ function initTargetMenu(){
   document.addEventListener('click',e=>{if($('targetMenu')&&!e.target.closest('#targetMenu')&&!e.target.closest('#tframe'))$('targetMenu').hidden=true});
 }
 
-/* ---------- 4. ÁRBOLES DE TALENTOS ---------- */
+/* ---------- 4. ÁRBOLES DE TALENTOS (5 NIVELES POR RAMA · 10 CLASES) ---------- */
 const TALENTS_DATA={
   war:[
     {name:'Armas',desc:'Enfoque en golpes críticos, laceraciones y devastación.',tiers:[
       [{id:'crit1',name:'Filo Afilado',desc:'Aumenta el golpe crítico un +3% por rango.',max:3,stat:'crit',val:3}],
       [{id:'bleed1',name:'Heridas Profundas',desc:'Aumenta el daño de tus ataques un +5% por rango.',max:3,stat:'atkM',val:0.05}],
-      [{id:'mas1',name:'Maestría en Armas',desc:'Tus ataques tienen un 15% de probabilidad de infligir daño adicional masivo.',max:1,stat:'procDmg',val:1}]
+      [{id:'crit2',name:'Tendón Cortado',desc:'Aumenta el daño de golpes críticos un +8% por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'bleed2',name:'Golpe Mortal Perfeccionado',desc:'Aumenta el ataque un +6% y velocidad un +4% por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'mas1',name:'Maestría en Armas',desc:'Tus ataques infligen +25% de daño adicional permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Furia',desc:'Fiebre berserker, velocidad vertiginosa y potencia.',tiers:[
       [{id:'atk1',name:'Furia Indómita',desc:'Aumenta tu poder de ataque un +4% por rango.',max:3,stat:'atkM',val:0.04}],
       [{id:'spd1',name:'Celeridad Sangrienta',desc:'Aumenta tu velocidad de movimiento un +5% por rango.',max:3,stat:'spdM',val:0.05}],
-      [{id:'furyMaster',name:'Sed de Sangre',desc:'Asestar golpes críticos te cura un 4% de tu vida máxima.',max:1,stat:'critHeal',val:0.04}]
+      [{id:'vamp1',name:'Sed Insaciable',desc:'Tus ataques recuperan un +4% del daño como vida por rango.',max:3,stat:'hpM',val:0.04}],
+      [{id:'enrage',name:'Enloquecer',desc:'Aumenta tu ataque un +7% por rango.',max:3,stat:'atkM',val:0.07}],
+      [{id:'furyMaster',name:'Berserker Titánico',desc:'Aumenta tu daño un +25% y velocidad un +20% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Protección',desc:'Escudo inquebrantable, armadura de placas y resistencia.',tiers:[
       [{id:'arm1',name:'Piel de Acero',desc:'Aumenta tu armadura un +10% por rango.',max:3,stat:'armM',val:0.10}],
       [{id:'hp1',name:'Vitalidad Titánica',desc:'Aumenta tu vida máxima un +6% por rango.',max:3,stat:'hpM',val:0.06}],
-      [{id:'lastStand',name:'Muralla Inmóvil',desc:'Reduce todo el daño recibido un 15%.',max:1,stat:'dr',val:0.15}]
+      [{id:'arm2',name:'Baluarte Rígido',desc:'Aumenta tu armadura un +8% adicional por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'hp2',name:'Fortaleza Inquebrantable',desc:'Aumenta tu vida máxima un +8% por rango.',max:3,stat:'hpM',val:0.08}],
+      [{id:'lastStand',name:'Muralla Inmóvil',desc:'Reduce todo el daño recibido un 20% permanente.',max:1,stat:'armM',val:0.25}]
     ]}
   ],
   mage:[
     {name:'Fuego',desc:'Calor abrasador, llamaradas e ignición fulminante.',tiers:[
-      [{id:'fCrit',name:'Piroclasto',desc:'+4% golpe crítico con hechizos de fuego.',max:3,stat:'crit',val:4}],
+      [{id:'fCrit',name:'Piroclasto',desc:'+4% golpe crítico con hechizos de fuego por rango.',max:3,stat:'crit',val:4}],
       [{id:'fDmg',name:'Combustión Ígnea',desc:'+6% de daño de fuego por rango.',max:3,stat:'atkM',val:0.06}],
-      [{id:'fMaster',name:'Fénix Eterno',desc:'Al lanzar hechizos generas una explosión de ascuas automática.',max:1,stat:'procDmg',val:1}]
+      [{id:'fIgnite',name:'Ignición Devastadora',desc:'+4% crítico adicional por rango.',max:3,stat:'crit',val:4}],
+      [{id:'fPyro',name:'Pirofrenesí',desc:'+8% daño con hechizos por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'fMaster',name:'Fénix Eterno',desc:'Aumenta tu daño de fuego un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Escarcha',desc:'Control glacial, frío cortante y escudos de hielo.',tiers:[
-      [{id:'frArm',name:'Armadura Helada',desc:'+8% armadura y ralentiza a los atacantes.',max:3,stat:'armM',val:0.08}],
-      [{id:'frCd',name:'Frío Absoluto',desc:'Reduce el tiempo de recarga de tus habilidades un 6% por rango.',max:3,stat:'cdr',val:0.06}],
-      [{id:'frMaster',name:'Cero Absoluto',desc:'Nova de Escarcha congela a los objetivos durante 2,5 s adicionales.',max:1,stat:'ccBuff',val:1}]
+      [{id:'frArm',name:'Armadura Helada',desc:'+8% armadura por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'frCd',name:'Frío Absoluto',desc:'+5% de velocidad y +4% ataque por rango.',max:3,stat:'atkM',val:0.04}],
+      [{id:'frCrit',name:'Escarcha Penetrante',desc:'+4% golpe crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'frFrost',name:'Congelación Profunda',desc:'+8% daño con hechizos helados por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'frMaster',name:'Cero Absoluto',desc:'Aumenta tu daño un +25% y armadura un +20% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Arcano',desc:'Manipulación del Telar, maná abundante y ráfagas arcanas.',tiers:[
-      [{id:'arMana',name:'Mente Brillante',desc:'+10% maná máximo y regeneración aumentada.',max:3,stat:'resM',val:0.10}],
-      [{id:'arSpd',name:'Flujo Temporal',desc:'+5% velocidad de movimiento y lanzamiento.',max:3,stat:'spdM',val:0.05}],
-      [{id:'arMaster',name:'Poder Arcano Puro',desc:'Tus ataques consumen 20% menos de maná y tienen +20% de daño.',max:1,stat:'atkM',val:0.20}]
+      [{id:'arMana',name:'Mente Brillante',desc:'+10% vida y maná máximo por rango.',max:3,stat:'hpM',val:0.06}],
+      [{id:'arSpd',name:'Flujo Temporal',desc:'+5% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.05}],
+      [{id:'arFocus',name:'Enfoque Astral',desc:'+6% daño arcano por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'arSurge',name:'Aceleración Cuántica',desc:'+4% crítico y +5% velocidad por rango.',max:3,stat:'crit',val:4}],
+      [{id:'arMaster',name:'Poder Arcano Puro',desc:'Aumenta tu daño arcano un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]}
   ],
   priest:[
     {name:'Sagrado',desc:'Luz curativa radiante y renacimiento de la vida.',tiers:[
-      [{id:'hHeal',name:'Gracia Sagrada',desc:'+8% a todas tus sanaciones por rango.',max:3,stat:'healM',val:0.08}],
+      [{id:'hHeal',name:'Gracia Sagrada',desc:'+6% a curaciones y daño sagrado por rango.',max:3,stat:'atkM',val:0.06}],
       [{id:'hHp',name:'Don de Vida',desc:'+5% de vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
-      [{id:'hMaster',name:'Luz Perpetua',desc:'Tus curaciones aplican un escudo de absorción del 20% del monto.',max:1,stat:'healShield',val:0.20}]
+      [{id:'hCrit',name:'Oleada Bendita',desc:'+4% golpe crítico sagrado por rango.',max:3,stat:'crit',val:4}],
+      [{id:'hSpirit',name:'Espíritu Divino',desc:'+8% vida máxima por rango.',max:3,stat:'hpM',val:0.08}],
+      [{id:'hMaster',name:'Luz Perpetua',desc:'Aumenta tu poder y vida un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Disciplina',desc:'Barreras de fe impenetrables y equilibrio sagrado.',tiers:[
-      [{id:'dShield',name:'Escudo de Fe',desc:'+10% absorción de tus barreras por rango.',max:3,stat:'dr',val:0.05}],
-      [{id:'dRes',name:'Comunión Divina',desc:'+8% de maná máximo y regeneración.',max:3,stat:'resM',val:0.08}],
-      [{id:'dMaster',name:'Supresión del Dolor',desc:'Reduce todo el daño recibido un 15% de forma permanente.',max:1,stat:'dr',val:0.15}]
+      [{id:'dShield',name:'Escudo de Fe',desc:'+8% armadura por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'dRes',name:'Comunión Divina',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'dArmor',name:'Determinación Sagrada',desc:'+10% armadura por rango.',max:3,stat:'armM',val:0.10}],
+      [{id:'dAtk',name:'Contrición',desc:'+7% poder de ataque por rango.',max:3,stat:'atkM',val:0.07}],
+      [{id:'dMaster',name:'Supresión del Dolor',desc:'Aumenta tu armadura un +25% y daño un +15% permanente.',max:1,stat:'armM',val:0.25}]
     ]},
     {name:'Sombras',desc:'Oscuridad marchitadora, vaciamiento y daño continuado.',tiers:[
       [{id:'sDot',name:'Oscuridad Pura',desc:'+6% daño de sombras por rango.',max:3,stat:'atkM',val:0.06}],
-      [{id:'sCrit',name:'Pesadilla',desc:'+3% crítico con hechizos sombríos.',max:3,stat:'crit',val:3}],
-      [{id:'sMaster',name:'Forma del Vacío',desc:'El daño de sombras te sana un 15% de todo lo infligido.',max:1,stat:'vamp',val:0.15}]
+      [{id:'sCrit',name:'Pesadilla',desc:'+3% crítico con hechizos sombríos por rango.',max:3,stat:'crit',val:3}],
+      [{id:'sVamp',name:'Abrazo Sombrío',desc:'+4% vida máxima por rango.',max:3,stat:'hpM',val:0.04}],
+      [{id:'sDark',name:'Putrefacción Mental',desc:'+8% daño con hechizos por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'sMaster',name:'Forma del Vacío Suprema',desc:'Aumenta tu daño de sombras un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]}
   ],
   paladin:[
     {name:'Reprensión',desc:'Justicia férrea y daño fulgurante.',tiers:[
       [{id:'pAtk',name:'Espada de la Justicia',desc:'+5% de daño con armas y luz por rango.',max:3,stat:'atkM',val:0.05}],
       [{id:'pCrit',name:'Celo Sagrado',desc:'+3% golpe crítico por rango.',max:3,stat:'crit',val:3}],
-      [{id:'pMaster',name:'Veredicto Final',desc:'Tus golpes críticos reinician el tiempo de reutilización de Juicio.',max:1,stat:'procDmg',val:1}]
+      [{id:'pPen',name:'Veredicto Penetrante',desc:'+6% daño de ataque por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'pJudge',name:'Juicio Radiante',desc:'+5% golpe crítico adicional por rango.',max:3,stat:'crit',val:5}],
+      [{id:'pMaster',name:'Veredicto Final',desc:'Aumenta tu ataque un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Protección',desc:'Baluarte sagrado, armadura y resistencia divina.',tiers:[
       [{id:'pDef',name:'Escudo Sagrado',desc:'+10% de armadura por rango.',max:3,stat:'armM',val:0.10}],
       [{id:'pHp',name:'Robustez',desc:'+6% de vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
-      [{id:'pMaster2',name:'Defensa Inquebrantable',desc:'Reduce el daño recibido un 15% permanentemente.',max:1,stat:'dr',val:0.15}]
+      [{id:'pBulwark',name:'Baluarte Bendito',desc:'+10% de armadura por rango.',max:3,stat:'armM',val:0.10}],
+      [{id:'pFaith',name:'Fe Firme',desc:'+8% de vida máxima por rango.',max:3,stat:'hpM',val:0.08}],
+      [{id:'pMaster2',name:'Defensa Inquebrantable',desc:'Aumenta tu armadura un +30% permanente.',max:1,stat:'armM',val:0.30}]
     ]},
     {name:'Luz',desc:'Auras benditas y sanación reactiva.',tiers:[
-      [{id:'pHeal',name:'Toque de Gracia',desc:'+8% a las curaciones propias por rango.',max:3,stat:'healM',val:0.08}],
+      [{id:'pHeal',name:'Toque de Gracia',desc:'+6% daño sagrado y sanación por rango.',max:3,stat:'atkM',val:0.06}],
       [{id:'pSpd',name:'Persecución de la Fe',desc:'+5% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.05}],
-      [{id:'pMaster3',name:'Aura de Devoción',desc:'Otorga regeneración de vida constante a ti y a tu grupo.',max:1,stat:'regen',val:1}]
+      [{id:'pFlash',name:'Destello Radiante',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'pLum',name:'Iluminación',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'pMaster3',name:'Aura de Devoción',desc:'Aumenta tu daño y vida un +20% permanente.',max:1,stat:'hpM',val:0.20}]
     ]}
   ],
   rogue:[
     {name:'Asesinato',desc:'Hemorragias letales, veneno y ejecuciones.',tiers:[
       [{id:'rAtk',name:'Tajo Quirúrgico',desc:'+5% daño de armas por rango.',max:3,stat:'atkM',val:0.05}],
       [{id:'rCrit',name:'Letalidad',desc:'+4% golpe crítico por rango.',max:3,stat:'crit',val:4}],
-      [{id:'rMaster',name:'Veneno Mortal',desc:'Tus ataques aplican veneno que devora al objetivo con el tiempo.',max:1,stat:'procDmg',val:1}]
+      [{id:'rBleed',name:'Sangrado Vil',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'rFast',name:'Veneno Rápido',desc:'+4% crítico y +5% velocidad por rango.',max:3,stat:'crit',val:4}],
+      [{id:'rMaster',name:'Veneno Mortal',desc:'Aumenta tu daño un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Sutileza',desc:'Paso silencioso, sombras evasivas y presteza.',tiers:[
       [{id:'rSpd',name:'Velocidad Espectral',desc:'+6% de velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.06}],
-      [{id:'rEva',name:'Reflejos Relámpago',desc:'+4% probabilidad de esquiva total por rango.',max:3,stat:'crit',val:2}],
-      [{id:'rMaster2',name:'Maestro de Sombras',desc:'Al usar habilidades de sigilo te vuelves inmune al daño 1 s.',max:1,stat:'dr',val:0.10}]
+      [{id:'rEva',name:'Reflejos Relámpago',desc:'+3% crítico y +4% velocidad por rango.',max:3,stat:'crit',val:3}],
+      [{id:'rCamo',name:'Camuflaje Sombrío',desc:'+5% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.05}],
+      [{id:'rAmbush',name:'Emboscada Letal',desc:'+8% daño de ataque por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'rMaster2',name:'Maestro de Sombras',desc:'Aumenta tu daño un +25% y velocidad un +15% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Combate',desc:'Duelo cuerpo a cuerpo, vigor y energía inagotable.',tiers:[
-      [{id:'rEng',name:'Vigor Infatigable',desc:'+15% regeneración de energía por rango.',max:3,stat:'resM',val:0.15}],
-      [{id:'rDef',name:'Curtido en Mil Batallas',desc:'+8% armadura y +5% vida.',max:3,stat:'hpM',val:0.05}],
-      [{id:'rMaster3',name:'Aluvión de Acero',desc:'Tus ataques tienen un 25% de probabilidad de golpear dos veces.',max:1,stat:'atkM',val:0.18}]
+      [{id:'rEng',name:'Vigor Infatigable',desc:'+5% velocidad y +4% ataque por rango.',max:3,stat:'atkM',val:0.04}],
+      [{id:'rDef',name:'Curtido en Mil Batallas',desc:'+8% armadura y +5% vida por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'rSteel',name:'Filos de Acero',desc:'+6% daño cuerpo a cuerpo por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'rAgile',name:'Vitalidad Ágil',desc:'+6% vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
+      [{id:'rMaster3',name:'Aluvión de Acero',desc:'Aumenta tu daño un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]}
   ],
   hunter:[
     {name:'Puntería',desc:'Tiroteo preciso, flechas perforantes y daño a distancia.',tiers:[
       [{id:'hAtk',name:'Disparo Maestro',desc:'+5% daño a distancia por rango.',max:3,stat:'atkM',val:0.05}],
       [{id:'hCrit',name:'Ojo de Halcón',desc:'+4% crítico a distancia por rango.',max:3,stat:'crit',val:4}],
-      [{id:'hMaster',name:'Tiro Mortal',desc:'Tus disparos perforan armaduras ignorando el 30% de la defensa.',max:1,stat:'procDmg',val:1}]
+      [{id:'hArrow',name:'Flechas Lacerantes',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'hSnipe',name:'Disparo Certero',desc:'+5% golpe crítico por rango.',max:3,stat:'crit',val:5}],
+      [{id:'hMaster',name:'Tiro Mortal',desc:'Aumenta tu daño a distancia un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Bestias',desc:'Vínculo animal, ferocidad y compañía salvaje.',tiers:[
-      [{id:'hPet',name:'Compañero Feroz',desc:'+8% daño de bestias invocadas por rango.',max:3,stat:'atkM',val:0.04}],
+      [{id:'hPet',name:'Compañero Feroz',desc:'+6% daño de ataque por rango.',max:3,stat:'atkM',val:0.06}],
       [{id:'hSpd',name:'Paso de Guepardo',desc:'+6% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.06}],
-      [{id:'hMaster2',name:'Ira Bestial',desc:'Tu bestia y tú os enfurecéis ganando +20% de daño permanente.',max:1,stat:'atkM',val:0.20}]
+      [{id:'hFrenzy',name:'Frenesí Salvaje',desc:'+6% poder de ataque por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'hBond',name:'Vínculo Espiritual',desc:'+6% vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
+      [{id:'hMaster2',name:'Ira Bestial',desc:'Aumenta tu daño un +25% y velocidad un +20% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Supervivencia',desc:'Trampas astutas, resistencia y combate táctico.',tiers:[
-      [{id:'hDef',name:'Piel de Cazador',desc:'+8% armadura y +5% vida máxima.',max:3,stat:'hpM',val:0.05}],
-      [{id:'hTrap',name:'Trampero Experto',desc:'Reduce el tiempo de recarga de trampas un 10% por rango.',max:3,stat:'cdr',val:0.10}],
-      [{id:'hMaster3',name:'Espíritu del Bosque',desc:'Recuperas un 2% de vida cada 3 segundos continuamente.',max:1,stat:'regen',val:1}]
+      [{id:'hDef',name:'Piel de Cazador',desc:'+8% armadura y +5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'hReflex',name:'Reflejos del Bosque',desc:'+5% velocidad por rango.',max:3,stat:'spdM',val:0.05}],
+      [{id:'hString',name:'Cuerda Tensa',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'hTrap',name:'Trampero Experto',desc:'+8% armadura por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'hMaster3',name:'Espíritu del Bosque',desc:'Aumenta tu vida un +20% y daño un +15% permanente.',max:1,stat:'hpM',val:0.20}]
     ]}
   ],
   necro:[
     {name:'Hueso',desc:'Armaduras óseas impenetrables y lanzas punzantes.',tiers:[
       [{id:'nArm',name:'Armadura de Hueso',desc:'+10% armadura por rango.',max:3,stat:'armM',val:0.10}],
       [{id:'nAtk',name:'Esquirlas Aguzadas',desc:'+5% daño perforante por rango.',max:3,stat:'atkM',val:0.05}],
-      [{id:'nMaster',name:'Prisión Ósea',desc:'Al golpear tienes probabilidad de atrapar al enemigo en huesos.',max:1,stat:'procDmg',val:1}]
+      [{id:'nBone2',name:'Osamenta Reforzada',desc:'+10% armadura por rango.',max:3,stat:'armM',val:0.10}],
+      [{id:'nSpear',name:'Lanza Ósea Letal',desc:'+8% daño de ataque por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'nMaster',name:'Prisión Ósea',desc:'Aumenta tu armadura un +30% permanente.',max:1,stat:'armM',val:0.30}]
     ]},
     {name:'Sangre',desc:'Vampirismo, sacrificios vitales y robo de esencia.',tiers:[
-      [{id:'nVamp',name:'Drenaje Sanguíneo',desc:'Recuperas un +4% del daño infligido como vida.',max:3,stat:'vamp',val:0.04}],
+      [{id:'nVamp',name:'Drenaje Sanguíneo',desc:'+5% daño y +4% vida por rango.',max:3,stat:'hpM',val:0.04}],
       [{id:'nHp',name:'Reserva Vital',desc:'+6% vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
-      [{id:'nMaster2',name:'Transfusión Oscura',desc:'Al recibir daño fatal sobrevives con 25% de vida (cd 90s).',max:1,stat:'dr',val:0.12}]
+      [{id:'nTrans',name:'Transfusión Continua',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'nUnholy',name:'Sangre Impía',desc:'+8% vida máxima por rango.',max:3,stat:'hpM',val:0.08}],
+      [{id:'nMaster2',name:'Presencia Carmesí Suprema',desc:'Aumenta tu vida máxima un +25% permanente.',max:1,stat:'hpM',val:0.25}]
     ]},
     {name:'Peste',desc:'Maldiciones corrosivas, peste y descomposición.',tiers:[
       [{id:'nDot',name:'Peste Negra',desc:'+6% daño periódico por rango.',max:3,stat:'atkM',val:0.06}],
-      [{id:'nSlow',name:'Putrefacción',desc:'Tus maldiciones ralentizan un +10% adicional.',max:3,stat:'spdM',val:0.03}],
-      [{id:'nMaster3',name:'Apocalipsis',desc:'Los enemigos abatidos explotan dañando a todos a su alrededor.',max:1,stat:'procDmg',val:1}]
+      [{id:'nSlow',name:'Putrefacción',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'nMiasma',name:'Miasma Letal',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'nInfect',name:'Infección Corrupta',desc:'+5% crítico por rango.',max:3,stat:'crit',val:5}],
+      [{id:'nMaster3',name:'Apocalipsis Pútrido',desc:'Aumenta tu daño de sombras un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]}
   ],
   druid:[
     {name:'Equilibrio',desc:'Luz estelar, energía solar y poder cósmico.',tiers:[
       [{id:'dAtk',name:'Luz de las Estrellas',desc:'+5% daño mágico por rango.',max:3,stat:'atkM',val:0.05}],
       [{id:'dCrit',name:'Alineación Celeste',desc:'+3% crítico por rango.',max:3,stat:'crit',val:3}],
-      [{id:'dMaster',name:'Eclipse Cósmico',desc:'Lluvia estelar continua cae sobre tus objetivos en combate.',max:1,stat:'procDmg',val:1}]
+      [{id:'dStar',name:'Fuego Astral',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'dSolar',name:'Fuerza Solar',desc:'+5% crítico por rango.',max:3,stat:'crit',val:5}],
+      [{id:'dMaster',name:'Eclipse Cósmico',desc:'Aumenta tu daño mágico un +25% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Feral',desc:'Zarpazos, ferocidad animal y velocidad felina.',tiers:[
-      [{id:'dBleed',name:'Garras Lacerantes',desc:'+6% daño cuerpo a cuerpo y sangrados.',max:3,stat:'atkM',val:0.06}],
+      [{id:'dBleed',name:'Garras Lacerantes',desc:'+6% daño cuerpo a cuerpo por rango.',max:3,stat:'atkM',val:0.06}],
       [{id:'dSpd',name:'Presteza Felina',desc:'+6% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.06}],
-      [{id:'dMaster2',name:'Instinto Depredador',desc:'Tus golpes críticos aumentan tu velocidad de ataque un 25%.',max:1,stat:'crit',val:5}]
+      [{id:'dPred',name:'Depredador del Bosque',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'dRip',name:'Desgarro Feroz',desc:'+8% daño de ataque por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'dMaster2',name:'Instinto Primitivo',desc:'Aumenta tu daño un +25% y velocidad un +20% permanente.',max:1,stat:'atkM',val:0.25}]
     ]},
     {name:'Restauración',desc:'Raíces curativas, savia milenaria y renacimiento.',tiers:[
-      [{id:'dHeal',name:'Savia Viva',desc:'+8% a todas tus curaciones por rango.',max:3,stat:'healM',val:0.08}],
+      [{id:'dHeal',name:'Savia Viva',desc:'+6% daño y curación por rango.',max:3,stat:'atkM',val:0.06}],
       [{id:'dHp',name:'Raíces Profundas',desc:'+6% vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
-      [{id:'dMaster3',name:'Árbol de la Vida',desc:'Generas un aura sanadora permanente que restaura vida a ti y tus aliados.',max:1,stat:'regen',val:1}]
+      [{id:'dGift',name:'Don de la Naturaleza',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'dBark',name:'Corteza Milenaria',desc:'+8% armadura por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'dMaster3',name:'Árbol de la Vida',desc:'Aumenta tu vida un +20% y armadura un +20% permanente.',max:1,stat:'hpM',val:0.20}]
+    ]}
+  ],
+  dk:[
+    {name:'Sangre',desc:'Presencia vampírica, mitigación de daño y regeneración.',tiers:[
+      [{id:'dkVamp',name:'Golpe Vampírico',desc:'+5% daño y +4% vida por rango.',max:3,stat:'hpM',val:0.04}],
+      [{id:'dkBone',name:'Blindaje de Hueso',desc:'+10% armadura por rango.',max:3,stat:'armM',val:0.10}],
+      [{id:'dkFort',name:'Fortitud Impía',desc:'+6% vida máxima por rango.',max:3,stat:'hpM',val:0.06}],
+      [{id:'dkBoil',name:'Sangre Hirviente',desc:'+7% poder de ataque por rango.',max:3,stat:'atkM',val:0.07}],
+      [{id:'dkBloodMaster',name:'Señor de la Sangre',desc:'Aumenta tu vida máxima un +25% y armadura un +20% permanente.',max:1,stat:'hpM',val:0.25}]
+    ]},
+    {name:'Escarcha',desc:'Frialdad glacial, críticos helados y ráfagas despiadadas.',tiers:[
+      [{id:'dkHeart',name:'Corazón Helado',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'dkBlade',name:'Filo Glacial',desc:'+6% daño de escarcha por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'dkWind',name:'Viento Gélido',desc:'+5% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.05}],
+      [{id:'dkShatter',name:'Hielo Quebrantador',desc:'+5% golpe crítico adicional por rango.',max:3,stat:'crit',val:5}],
+      [{id:'dkFrostMaster',name:'Furia del Rey Exánime',desc:'Aumenta tu daño de escarcha un +25% permanente.',max:1,stat:'atkM',val:0.25}]
+    ]},
+    {name:'Profano',desc:'Plagas pútridas, siervos de ultratumba y daño sombrío.',tiers:[
+      [{id:'dkPlague',name:'Portador de la Peste',desc:'+6% daño de sombras por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'dkNecro',name:'Nigromancia Rúnica',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'dkBlack',name:'Plaga Negra',desc:'+6% daño de ataque por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'dkArmy',name:'Ejército de Ultratumba',desc:'+8% poder de ataque por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'dkUnholyMaster',name:'Jinete del Apocalipsis',desc:'Aumenta tu daño un +25% y velocidad un +15% permanente.',max:1,stat:'atkM',val:0.25}]
+    ]}
+  ],
+  shaman:[
+    {name:'Elemental',desc:'Furia de rayos, llamaradas de lava y sobrecarga elemental.',tiers:[
+      [{id:'shThunder',name:'Furia del Trueno',desc:'+5% daño mágico elemental por rango.',max:3,stat:'atkM',val:0.05}],
+      [{id:'shSpark',name:'Chispa de Relámpago',desc:'+4% golpe crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'shLava',name:'Corriente Ígnea',desc:'+6% daño por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'shOverload',name:'Sobrecarga Ancestral',desc:'+5% crítico adicional por rango.',max:3,stat:'crit',val:5}],
+      [{id:'shEleMaster',name:'Cataclismo Elemental',desc:'Aumenta tu daño elemental un +25% permanente.',max:1,stat:'atkM',val:0.25}]
+    ]},
+    {name:'Mejora',desc:'Armas imbuidas de tormenta, viento furioso y ferocidad.',tiers:[
+      [{id:'shStorm',name:'Golpe de Tormenta',desc:'+6% daño cuerpo a cuerpo por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'shAir',name:'Gracia del Aire',desc:'+6% velocidad de movimiento por rango.',max:3,stat:'spdM',val:0.06}],
+      [{id:'shWindfury',name:'Viento Furioso Mejorado',desc:'+4% crítico por rango.',max:3,stat:'crit',val:4}],
+      [{id:'shTelluric',name:'Fuerza Telúrica',desc:'+8% daño de ataque por rango.',max:3,stat:'atkM',val:0.08}],
+      [{id:'shEnhMaster',name:'Espíritu del Lobo Salvaje',desc:'Aumenta tu daño un +25% y velocidad un +20% permanente.',max:1,stat:'atkM',val:0.25}]
+    ]},
+    {name:'Restauración',desc:'Aguas sanadoras ancestrales, tótems y renacer espiritual.',tiers:[
+      [{id:'shWater',name:'Aguas Purificadoras',desc:'+6% daño sagrado y curaciones por rango.',max:3,stat:'atkM',val:0.06}],
+      [{id:'shTotem',name:'Tótem de Vida',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'shTide',name:'Vínculo de Marea',desc:'+5% vida máxima por rango.',max:3,stat:'hpM',val:0.05}],
+      [{id:'shAnces',name:'Don de los Ancestros',desc:'+8% armadura por rango.',max:3,stat:'armM',val:0.08}],
+      [{id:'shRestoMaster',name:'Bendición de la Lluvia',desc:'Aumenta tu vida máxima un +20% y armadura un +20% permanente.',max:1,stat:'hpM',val:0.20}]
     ]}
   ]
 };
@@ -389,17 +483,19 @@ function respecTalents(){
   sfx('buff');
 }
 
-/* ---------- 5. ESTABLO DE MONTURAS ---------- */
+/* ---------- 5. ESTABLO DE MONTURAS CON PERKS Y PASIVAS ÚNICAS ---------- */
 const MOUNTS={
-  horse:{id:'horse',name:'Caballo de Guerra',speed:270,price:25,ic:'horse',col:'#8a5a32',desc:'El leal corcel de la guardia de Villa Alba.'},
-  wolf:{id:'wolf',name:'Lobo Huargo Sombrío',speed:295,price:40,ic:'ghost',col:'#6a748c',desc:'Depredador veloz de las nieves del norte.'},
-  tiger:{id:'tiger',name:'Tigre Dientes de Sable',speed:315,price:50,ic:'strike',col:'#d98a2a',desc:'Feroz carnívoro de zancada letal.'},
-  ram:{id:'ram',name:'Carnero de las Cumbres',speed:285,price:35,ic:'shield',col:'#d0dde8',desc:'Bestia montañesa de cuernos curvos.'},
-  drake:{id:'drake',name:'Draco del Alba',speed:335,price:70,ic:'wing',col:'#ff6a3a',desc:'Draco alado que planea veloz por los cielos.',flying:true},
-  mech:{id:'mech',name:'Zancudo de Vapor',speed:310,price:60,ic:'crown',col:'#c89838',desc:'Ingeniería enana impulsada por vapor y bronce.'},
-  unicorn:{id:'unicorn',name:'Unicornio Astral',speed:325,price:65,ic:'star',col:'#d0f4ff',desc:'Criatura pura bañada por el fulgor de las constelaciones.'},
-  wyvern_mount:{id:'wyvern_mount',name:'Draco de Obsidiana',speed:345,price:80,ic:'wing',col:'#8034a0',desc:'Temible reptil alado forjado en el cráter de Ignis.',flying:true},
-  stag:{id:'stag',name:'Ciervo Celestial',speed:305,price:45,ic:'leaf',col:'#7ad08a',desc:'Noble espíritu de los bosques con cornamenta luminosa.'}
+  horse:{id:'horse',name:'Caballo de Guerra',speed:275,price:25,ic:'horse',col:'#8a5a32',perk:'+25% Armadura Física',desc:'El leal corcel de guardia. Otorga +25% de armadura física al jinete.'},
+  wolf:{id:'wolf',name:'Lobo Huargo Sombrío',speed:300,price:40,ic:'wolf',col:'#6a748c',perk:'+8% Probabilidad Crítica',desc:'Depredador ártico. Aumenta tu probabilidad de golpe crítico un +8%.'},
+  tiger:{id:'tiger',name:'Tigre Dientes de Sable',speed:320,price:50,ic:'strike',col:'#d98a2a',perk:'+12% Poder de Ataque',desc:'Feroz carnívoro. Aumenta tu poder de ataque un +12%.'},
+  ram:{id:'ram',name:'Carnero de las Cumbres',speed:290,price:35,ic:'shield',col:'#d0dde8',perk:'+15% Reducción de Daño',desc:'Bestia montañesa. Reduce el daño recibido un 15%.'},
+  drake:{id:'drake',name:'Draco del Alba',speed:345,price:70,ic:'wing',col:'#ff6a3a',perk:'Vuelo sin colisión aérea',desc:'Draco alado que planea veloz sobre aguas y terrenos escarpados.',flying:true},
+  mech:{id:'mech',name:'Zancudo de Vapor',speed:315,price:60,ic:'crown',col:'#c89838',perk:'+25% Velocidad y Escudo',desc:'Ingeniería enana impulsada por vapor con escudo cinético.'},
+  unicorn:{id:'unicorn',name:'Unicornio Astral',speed:330,price:65,ic:'star',col:'#d0f4ff',perk:'Regeneración y Caminata Acuática',desc:'Regenera 3% vida/maná por segundo continuamente y camina sobre el agua.'},
+  wyvern_mount:{id:'wyvern_mount',name:'Draco de Obsidiana',speed:350,price:80,ic:'wing',col:'#8034a0',perk:'Vuelo Ígneo Máximo (+20% ataque)',desc:'Reptil alado del cráter de Ignis. Vuela e incrementa ataque un +20%.',flying:true},
+  stag:{id:'stag',name:'Ciervo Celestial',speed:310,price:45,ic:'leaf',col:'#7ad08a',perk:'Recolección montado (+50% botín)',desc:'Espíritu del bosque. Permite recolectar plantas y minerales sin desmontar y otorga +50% botín.'},
+  bear:{id:'bear',name:'Oso Acorazado de Batalla',speed:285,price:55,ic:'shield',col:'#5a3a1e',perk:'+20% Vida Máxima Titánica',desc:'Imponente oso blindado. Aumenta tu vida máxima un +20%.'},
+  steed:{id:'steed',name:'Destrero del Ocaso',speed:325,price:75,ic:'rune',col:'#38bdf8',perk:'Aura de Sombra (debilita enemigos)',desc:'Corcel espectral de los Caballeros de la Muerte. Su presencia drena enemigos.'}
 };
 
 function renderMountsUI(){
@@ -414,6 +510,7 @@ function renderMountsUI(){
     card.className='mount-card'+(active?' active':'');
     card.innerHTML='<div class="mount-ic">'+svg(m.ic,m.col)+'</div>'+
       '<b>'+esc(m.name)+'</b>'+
+      '<div style="color:#5cff8a;font-weight:700;font-size:11px;margin:2px 0">Beneficio: '+esc(m.perk||'Velocidad')+'</div>'+
       '<span>Velocidad: +'+Math.round((m.speed/150-1)*100)+'% ('+m.speed+')</span>'+
       '<div style="font-size:11px;color:var(--muted)">'+esc(m.desc)+'</div>'+
       (owned?(active?'<span style="color:#5cff8a;font-weight:700">✓ ACTIVA</span>':'<button class="btn sm" style="margin-top:4px">Seleccionar</button>'):
@@ -421,11 +518,11 @@ function renderMountsUI(){
     card.onclick=()=>{
       if(owned){
         P.mount=k;toast('Montura activa: '+m.name);
-        sfx('equip');renderMountsUI();
+        sfx('equip');recalc();refreshUI();renderMountsUI();
       }else if(P.gold>=cost){
         P.gold-=cost;P.mounts.push(k);P.mount=k;
         toast('¡Has desbloqueado '+m.name+'!');
-        sfx('coin');renderMountsUI();refreshUI();
+        sfx('coin');recalc();refreshUI();renderMountsUI();
       }else{
         toast('Necesitas '+cost+' de oro para desbloquear');
       }
@@ -582,7 +679,8 @@ const DEFAULT_BINDS={
   '1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','10':'0','11':'-','12':'=',
   'q':'q','r':'r','t':'t','e':'e',
   'dodge':' ','target':'Tab','interact':'f','loot':'z','mount':'h',
-  'map':'m','inv':'b','char':'c','talents':'n','quests':'l','guild':'g','opts':'o'
+  'map':'m','inv':'b','char':'c','talents':'n','quests':'l','guild':'g','opts':'o',
+  'spells':'p','craft':'k'
 };
 let KEYBINDS={};
 try{KEYBINDS=Object.assign({},DEFAULT_BINDS,JSON.parse(localStorage.getItem('astra_binds_v3'))||{})}catch(_){KEYBINDS=Object.assign({},DEFAULT_BINDS)}
@@ -615,7 +713,8 @@ const ACTION_DEFS=[
   {id:'dodge',label:'Esquivar (Espacio)'},{id:'target',label:'Cambiar Objetivo (Tab)'},
   {id:'interact',label:'Interactuar (F)'},{id:'loot',label:'Saquear botín (Z)'},
   {id:'mount',label:'Subir a Montura (H)'},{id:'talents',label:'Talentos (N)'},
-  {id:'guild',label:'Hermandad (G)'},{id:'inv',label:'Mochila (B)'},
+  {id:'guild',label:'Hermandad (G)'},{id:'spells',label:'Libro Habilidades (P)'},
+  {id:'craft',label:'Fabricación (K)'},{id:'inv',label:'Mochila (B)'},
   {id:'char',label:'Personaje (C)'},{id:'quests',label:'Misiones (L)'},{id:'map',label:'Mapa (M)'}
 ];
 
@@ -1188,21 +1287,9 @@ drawParts=function(){
   }
 };
 
-/* ---------- 19. DESPACHO DE TECLAS CON COMBINACIONES ---------- */
-window.addEventListener('keydown',e=>{
-  if(!G.started||document.activeElement===$('chatIn')||e.repeat)return;
-  const combo=comboFromEvent(e);
-  if(!combo)return;
-
-  // Buscar acción ligada a este combo
-  let boundAct=null;
-  for(const act in KEYBINDS){
-    if(KEYBINDS[act].toLowerCase()===combo.toLowerCase()){
-      boundAct=act;break;
-    }
-  }
+/* ---------- 19. DESPACHO DE ACCIONES DE TECLAS (UNIFICADO) ---------- */
+function dispatchBoundAction(boundAct){
   if(!boundAct)return;
-
   if(+boundAct>=1&&+boundAct<=12){
     tryUse(+boundAct-1);
   } else if(boundAct==='q')useQuick(0);
@@ -1215,12 +1302,14 @@ window.addEventListener('keydown',e=>{
   else if(boundAct==='mount')toggleMount();
   else if(boundAct==='talents')togglePanel('pTalents');
   else if(boundAct==='guild')togglePanel('pGuild');
+  else if(boundAct==='spells')togglePanel('pSpells');
+  else if(boundAct==='craft')togglePanel('pCraft');
   else if(boundAct==='inv')togglePanel('pInv');
   else if(boundAct==='char')togglePanel('pChar');
   else if(boundAct==='quests')togglePanel('pQuest');
   else if(boundAct==='map')openMap();
   else if(boundAct==='opts')togglePanel('pOpts');
-});
+}
 
 /* ---------- 20. ENLACE DE PANELES Y ARRANQUE ---------- */
 const _bindPanels=bindPanels;

@@ -11,6 +11,7 @@ function syncToggles(){
 function bindPanels(){
   document.addEventListener('click',e=>{
     const c=e.target.closest('[data-close]');if(c){closePanel(c.getAttribute('data-close'))}
+    const b=e.target.closest('button');if(b&&b.id!=='chatIn')b.blur();
   });
   if($('invGrid'))$('invGrid').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){useInv(+b.dataset.i);hideTip()}});
   const onEqClick=e=>{const b=e.target.closest('[data-i]');if(b){unequip(b.dataset.i);hideTip()}};
@@ -53,7 +54,12 @@ function bindPanels(){
   if($('bQuest'))$('bQuest').onclick=()=>togglePanel('pQuest');
   if($('bMap'))$('bMap').onclick=openMap;
   if($('bOpts'))$('bOpts').onclick=()=>togglePanel('pOpts');
-  if($('bMount'))$('bMount').onclick=toggleMount;
+  if($('bSpells'))$('bSpells').onclick=()=>togglePanel('pSpells');
+  if($('bCraft'))$('bCraft').onclick=()=>togglePanel('pCraft');
+  if($('bTal'))$('bTal').onclick=()=>togglePanel('pTalents');
+  if($('bGuild'))$('bGuild').onclick=()=>togglePanel('pGuild');
+  if($('bMount'))$('bMount').onclick=e=>{if(e.shiftKey)togglePanel('pMounts');else toggleMount()};
+  if($('bFull'))$('bFull').onclick=()=>{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>{});else document.exitFullscreen().catch(()=>{})};
   if($('bChat'))$('bChat').onclick=()=>{if($('chat'))$('chat').classList.toggle('open')};
 }
 
@@ -80,25 +86,60 @@ function bindInput(){
   const chatIn=$('chatIn');
   window.addEventListener('keydown',e=>{
     if(!G.started)return;
-    if(document.activeElement===chatIn){
-      if(e.key==='Enter'){chatSend(chatIn.value);chatIn.value='';chatIn.blur()}
-      else if(e.key==='Escape'){chatIn.value='';chatIn.blur()}
+    const isInput=document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA'||document.activeElement.isContentEditable);
+    if(isInput){
+      if(e.key==='Enter'){
+        if(document.activeElement===chatIn){chatSend(chatIn.value);chatIn.value=''}
+        document.activeElement.blur();
+      }else if(e.key==='Escape'){
+        if(document.activeElement===chatIn){chatIn.value=''}
+        document.activeElement.blur();
+      }
       return;
     }
+
+    let boundAct=null;
+    if(typeof comboFromEvent==='function'&&typeof KEYBINDS!=='undefined'){
+      const combo=comboFromEvent(e);
+      if(combo){
+        for(const act in KEYBINDS){
+          if(KEYBINDS[act].toLowerCase()===combo.toLowerCase()){boundAct=act;break}
+        }
+      }
+    }
+
     const k=keyName(e);
     if(e.repeat&&k!=='Tab'){G.keys[k]=true;return}
     G.keys[k]=true;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Tab'].indexOf(e.key)>=0)e.preventDefault();
     if(P.dead)return;
-    if(k>='1'&&k<='6')tryUse(+k-1);
-    else if(k==='7')usePotion('hp');else if(k==='8')usePotion('mp');else if(k==='9')useHerb();
+
+    if(boundAct&&typeof dispatchBoundAction==='function'){
+      dispatchBoundAction(boundAct);
+      return;
+    }
+
+    if(k>='1'&&k<='9')tryUse(+k-1);
+    else if(k==='0')tryUse(9);
+    else if(k==='-')tryUse(10);
+    else if(k==='=')tryUse(11);
+    else if(k==='q'&&typeof useQuick==='function')useQuick(0);
+    else if(k==='r'&&typeof useQuick==='function')useQuick(1);
+    else if(k==='t'&&typeof useQuick==='function')useQuick(2);
     else if(k===' ')dodge();
     else if(k==='Tab')cycleTarget();
-    else if(k==='f'||k==='e')interact();
-    else if(k==='z'){if(!lootNearby())toast('No hay botín cerca')}
+    else if(k==='f'||k==='e'){if(typeof checkNoticeBoardInteract!=='function'||!checkNoticeBoardInteract())interact()}
+    else if(k==='z'){if(typeof lootNearby==='function'&&!lootNearby())toast('No hay botín cerca')}
     else if(k==='h')toggleMount();
     else if(k==='m')openMap();
-    else if(k==='b')togglePanel('pInv');else if(k==='c')togglePanel('pChar');else if(k==='l')togglePanel('pQuest');else if(k==='o')togglePanel('pOpts');
+    else if(k==='b')togglePanel('pInv');
+    else if(k==='c')togglePanel('pChar');
+    else if(k==='l')togglePanel('pQuest');
+    else if(k==='o')togglePanel('pOpts');
+    else if(k==='p')togglePanel('pSpells');
+    else if(k==='k')togglePanel('pCraft');
+    else if(k==='n')togglePanel('pTalents');
+    else if(k==='g')togglePanel('pGuild');
     else if(k==='Escape'){let any=false;for(const id of PANELS)if(!$(id).hidden){closePanel(id);any=true}if(!any){P.target=null;P.autoAtk=false}}
     else if(k==='Enter'){$('chat').classList.add('open');chatIn.focus();e.preventDefault()}
   });

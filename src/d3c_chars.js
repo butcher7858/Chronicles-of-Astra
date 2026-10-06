@@ -61,6 +61,8 @@ function weaponDraw(g,hx,hy,wa,L,bowFix){
   g.save();g.translate(hx,hy);g.rotate(bowFix?0:Math.PI/2-wa);
   g.lineCap='round';
   const bl=L.blade||'#e2e8f0',trim=L.trim||'#d9a73a';
+  const isDK=L.cls==='dk'||(L.blade&&L.blade==='#00f0ff')||(L.trim==='cyan');
+  const isShaman=L.cls==='shaman'||(L.orb&&L.orb==='#38bdf8');
   
   if(w==='sword'){
     const len=22;
@@ -69,12 +71,25 @@ function weaponDraw(g,hx,hy,wa,L,bowFix){
     disc(g,-5,0,2.2,trim);
     // gavilanes de la guarda
     rr(g,1.5,-5.5,3,11,1.2,trim);
-    disc(g,3,0,1.8,'#d43a2a',false); // gema central
+    disc(g,3,0,1.8,isDK?'#38bdf8':isShaman?'#f59e0b':'#d43a2a',false); // gema central
     // hoja de acero con filo y brillo
     poly(g,[4,-2.2,4+len,-1.6,6+len,0,4+len,1.6,4,2.2],bl);
     g.strokeStyle='rgba(255,255,255,0.85)';g.lineWidth=0.8;g.beginPath();g.moveTo(5,-0.5);g.lineTo(4+len,-0.2);g.stroke();
-    // brillo mágico en rareza alta
-    if(L.rarity>=2||L.aura){
+    // Runas para Caballero de la Muerte o armas épicas
+    if(isDK){
+      g.save();g.globalCompositeOperation='lighter';
+      g.strokeStyle='#38bdf8';g.lineWidth=1.5;
+      g.beginPath();g.moveTo(7,0);g.lineTo(4+len,0);g.stroke();
+      for(let r=0;r<3;r++){
+        disc(g,8+r*6,0,1.2,'#e0f2fe',false);
+      }
+      g.restore();
+    }else if(isShaman){
+      g.save();g.globalCompositeOperation='lighter';
+      g.strokeStyle='#60a5fa';g.lineWidth=1.2;
+      g.beginPath();g.moveTo(6,-1);g.lineTo(12,1);g.lineTo(18,-1);g.lineTo(4+len,0);g.stroke();
+      g.restore();
+    }else if(L.rarity>=2||L.aura){
       g.strokeStyle=L.aura||'rgba(140,200,255,0.7)';g.lineWidth=1.6;
       g.beginPath();g.moveTo(6,0);g.lineTo(4+len,0);g.stroke();
     }
@@ -82,46 +97,56 @@ function weaponDraw(g,hx,hy,wa,L,bowFix){
     const len=13;
     rr(g,-4,-1.3,5,2.6,1,'#2c1f14');
     rr(g,1,-3.5,2.4,7,1,trim);
-    // hoja sinuosa
     poly(g,[3,-1.6,6,-2.4,10,-1.2,3+len,0,10,1.2,6,2.4,3,1.6],bl);
     g.strokeStyle='#ffffff';g.lineWidth=0.6;g.beginPath();g.moveTo(4,0);g.lineTo(2+len,0);g.stroke();
+    if(L.rarity>=2||L.aura){
+      g.strokeStyle=L.aura||'#4ade80';g.lineWidth=1.2;
+      g.beginPath();g.moveTo(5,0);g.lineTo(2+len,0);g.stroke();
+    }
   }else if(w==='club'||w==='hammer'){
     rr(g,-4,-1.6,20,3.2,1,'#5a3a1e');
     rr(g,12,-7,10,14,2,'#7a8292');
     rr(g,13,-6,3,12,1,trim,false);
-    g.fillStyle='#e8e0c8';disc(g,17,0,1.8,'#e8e0c8',false); // runa sagrada
+    g.fillStyle='#e8e0c8';disc(g,17,0,1.8,isShaman?'#f59e0b':'#e8e0c8',false); // runa sagrada o elemental
+    if(isShaman){
+      g.strokeStyle='#38bdf8';g.lineWidth=1.4;
+      g.beginPath();g.arc(17,0,4,0,6.283);g.stroke();
+    }
   }else if(w==='axe'){
     rr(g,-4,-1.5,22,3,1,'#5a3a1e');
-    // cabeza de hacha en media luna
     poly(g,[12,-1.8,14,-11,22,-9,23,0,22,9,14,11,12,1.8],bl);
     g.strokeStyle='#fff';g.lineWidth=0.9;g.beginPath();g.moveTo(21,-8);g.quadraticCurveTo(23,0,21,8);g.stroke();
     disc(g,15,0,2.2,trim);
+    if(isDK){
+      g.strokeStyle='#38bdf8';g.lineWidth=1.4;g.beginPath();g.moveTo(17,-6);g.lineTo(21,0);g.lineTo(17,6);g.stroke();
+    }
   }else if(w==='staff'){
     lim(g,-10,0,24,0,3,'#5a3e24');
-    // cabeza dorada ornamentada
     rr(g,19,-4,5,8,1.5,trim);
-    const oc=L.orb||'#b68cff';
+    const oc=L.orb||(isShaman?'#38bdf8':isDK?'#00f0ff':'#b68cff');
     g.save();g.globalCompositeOperation='lighter';
     const gr=g.createRadialGradient(27,0,0,27,0,12);gr.addColorStop(0,rgba(oc,0.85));gr.addColorStop(1,rgba(oc,0));
     g.fillStyle=gr;g.fillRect(14,-13,26,26);g.restore();
     disc(g,27,0,4.2,oc);disc(g,26,-1,1.5,'#ffffff',false);
-    // arco superior
     g.strokeStyle=trim;g.lineWidth=1.5;g.beginPath();g.arc(26,0,6.5,-Math.PI*0.6,Math.PI*0.6);g.stroke();
+    // Elementos orbitales para chamán
+    if(isShaman){
+      disc(g,20,-6,1.4,'#ef4444',false); // fuego
+      disc(g,34,-6,1.4,'#3b82f6',false); // agua
+      disc(g,27,7,1.4,'#eab308',false); // rayo
+    }
   }else if(w==='bow'){
     g.strokeStyle=OUT;g.lineWidth=4;g.beginPath();g.moveTo(1,-15);g.quadraticCurveTo(11,0,1,15);g.stroke();
     g.strokeStyle='#7c4c22';g.lineWidth=2.4;g.stroke();
-    // extremos dorados
     disc(g,1,-15,1.6,trim);disc(g,1,15,1.6,trim);
-    // cuerda tensada
     g.strokeStyle='rgba(255,255,240,0.85)';g.lineWidth=0.8;g.beginPath();g.moveTo(1,-15);g.lineTo(1,15);g.stroke();
-    // flecha
     g.strokeStyle='#d8ceb4';g.lineWidth=1.2;g.beginPath();g.moveTo(-4,0);g.lineTo(12,0);g.stroke();
     poly(g,[11,-2,15,0,11,2],'#b8bec8',false);
   }else if(w==='spear'){
     lim(g,-14,0,26,0,2.8,'#5a3a1e');
     poly(g,[18,-3.5,30,0,18,3.5],bl);
     rr(g,16,-2,3,4,1,trim);
-    poly(g,[15,-2,11,-7,17,-4],'#d9382a',false); // borla roja
+    poly(g,[15,-2,11,-7,17,-4],'#d9382a',false);
   }
   g.restore();
 }
@@ -255,8 +280,19 @@ function drawHuman(g,x,y,L,o){
   const sc=o.scale||1,dir=o.dir||1,t=o.t||0,mv=!!o.moving,ph=mv?t*(o.fast?13:9):0,mounted=!!o.mounted;
   g.save();g.translate(x,y);g.scale(sc*dir,sc);
   if(o.rollA){g.translate(0,-10);g.rotate(o.rollA);g.translate(0,10)}
+  const isDK=L.cls==='dk'||(L.blade&&L.blade==='#00f0ff')||(L.trim==='cyan');
+  const isShaman=L.cls==='shaman'||(L.orb&&L.orb==='#38bdf8');
+
   if(mounted){drawHorse(g,t,mv,o.fast);g.translate(0,-12)}
-  else{g.fillStyle='rgba(0,0,0,0.28)';g.beginPath();g.ellipse(0,1,10,3.4,0,0,6.283);g.fill()}
+  else{
+    g.fillStyle='rgba(0,0,0,0.28)';g.beginPath();g.ellipse(0,1,10,3.4,0,0,6.283);g.fill();
+    if(isDK){
+      g.save();g.globalCompositeOperation='lighter';
+      g.fillStyle='rgba(56,189,248,0.25)';g.beginPath();g.ellipse(0,1,15,5,0,0,6.283);g.fill();
+      g.restore();
+    }
+  }
+  const breathe=mv?0:Math.sin(t*3)*0.6;
   const bob=mounted?(mv?Math.sin(ph*1.2)*-1.2:0):(mv?-Math.abs(Math.sin(ph))*1.6:Math.sin(t*2)*-0.5);
   g.translate(0,bob);
 
@@ -264,14 +300,28 @@ function drawHuman(g,x,y,L,o){
   const boot=L.bootColor||tint(legc,-0.35),sw=o.sw||0;
 
   // Aura mágica / divina por conjunto o rareza alta
-  if(L.aura&&!o.noAura){
+  if((L.aura||isDK||isShaman)&&!o.noAura){
     g.save();g.globalCompositeOperation='lighter';
+    const ac=isDK?'#38bdf8':isShaman?'#f59e0b':(L.aura||'#ffd700');
     const gr=g.createRadialGradient(0,-18,4,0,-18,28);
-    gr.addColorStop(0,'rgba(255,255,255,0.15)');gr.addColorStop(0.7,L.aura+'44');gr.addColorStop(1,'rgba(0,0,0,0)');
+    gr.addColorStop(0,'rgba(255,255,255,0.18)');gr.addColorStop(0.7,rgba(ac,0.3));gr.addColorStop(1,'rgba(0,0,0,0)');
     g.fillStyle=gr;g.fillRect(-28,-46,56,56);
     // partículas de aura flotantes
-    const aSin=Math.sin(t*4)*5;
-    disc(g,-10+aSin,-26,1.4,L.aura,false);disc(g,8-aSin,-22,1.2,L.aura,false);
+    if(isShaman){
+      const ang=t*2.8;
+      disc(g,Math.cos(ang)*18,-20+Math.sin(ang)*6,2.2,'#ef4444',false);
+      disc(g,Math.cos(ang+2.09)*18,-20+Math.sin(ang+2.09)*6,2.2,'#3b82f6',false);
+      disc(g,Math.cos(ang+4.18)*18,-20+Math.sin(ang+4.18)*6,2.2,'#eab308',false);
+    }else if(isDK){
+      const ang=-t*2.2;
+      for(let r=0;r<3;r++){
+        const ra=ang+r*2.09;
+        disc(g,Math.cos(ra)*17,-22+Math.sin(ra)*5,1.8,'#38bdf8',false);
+      }
+    }else{
+      const aSin=Math.sin(t*4)*5;
+      disc(g,-10+aSin,-26,1.4,ac,false);disc(g,8-aSin,-22,1.2,ac,false);
+    }
     g.restore();
   }
 
@@ -285,14 +335,13 @@ function drawHuman(g,x,y,L,o){
 
   // 2. Brazo trasero y escudo
   const bs=mv&&!sw?Math.sin(ph+Math.PI)*0.55:0;
-  const backA=-0.2+bs,bshx=-5,bshy=-24;
+  const backA=-0.2+bs,bshx=-5,bshy=-24+breathe*0.4;
   lim(g,bshx,bshy,bshx+10*Math.sin(backA),bshy+10*Math.cos(backA),4.4,skin);
   const bhx=bshx+10*Math.sin(backA),bhy=bshy+10*Math.cos(backA);
   // guantelete trasero
   if(L.glove){disc(g,bhx,bhy,2.4,L.glove)}
 
   if(L.shield){
-    // Escudo heráldico curvado
     poly(g,[bhx-6,bhy-9,bhx+8,bhy-9,bhx+6,bhy+6,bhx,bhy+11,bhx-6,bhy+6],L.trim||'#c5a038');
     poly(g,[bhx-4,bhy-7,bhx+6,bhy-7,bhx+4,bhy+4,bhx,bhy+8,bhx-4,bhy+4],body,false);
     disc(g,bhx+1,bhy-1,2.5,'#ffd700');disc(g,bhx+1,bhy-1,1.2,'#ff3a2a',false);
@@ -304,64 +353,57 @@ function drawHuman(g,x,y,L,o){
     lim(g,3,-14,9,-7,5.4,tint(legc,0.08));lim(g,9,-7,8,-1,4.6,boot);
   }else{
     const s1=mv?Math.sin(ph)*5.5:0,s2=-s1,l1=mv?Math.max(0,Math.cos(ph))*2.6:0,l2=mv?Math.max(0,-Math.cos(ph))*2.6:0;
-    // pierna trasera
     lim(g,-3,-14,-3+s2,-3-l2,5,legc);rr(g,-3+s2-3,-3.4-l2,6.8,3.6,1.4,boot);
-    // pierna delantera con rodillera
     lim(g,3,-14,3+s1,-3-l1,5.4,tint(legc,0.08));
-    disc(g,3+s1*0.5,-8-l1*0.5,2.4,trim); // rodillera reforzada
+    disc(g,3+s1*0.5,-8-l1*0.5,2.4,trim);
     rr(g,3+s1-3,-3.4-l1,7.2,3.8,1.4,boot);
-    // puntera de acero
     g.fillStyle=trim;g.fillRect(3+s1+1,-3.4-l1+1,2.2,2);
   }
 
-  // 4. Torso y Coraza
+  // 4. Torso y Coraza con respiración
   const bw=L.belly?10.5:7.6;
-  rr(g,-bw,-28,bw*2,15,4,body);
-  // relieve de pechera metálica
-  g.fillStyle='rgba(255,255,255,0.18)';g.fillRect(-bw+1.2,-27.5,bw*1.2,3.2);
+  rr(g,-bw,-28+breathe*0.5,bw*2,15+breathe*0.4,4,body);
+  g.fillStyle='rgba(255,255,255,0.18)';g.fillRect(-bw+1.2,-27.5+breathe*0.5,bw*1.2,3.2);
   g.fillStyle='rgba(0,0,0,0.18)';g.fillRect(-bw+1,-16.5,bw*2-2,2);
-  // cinturón de cuero y hebilla dorada con gema
   g.fillStyle='#3a2414';g.fillRect(-bw,-16,bw*2,3);
   rr(g,-2.5,-16.5,5,4,1,trim);
   disc(g,0,-14.5,1,'#ff3b30',false);
 
-  // hombreras / pauldrons en ambos lados
+  // hombreras / pauldrons
   if(L.pads){
-    disc(g,-bw+1,-26,4.6,L.pads);disc(g,-bw+1,-26,2.2,trim,false);
-    disc(g,bw-1,-26,4.6,L.pads);disc(g,bw-1,-26,2.2,trim,false);
+    disc(g,-bw+1,-26+breathe*0.6,4.6,L.pads);disc(g,-bw+1,-26+breathe*0.6,2.2,trim,false);
+    disc(g,bw-1,-26+breathe*0.6,4.6,L.pads);disc(g,bw-1,-26+breathe*0.6,2.2,trim,false);
   }
 
-  // 5. Cabeza y Rostro Expresivo
-  const hy=-33.5;
-  // orejas
+  // 5. Cabeza y Rostro Expresivo con parpadeo
+  const hy=-33.5+breathe*0.7;
   if(L.ears){poly(g,[-5.5,hy-1,-12,hy-5,-6.5,hy+3],skin);poly(g,[5,hy-1,10,hy-5,6,hy+3],skin)}
   else{disc(g,-6,hy,2,skin,false);disc(g,6,hy,2,skin,false)}
   
-  // cabeza base
   disc(g,0,hy,6.8,skin);
   g.fillStyle='rgba(255,255,255,0.22)';g.beginPath();g.ellipse(-1.8,hy-2.4,3.4,2,0,0,6.283);g.fill();
 
-  // Rostro / Ojos detallados y lindos
+  // Rostro / Ojos
   if(L.skel){
-    // cráneo de no-muerto
     g.fillStyle='#120f0c';disc(g,2,hy-0.6,2,'#120f0c',false);disc(g,5.4,hy-0.6,1.8,'#120f0c',false);
-    disc(g,2.2,hy-0.6,1,L.eye||'#ff3333',false);disc(g,5.5,hy-0.6,1,L.eye||'#ff3333',false);
+    disc(g,2.2,hy-0.6,1,isDK?'#38bdf8':(L.eye||'#ff3333'),false);disc(g,5.5,hy-0.6,1,isDK?'#38bdf8':(L.eye||'#ff3333'),false);
     g.fillStyle='#120f0c';for(let k=0;k<4;k++)g.fillRect(1.5+k*1.6,hy+3.4,0.7,2);
   }else{
-    const ec=L.eye||'#2563eb'; // color de iris
-    // rubor suave en mejillas
+    const ec=isDK?'#38bdf8':(L.eye||'#2563eb');
     g.fillStyle='rgba(255,120,120,0.24)';
     g.beginPath();g.ellipse(1.5,hy+1.8,2,1.2,0,0,6.283);g.ellipse(6.2,hy+1.8,2,1.2,0,0,6.283);g.fill();
 
-    // esclera blanca de ojos
-    disc(g,2.2,hy-0.4,1.4,'#ffffff',false);disc(g,5.6,hy-0.4,1.4,'#ffffff',false);
-    // iris de color luminoso
-    disc(g,2.4,hy-0.3,1.1,ec,false);disc(g,5.8,hy-0.3,1.1,ec,false);
-    // pupila oscura
-    disc(g,2.5,hy-0.2,0.6,'#09090b',false);disc(g,5.9,hy-0.2,0.6,'#09090b',false);
-    // destello especular doble (kawaii / anime sparkle)
-    disc(g,2.0,hy-0.7,0.45,'#ffffff',false);disc(g,5.4,hy-0.7,0.45,'#ffffff',false);
-    disc(g,2.8,hy,0.25,'#ffffff',false);disc(g,6.2,hy,0.25,'#ffffff',false);
+    const isBlink=!mv&&(Math.floor(t*1.6)%6===0&&(t*1.6)%1<0.18);
+    if(isBlink){
+      g.strokeStyle='#181008';g.lineWidth=1.2;
+      g.beginPath();g.moveTo(1.0,hy-0.3);g.lineTo(3.4,hy-0.3);g.moveTo(4.6,hy-0.3);g.lineTo(7.0,hy-0.3);g.stroke();
+    }else{
+      disc(g,2.2,hy-0.4,1.4,'#ffffff',false);disc(g,5.6,hy-0.4,1.4,'#ffffff',false);
+      disc(g,2.4,hy-0.3,1.1,ec,false);disc(g,5.8,hy-0.3,1.1,ec,false);
+      disc(g,2.5,hy-0.2,0.6,'#09090b',false);disc(g,5.9,hy-0.2,0.6,'#09090b',false);
+      disc(g,2.0,hy-0.7,0.45,'#ffffff',false);disc(g,5.4,hy-0.7,0.45,'#ffffff',false);
+      disc(g,2.8,hy,0.25,'#ffffff',false);disc(g,6.2,hy,0.25,'#ffffff',false);
+    }
 
     // pestañas / delineado superior
     g.strokeStyle='#181008';g.lineWidth=0.8;
