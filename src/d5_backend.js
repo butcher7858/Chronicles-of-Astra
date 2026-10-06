@@ -6,9 +6,21 @@
    deleteChar, loadState, saveChar, top, residents, chatHistory, sendChat,
    y BE.rt (tiempo real): join/leave/pos/chat/track.
    ===================================================================== */
-const ACFG=window.ASTRA_CONFIG||{};
-const FORCE_LOCAL=/[?&]local=1/.test(location.search);
-const USE_SB=!!(ACFG.SUPABASE_URL&&ACFG.SUPABASE_ANON_KEY)&&!FORCE_LOCAL;
+let ACFG=window.ASTRA_CONFIG||{};
+if(!ACFG.SUPABASE_URL){
+  try{
+    const saved=JSON.parse(localStorage.getItem('astra_sb_config')||'{}');
+    if(saved&&saved.SUPABASE_URL)ACFG=saved;
+  }catch(e){}
+}
+if(!ACFG.SUPABASE_URL){
+  ACFG={
+    SUPABASE_URL:'https://yobntnymohcwjknubbbv.supabase.co',
+    SUPABASE_ANON_KEY:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvYm50bnltb2hjd2prbnViYmJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMTkzMDEsImV4cCI6MjEwNjc5NTMwMX0.UGgeDLVfS8ux1rLfP5GhDr9FHBmSa30zoa5BHgsXUoQ'
+  };
+}
+const FORCE_LOCAL=/[?&]local=1/.test(location.search)||localStorage.getItem('astra_force_local')==='1';
+const USE_SB=!!(ACFG&&ACFG.SUPABASE_URL&&ACFG.SUPABASE_ANON_KEY)&&!FORCE_LOCAL;
 const MAX_CHARS=6;
 
 function errEs(m,code){
@@ -126,8 +138,8 @@ const LocalBE=(function(){
 /* ---------------------------------------------------------------------
    Supabase
    --------------------------------------------------------------------- */
-const SupaBE=(function(){
-  const URL_=ACFG.SUPABASE_URL.replace(/\/+$/,''),KEY=ACFG.SUPABASE_ANON_KEY,KS='astra_sb_sess_v1';
+const SupaBE=USE_SB?(function(){
+  const URL_=String(ACFG.SUPABASE_URL||'').replace(/\/+$/,''),KEY=ACFG.SUPABASE_ANON_KEY||'',KS='astra_sb_sess_v1';
   let S=null;try{S=JSON.parse(localStorage.getItem(KS))}catch(e){}
   const saveS=()=>{try{if(S)localStorage.setItem(KS,JSON.stringify(S));else localStorage.removeItem(KS)}catch(e){}};
   let onToken=null;
@@ -194,9 +206,24 @@ const SupaBE=(function(){
       const now=new Date().toISOString();
       const a=raw('/rest/v1/characters?id=eq.'+q(ch.id)+'&user_id=eq.'+q(S.user.id),{method:'PATCH',keepalive:!!beacon,headers:{Prefer:'return=minimal'},
         body:{level:ch.level,x:ch.x,y:ch.y,zone:ch.zone,kills:ch.kills,appearance:ch.appearance,last_seen:now}});
-      const b=raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
-        body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},st)});
-      await Promise.all([a,b]);
+      let b;
+      try{
+        b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+          body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},st)});
+      }catch(err){
+        if(err&&/column.*does not exist|Could not find.*column/i.test(err.message)){
+          const fallbackSt=Object.assign({},st);
+          delete fallbackSt.talents;
+          delete fallbackSt.mount;
+          delete fallbackSt.mounts;
+          delete fallbackSt.guild;
+          b=await raw('/rest/v1/character_state?on_conflict=character_id',{method:'POST',keepalive:!!beacon,headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+            body:Object.assign({character_id:ch.id,user_id:S.user.id,updated_at:now},fallbackSt)});
+        }else{
+          throw err;
+        }
+      }
+      await a;
     },
     top:n=>api('/rest/v1/characters?select=name,class,level,kills&order=level.desc,kills.desc&limit='+n),
     residents(){
@@ -261,6 +288,6 @@ const SupaBE=(function(){
   })();
   o.saveBeacon=function(ch,st){try{o.saveChar(ch,st,true)}catch(e){}};
   return o;
-})();
+})():null;
 
-const BE=USE_SB?SupaBE:LocalBE;
+const BE=(USE_SB&&SupaBE)?SupaBE:LocalBE;

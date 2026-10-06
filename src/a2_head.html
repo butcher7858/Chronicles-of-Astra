@@ -622,7 +622,12 @@ body.touch #actionbar{flex-wrap:wrap;max-width:360px}
         <div id="aMsg" role="status" aria-live="polite"></div>
         <button class="btn" id="aGo" type="submit">Entrar</button>
       </form>
-      <div id="srvBadge"><i></i><span></span></div>
+      <div id="srvBadge" style="cursor:pointer" title="Haz clic para alternar modo"><i></i><span></span></div>
+      <div id="sbSetupRow" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:6px;font-size:12px">
+        <a href="javascript:void(0)" id="btnToggleMode" style="color:var(--gold);text-decoration:underline"></a>
+        <span style="color:#5e4a2a">·</span>
+        <a href="javascript:void(0)" id="btnConfigSupabase" style="color:var(--muted);text-decoration:underline">Configurar Supabase</a>
+      </div>
       <p class="quote">«Antes de que hubiera reinos hubo un cielo, y el cielo tenía nombre.»</p>
     </section>
     <!-- Personajes -->

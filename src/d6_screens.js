@@ -56,7 +56,37 @@ function bindAuth(){
   $('tabIn').onclick=()=>setAuthMode('in');$('tabUp').onclick=()=>setAuthMode('up');
   const b=$('srvBadge');
   b.classList.toggle('local',BE.mode!=='supabase');
-  b.querySelector('span').textContent=BE.mode==='supabase'?'Servidor global conectado':'Modo local · sin servidor (datos solo en este navegador)';
+  b.querySelector('span').textContent=BE.mode==='supabase'?'Servidor Supabase conectado':'Modo local (sin servidor · datos en este navegador)';
+  const tm=$('btnToggleMode');
+  if(tm){
+    tm.textContent=BE.mode==='supabase'?'Cambiar a Modo Local (offline)':'Conectar a Supabase (online)';
+    tm.onclick=()=>{
+      if(BE.mode==='supabase'){
+        localStorage.setItem('astra_force_local','1');
+      }else{
+        localStorage.removeItem('astra_force_local');
+      }
+      location.reload();
+    };
+  }
+  const cs=$('btnConfigSupabase');
+  if(cs){
+    cs.onclick=()=>{
+      const u=prompt('URL de tu proyecto Supabase:\n(ej. https://xxxxxx.supabase.co)',ACFG.SUPABASE_URL||'');
+      if(u===null)return;
+      const k=prompt('Anon Public Key de Supabase:\n(ej. eyJhbGciOi...)',ACFG.SUPABASE_ANON_KEY||'');
+      if(k===null)return;
+      if(u.trim()&&k.trim()){
+        localStorage.setItem('astra_sb_config',JSON.stringify({SUPABASE_URL:u.trim(),SUPABASE_ANON_KEY:k.trim()}));
+        localStorage.removeItem('astra_force_local');
+        location.reload();
+      }else{
+        localStorage.removeItem('astra_sb_config');
+        location.reload();
+      }
+    };
+  }
+  if(b)b.onclick=()=>{if(tm)tm.click()};
   $('authForm').addEventListener('submit',async e=>{
     e.preventDefault();
     const mail=$('aMail').value.trim(),pw=$('aPass').value;
@@ -67,11 +97,18 @@ function bindAuth(){
     try{
       if(authMode==='up'){
         const r=await BE.signUp(mail,pw);
-        if(r.needsConfirm){setMsg('aMsg','Cuenta creada. Confirma tu correo y luego entra.',true);setAuthMode('in');setMsg('aMsg','Cuenta creada. Confirma tu correo y luego entra.',true);return}
+        if(r.needsConfirm){setMsg('aMsg','Cuenta creada. Confirma tu correo y luego entra.',true);setAuthMode('in');return}
       }else await BE.signIn(mail,pw);
       $('aPass').value='';$('aPass2').value='';
       await openChars();
-    }catch(err){setMsg('aMsg',err.message)}
+    }catch(err){
+      const isNet=/No hay conexión|NetworkError|Failed to fetch/i.test(err.message);
+      if(isNet&&BE.mode==='supabase'){
+        setMsg('aMsg',err.message+' — ¿Sin conexión? Haz clic abajo para entrar en Modo Local.');
+      }else{
+        setMsg('aMsg',err.message);
+      }
+    }
     finally{$('aGo').disabled=false}
   });
 }
@@ -90,7 +127,7 @@ function portrait(cv_,row){
 }
 async function openChars(){
   Sess.user=BE.session();
-  $('cMail').textContent=Sess.user.email||'';
+  $('cMail').textContent=(Sess.user&&Sess.user.email)||'';
   showScreen('sChars');
   $('cGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:30px">Cargando personajes…</div>';
   try{Sess.chars=await BE.listChars()}catch(e){Sess.chars=[];$('cGrid').innerHTML='<div style="grid-column:1/-1;color:#ff9a86">'+esc(e.message)+'</div>';return}
@@ -222,6 +259,7 @@ function bindScreens(){
 function snapshot(){
   const ch={id:P.charId,level:P.level,x:Math.round(P.x),y:Math.round(P.y),zone:(G.zone&&G.zone.id)||'town',kills:P.kills|0,appearance:P.app};
   const st={xp:P.xp|0,gold:P.gold|0,inv:P.inv,eq:P.eq,quests:P.quests,disc:P.disc,explored:bitsPack(G.explored),world_time:Math.round(G.worldT),
+    talents:P.talents||{},mount:P.mount||'horse',mounts:P.mounts||['horse'],guild:P.guild||null,
     options:{autoLoot:G.autoLoot,sfx:G.sfxOn,run:G.sprintToggle,shake:!G.shakeOff}};
   return {ch:ch,st:st};
 }
@@ -254,6 +292,10 @@ async function enterWorld(row){
     P.quests=st.quests||{};P.disc=st.disc||{town:1};
     if(st.explored)G.explored.set(bitsUnpack(st.explored,G.explored.length));
     G.worldT=st.world_time||0;
+    P.talents=st.talents||{};
+    P.mount=st.mount||'horse';
+    P.mounts=st.mounts||['horse'];
+    P.guild=st.guild||null;
     const o=st.options||{};
     G.autoLoot=o.autoLoot!==false;G.sfxOn=o.sfx!==false;G.sprintToggle=!!o.run;G.shakeOff=o.shake===false;
   }
